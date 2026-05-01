@@ -1,570 +1,303 @@
-import '/components/button/button_widget.dart';
-import '/components/role_card/role_card_widget.dart';
-import '/components/text_field/text_field_widget.dart';
-import '/flutter_flow/flutter_flow_theme.dart';
-import '/flutter_flow/flutter_flow_util.dart';
-import '/flutter_flow/flutter_flow_widgets.dart';
-import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart';
-
-import 'login_screen_model.dart';
-export 'login_screen_model.dart';
+import 'ParentDashboard.dart';
+import 'AdminAnalyticsDashboard.dart';
+import 'GuardScanner.dart';
 
 class LoginScreenWidget extends StatefulWidget {
   const LoginScreenWidget({super.key});
-
-  static String routeName = 'LoginScreen';
-  static String routePath = '/loginScreen';
 
   @override
   State<LoginScreenWidget> createState() => _LoginScreenWidgetState();
 }
 
 class _LoginScreenWidgetState extends State<LoginScreenWidget> {
-  late LoginScreenModel _model;
-
   final scaffoldKey = GlobalKey<ScaffoldState>();
+  
+  // Controladores para los campos de texto
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  bool _passwordVisible = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _model = createModel(context, () => LoginScreenModel());
-  }
+  // Estado para la tarjeta de rol seleccionada
+  String _selectedRole = 'Parent';
 
   @override
   void dispose() {
-    _model.dispose();
-
+    _emailController.dispose();
+    _passwordController.dispose();
     super.dispose();
+  }
+
+  // Widget personalizado para reemplazar el RoleCard de FlutterFlow
+  Widget _buildRoleCard({
+    required String title,
+    required String description,
+    required IconData icon,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 6.0),
+        padding: const EdgeInsets.all(12.0),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.deepPurple.withOpacity(0.1) : Colors.transparent,
+          border: Border.all(
+            color: isSelected ? Colors.deepPurple : Colors.grey.shade300,
+            width: 2,
+          ),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: isSelected ? Colors.deepPurple : Colors.grey, size: 28),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: isSelected ? Colors.deepPurple : Colors.black87,
+                    ),
+                  ),
+                  Text(
+                    description,
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                  ),
+                ],
+              ),
+            ),
+            if (isSelected)
+              const Icon(Icons.check_circle, color: Colors.deepPurple)
+          ],
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {
-        FocusScope.of(context).unfocus();
-        FocusManager.instance.primaryFocus?.unfocus();
-      },
+      onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
         key: scaffoldKey,
-        backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
-        body: SingleChildScrollView(
-          primary: false,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Padding(
-                padding: EdgeInsets.all(24),
-                child: Container(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Padding(
-                        padding: EdgeInsetsDirectional.fromSTEB(0, 20, 0, 10),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Container(
-                              width: 80,
-                              height: 80,
-                              decoration: BoxDecoration(
-                                color: FlutterFlowTheme.of(context).primary,
-                                borderRadius: BorderRadius.circular(24),
-                                shape: BoxShape.rectangle,
-                              ),
-                              alignment: AlignmentDirectional(0, 0),
-                              child: Icon(
-                                Icons.security_rounded,
-                                color: FlutterFlowTheme.of(context).onPrimary,
-                                size: 40,
-                              ),
-                            ),
-                            Column(
-                              mainAxisSize: MainAxisSize.min,
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Text(
-                                  'SafeGuard School',
-                                  style: FlutterFlowTheme.of(context)
-                                      .headlineMedium
-                                      .override(
-                                        font: GoogleFonts.plusJakartaSans(
-                                          fontWeight: FontWeight.w800,
-                                          fontStyle:
-                                              FlutterFlowTheme.of(context)
-                                                  .headlineMedium
-                                                  .fontStyle,
-                                        ),
-                                        color: FlutterFlowTheme.of(context)
-                                            .primary,
-                                        letterSpacing: 0.0,
-                                        fontWeight: FontWeight.w800,
-                                        fontStyle: FlutterFlowTheme.of(context)
-                                            .headlineMedium
-                                            .fontStyle,
-                                        lineHeight: 1.25,
-                                      ),
-                                ),
-                                Text(
-                                  'Nurturing Safety, Ensuring Care',
-                                  style: FlutterFlowTheme.of(context)
-                                      .bodyMedium
-                                      .override(
-                                        font: GoogleFonts.outfit(
-                                          fontWeight:
-                                              FlutterFlowTheme.of(context)
-                                                  .bodyMedium
-                                                  .fontWeight,
-                                          fontStyle:
-                                              FlutterFlowTheme.of(context)
-                                                  .bodyMedium
-                                                  .fontStyle,
-                                        ),
-                                        color: FlutterFlowTheme.of(context)
-                                            .secondaryText,
-                                        letterSpacing: 0.0,
-                                        fontWeight: FlutterFlowTheme.of(context)
-                                            .bodyMedium
-                                            .fontWeight,
-                                        fontStyle: FlutterFlowTheme.of(context)
-                                            .bodyMedium
-                                            .fontStyle,
-                                        lineHeight: 1.45,
-                                      ),
-                                ),
-                              ].divide(SizedBox(height: 4)),
-                            ),
-                          ].divide(SizedBox(height: 16)),
-                        ),
+        backgroundColor: Colors.white,
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: 20),
+                // --- CABECERA (LOGO Y TÍTULO) ---
+                Column(
+                  children: [
+                    Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: Colors.deepPurple,
+                        borderRadius: BorderRadius.circular(24),
                       ),
-                      Padding(
-                        padding: EdgeInsetsDirectional.fromSTEB(4, 0, 4, 0),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Welcome Back',
-                              style: FlutterFlowTheme.of(context)
-                                  .headlineSmall
-                                  .override(
-                                    font: GoogleFonts.interTight(
-                                      fontWeight: FontWeight.bold,
-                                      fontStyle: FlutterFlowTheme.of(context)
-                                          .headlineSmall
-                                          .fontStyle,
-                                    ),
-                                    color: FlutterFlowTheme.of(context)
-                                        .primaryText,
-                                    letterSpacing: 0.0,
-                                    fontWeight: FontWeight.bold,
-                                    fontStyle: FlutterFlowTheme.of(context)
-                                        .headlineSmall
-                                        .fontStyle,
-                                  ),
-                            ),
-                            Text(
-                              'Please select your role and sign in',
-                              style: FlutterFlowTheme.of(context)
-                                  .bodyMedium
-                                  .override(
-                                    font: GoogleFonts.outfit(
-                                      fontWeight: FlutterFlowTheme.of(context)
-                                          .bodyMedium
-                                          .fontWeight,
-                                      fontStyle: FlutterFlowTheme.of(context)
-                                          .bodyMedium
-                                          .fontStyle,
-                                    ),
-                                    color: FlutterFlowTheme.of(context)
-                                        .secondaryText,
-                                    letterSpacing: 0.0,
-                                    fontWeight: FlutterFlowTheme.of(context)
-                                        .bodyMedium
-                                        .fontWeight,
-                                    fontStyle: FlutterFlowTheme.of(context)
-                                        .bodyMedium
-                                        .fontStyle,
-                                    lineHeight: 1.45,
-                                  ),
-                            ),
-                          ].divide(SizedBox(height: 8)),
-                        ),
+                      child: const Icon(Icons.security_rounded, color: Colors.white, size: 40),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'SafeGuard School',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.deepPurple,
                       ),
-                      Column(
-                        mainAxisSize: MainAxisSize.min,
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Padding(
-                            padding: EdgeInsetsDirectional.fromSTEB(4, 0, 0, 8),
-                            child: Container(
-                              child: Text(
-                                'I am a...',
-                                style: FlutterFlowTheme.of(context)
-                                    .labelLarge
-                                    .override(
-                                      font: GoogleFonts.plusJakartaSans(
-                                        fontWeight: FlutterFlowTheme.of(context)
-                                            .labelLarge
-                                            .fontWeight,
-                                        fontStyle: FlutterFlowTheme.of(context)
-                                            .labelLarge
-                                            .fontStyle,
-                                      ),
-                                      color: FlutterFlowTheme.of(context)
-                                          .secondaryText,
-                                      letterSpacing: 0.0,
-                                      fontWeight: FlutterFlowTheme.of(context)
-                                          .labelLarge
-                                          .fontWeight,
-                                      fontStyle: FlutterFlowTheme.of(context)
-                                          .labelLarge
-                                          .fontStyle,
-                                      lineHeight: 1.3,
-                                    ),
-                              ),
-                            ),
-                          ),
-                          wrapWithModel(
-                            model: _model.roleCardModel1,
-                            updateCallback: () => safeSetState(() {}),
-                            child: RoleCardWidget(
-                              description: 'Manage children & authorizations',
-                              icon: Icon(
-                                Icons.family_restroom_rounded,
-                                color: FlutterFlowTheme.of(context).primary,
-                                size: 24,
-                              ),
-                              title: 'Parent / Tutor',
-                              selected: true,
-                            ),
-                          ),
-                          wrapWithModel(
-                            model: _model.roleCardModel2,
-                            updateCallback: () => safeSetState(() {}),
-                            child: RoleCardWidget(
-                              description: 'Scan QR & validate identity',
-                              icon: Icon(
-                                Icons.shield_rounded,
-                                color:
-                                    FlutterFlowTheme.of(context).secondaryText,
-                                size: 24,
-                              ),
-                              title: 'Security Guard',
-                              selected: false,
-                            ),
-                          ),
-                          wrapWithModel(
-                            model: _model.roleCardModel3,
-                            updateCallback: () => safeSetState(() {}),
-                            child: RoleCardWidget(
-                              description: 'Reports & school management',
-                              icon: Icon(
-                                Icons.admin_panel_settings_rounded,
-                                color:
-                                    FlutterFlowTheme.of(context).secondaryText,
-                                size: 24,
-                              ),
-                              title: 'Administrator',
-                              selected: false,
-                            ),
-                          ),
-                        ].divide(SizedBox(height: 0)),
-                      ),
-                      Column(
-                        mainAxisSize: MainAxisSize.min,
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          wrapWithModel(
-                            model: _model.textFieldModel1,
-                            updateCallback: () => safeSetState(() {}),
-                            child: TextFieldWidget(
-                              label: false,
-                              helper: false,
-                              hint: 'parent@school.com',
-                              value: '',
-                              leading_icon: Icon(
-                                Icons.email_outlined,
-                              ),
-                              leading_icon_present: true,
-                              trailing_icon_present: false,
-                              variant: 'outlined',
-                              error: false,
-                            ),
-                          ),
-                          Column(
-                            mainAxisSize: MainAxisSize.min,
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              wrapWithModel(
-                                model: _model.textFieldModel2,
-                                updateCallback: () => safeSetState(() {}),
-                                child: TextFieldWidget(
-                                  label: false,
-                                  helper: false,
-                                  hint: '••••••••',
-                                  value: '',
-                                  leading_icon: Icon(
-                                    Icons.lock_outlined,
-                                  ),
-                                  leading_icon_present: true,
-                                  trailing_icon: Icon(
-                                    Icons.visibility_outlined,
-                                  ),
-                                  trailing_icon_present: true,
-                                  variant: 'outlined',
-                                  error: false,
-                                ),
-                              ),
-                              Align(
-                                alignment: AlignmentDirectional(1, -1),
-                                child: Container(
-                                  child: wrapWithModel(
-                                    model: _model.buttonModel1,
-                                    updateCallback: () => safeSetState(() {}),
-                                    child: ButtonWidget(
-                                      content: 'Forgot Password?',
-                                      icon_present: false,
-                                      icon_end_present: false,
-                                      color:
-                                          FlutterFlowTheme.of(context).primary,
-                                      bg: FlutterFlowTheme.of(context).tertiary,
-                                      on_tap: 'navigate:PickupHistory',
-                                      variant: 'ghost',
-                                      size: 'small',
-                                      full_width: false,
-                                      loading: false,
-                                      disabled: false,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ].divide(SizedBox(height: 4)),
-                          ),
-                        ].divide(SizedBox(height: 16)),
-                      ),
-                      Padding(
-                        padding: EdgeInsetsDirectional.fromSTEB(0, 10, 0, 10),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Container(
-                              height: 56,
-                              decoration: BoxDecoration(
-                                color: FlutterFlowTheme.of(context).secondary,
-                                borderRadius: BorderRadius.circular(24),
-                                shape: BoxShape.rectangle,
-                              ),
-                              alignment: AlignmentDirectional(0, 0),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.max,
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    'Sign In',
-                                    style: FlutterFlowTheme.of(context)
-                                        .titleMedium
-                                        .override(
-                                          font: GoogleFonts.plusJakartaSans(
-                                            fontWeight: FontWeight.bold,
-                                            fontStyle:
-                                                FlutterFlowTheme.of(context)
-                                                    .titleMedium
-                                                    .fontStyle,
-                                          ),
-                                          color: FlutterFlowTheme.of(context)
-                                              .onSurface,
-                                          letterSpacing: 0.0,
-                                          fontWeight: FontWeight.bold,
-                                          fontStyle:
-                                              FlutterFlowTheme.of(context)
-                                                  .titleMedium
-                                                  .fontStyle,
-                                          lineHeight: 1.35,
-                                        ),
-                                  ),
-                                  Icon(
-                                    Icons.arrow_forward_rounded,
-                                    color:
-                                        FlutterFlowTheme.of(context).onSurface,
-                                    size: 20,
-                                  ),
-                                ].divide(SizedBox(width: 8)),
-                              ),
-                            ),
-                            Row(
-                              mainAxisSize: MainAxisSize.max,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Expanded(
-                                  flex: 1,
-                                  child: Divider(
-                                    height: 16,
-                                    thickness: 1,
-                                    indent: 0,
-                                    endIndent: 0,
-                                    color:
-                                        FlutterFlowTheme.of(context).alternate,
-                                  ),
-                                ),
-                                Text(
-                                  'OR',
-                                  style: FlutterFlowTheme.of(context)
-                                      .labelSmall
-                                      .override(
-                                        font: GoogleFonts.plusJakartaSans(
-                                          fontWeight:
-                                              FlutterFlowTheme.of(context)
-                                                  .labelSmall
-                                                  .fontWeight,
-                                          fontStyle:
-                                              FlutterFlowTheme.of(context)
-                                                  .labelSmall
-                                                  .fontStyle,
-                                        ),
-                                        color: FlutterFlowTheme.of(context)
-                                            .onSurface,
-                                        letterSpacing: 0.0,
-                                        fontWeight: FlutterFlowTheme.of(context)
-                                            .labelSmall
-                                            .fontWeight,
-                                        fontStyle: FlutterFlowTheme.of(context)
-                                            .labelSmall
-                                            .fontStyle,
-                                        lineHeight: 1.2,
-                                      ),
-                                ),
-                                Expanded(
-                                  flex: 1,
-                                  child: Divider(
-                                    height: 16,
-                                    thickness: 1,
-                                    indent: 0,
-                                    endIndent: 0,
-                                    color:
-                                        FlutterFlowTheme.of(context).alternate,
-                                  ),
-                                ),
-                              ].divide(SizedBox(width: 16)),
-                            ),
-                            wrapWithModel(
-                              model: _model.buttonModel2,
-                              updateCallback: () => safeSetState(() {}),
-                              child: ButtonWidget(
-                                content: 'Sign in with Biometrics',
-                                icon: Icon(
-                                  Icons.fingerprint_rounded,
-                                  color:
-                                      FlutterFlowTheme.of(context).primaryText,
-                                  size: 16,
-                                ),
-                                icon_present: true,
-                                icon_end_present: false,
-                                color: FlutterFlowTheme.of(context).primary,
-                                bg: FlutterFlowTheme.of(context).tertiary,
-                                on_tap: 'navigate:PickupHistory',
-                                variant: 'outline',
-                                size: 'medium',
-                                full_width: true,
-                                loading: false,
-                                disabled: false,
-                              ),
-                            ),
-                          ].divide(SizedBox(height: 16)),
-                        ),
-                      ),
-                      Container(
-                        child: Padding(
-                          padding: EdgeInsetsDirectional.fromSTEB(0, 20, 0, 20),
-                          child: Container(
-                            child: Container(
-                              alignment: AlignmentDirectional(0, 0),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.max,
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    'New to SafeGuard?',
-                                    style: FlutterFlowTheme.of(context)
-                                        .bodyMedium
-                                        .override(
-                                          font: GoogleFonts.outfit(
-                                            fontWeight:
-                                                FlutterFlowTheme.of(context)
-                                                    .bodyMedium
-                                                    .fontWeight,
-                                            fontStyle:
-                                                FlutterFlowTheme.of(context)
-                                                    .bodyMedium
-                                                    .fontStyle,
-                                          ),
-                                          color: FlutterFlowTheme.of(context)
-                                              .secondaryText,
-                                          letterSpacing: 0.0,
-                                          fontWeight:
-                                              FlutterFlowTheme.of(context)
-                                                  .bodyMedium
-                                                  .fontWeight,
-                                          fontStyle:
-                                              FlutterFlowTheme.of(context)
-                                                  .bodyMedium
-                                                  .fontStyle,
-                                          lineHeight: 1.45,
-                                        ),
-                                  ),
-                                  Text(
-                                    'Contact Admin',
-                                    style: FlutterFlowTheme.of(context)
-                                        .bodyMedium
-                                        .override(
-                                          font: GoogleFonts.outfit(
-                                            fontWeight: FontWeight.bold,
-                                            fontStyle:
-                                                FlutterFlowTheme.of(context)
-                                                    .bodyMedium
-                                                    .fontStyle,
-                                          ),
-                                          color: FlutterFlowTheme.of(context)
-                                              .primary,
-                                          letterSpacing: 0.0,
-                                          fontWeight: FontWeight.bold,
-                                          fontStyle:
-                                              FlutterFlowTheme.of(context)
-                                                  .bodyMedium
-                                                  .fontStyle,
-                                          decoration: TextDecoration.underline,
-                                          lineHeight: 1.45,
-                                        ),
-                                  ),
-                                ].divide(SizedBox(width: 4)),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ].divide(SizedBox(height: 24)),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Nurturing Safety, Ensuring Care',
+                      style: TextStyle(fontSize: 14, color: Colors.grey),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 40),
+
+                // --- MENSAJE DE BIENVENIDA ---
+                const Text(
+                  'Welcome Back',
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black87),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Please select your role and sign in',
+                  style: TextStyle(fontSize: 14, color: Colors.grey),
+                ),
+                const SizedBox(height: 24),
+
+                // --- SELECCIÓN DE ROL ---
+                const Text(
+                  'I am a...',
+                  style: TextStyle(fontWeight: FontWeight.w600, color: Colors.grey),
+                ),
+                const SizedBox(height: 8),
+                _buildRoleCard(
+                  title: 'Parent / Tutor',
+                  description: 'Manage children & authorizations',
+                  icon: Icons.family_restroom_rounded,
+                  isSelected: _selectedRole == 'Parent',
+                  onTap: () => setState(() => _selectedRole = 'Parent'),
+                ),
+                _buildRoleCard(
+                  title: 'Security Guard',
+                  description: 'Scan QR & validate identity',
+                  icon: Icons.shield_rounded,
+                  isSelected: _selectedRole == 'Guard',
+                  onTap: () => setState(() => _selectedRole = 'Guard'),
+                ),
+                _buildRoleCard(
+                  title: 'Administrator',
+                  description: 'Reports & school management',
+                  icon: Icons.admin_panel_settings_rounded,
+                  isSelected: _selectedRole == 'Admin',
+                  onTap: () => setState(() => _selectedRole = 'Admin'),
+                ),
+                const SizedBox(height: 24),
+
+                // --- FORMULARIO DE LOGIN ---
+                TextFormField(
+                  controller: _emailController,
+                  decoration: InputDecoration(
+                    labelText: 'parent@school.com',
+                    prefixIcon: const Icon(Icons.email_outlined),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _passwordController,
+                  obscureText: !_passwordVisible,
+                  decoration: InputDecoration(
+                    labelText: 'Password',
+                    prefixIcon: const Icon(Icons.lock_outlined),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _passwordVisible ? Icons.visibility : Icons.visibility_off,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _passwordVisible = !_passwordVisible;
+                        });
+                      },
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+                
+                // Forgot Password
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: () {},
+                    child: const Text('Forgot Password?', style: TextStyle(color: Colors.deepPurple)),
+                  ),
+                ),
+                const SizedBox(height: 10),
+
+                // --- BOTONES DE ACCIÓN ---
+                ElevatedButton(
+                  onPressed: () {
+                    // Lógica de inicio de sesión y enrutamiento
+                    if (_selectedRole == 'Parent') {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => const ParentDashboardWidget()),
+                      );
+                    } else if (_selectedRole == 'Admin') {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => const AdminAnalyticsDashboardWidget()),
+                      );
+                    } else if (_selectedRole == 'Guard') {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => const GuardScannerWidget()),
+                      );
+                    } else {
+                      print("Iniciando sesión como \$_selectedRole (Falta implementar destino)");
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.deepPurple,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text('Sign In', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                      SizedBox(width: 8),
+                      Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 20),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                
+                // OR Divider
+                const Row(
+                  children: [
+                    Expanded(child: Divider()),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16),
+                      child: Text('OR', style: TextStyle(color: Colors.grey)),
+                    ),
+                    Expanded(child: Divider()),
+                  ],
+                ),
+                const SizedBox(height: 16),
+
+                OutlinedButton.icon(
+                  onPressed: () {
+                    // Bypass biométrico
+                    print("Biometría presionada");
+                  },
+                  icon: const Icon(Icons.fingerprint_rounded, color: Colors.deepPurple),
+                  label: const Text('Sign in with Biometrics', style: TextStyle(color: Colors.deepPurple)),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    side: const BorderSide(color: Colors.deepPurple),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // Nuevo usuario
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text('New to SafeGuard?', style: TextStyle(color: Colors.grey)),
+                    const SizedBox(width: 4),
+                    GestureDetector(
+                      onTap: () {},
+                      child: const Text(
+                        'Contact Admin',
+                        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.deepPurple, decoration: TextDecoration.underline),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+              ],
+            ),
           ),
         ),
       ),

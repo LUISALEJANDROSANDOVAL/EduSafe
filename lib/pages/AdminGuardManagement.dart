@@ -1,40 +1,38 @@
 import 'package:flutter/material.dart';
 
-class AdminStudentManagementWidget extends StatefulWidget {
-  const AdminStudentManagementWidget({super.key});
+class AdminGuardManagementWidget extends StatefulWidget {
+  const AdminGuardManagementWidget({super.key});
 
-  static String routeName = 'AdminStudentManagement';
+  static String routeName = 'AdminGuardManagement';
 
   @override
-  State<AdminStudentManagementWidget> createState() => _AdminStudentManagementWidgetState();
+  State<AdminGuardManagementWidget> createState() => _AdminGuardManagementWidgetState();
 }
 
-class _AdminStudentManagementWidgetState extends State<AdminStudentManagementWidget> {
-  final List<Map<String, dynamic>> _students = [
+class _AdminGuardManagementWidgetState extends State<AdminGuardManagementWidget> {
+  // Simulated list of guards
+  final List<Map<String, dynamic>> _guards = [
     {
-      'name': 'Mateo Garcia',
-      'ci': '12345678',
-      'grade': '4th Grade - Section B',
-      'tutor': 'Lucia Garcia (CI: 98765432)',
-      'status': 'Registered'
+      'name': 'Carlos Rodriguez',
+      'id': 'SEC-8942-A',
+      'shift': 'Morning (06:00 AM - 02:00 PM)',
+      'status': 'Active',
     },
     {
-      'name': 'Sofia Rodriguez',
-      'ci': '87654321',
-      'grade': '2nd Grade - Section A',
-      'tutor': 'Luis Rodriguez (CI: 55544433)',
-      'status': 'Registered'
+      'name': 'Luis Martinez',
+      'id': 'SEC-8943-B',
+      'shift': 'Afternoon (02:00 PM - 10:00 PM)',
+      'status': 'Off-Duty',
     },
     {
-      'name': 'Lucas Miller',
-      'ci': '11223344',
-      'grade': '5th Grade - Section C',
-      'tutor': 'John Miller (CI: 99887766)',
-      'status': 'Pending Auth'
+      'name': 'Ana Silva',
+      'id': 'SEC-8944-C',
+      'shift': 'Night (10:00 PM - 06:00 AM)',
+      'status': 'On-Leave',
     }
   ];
 
-  void _showAddStudentModal() {
+  void _showAddGuardModal() {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -46,7 +44,9 @@ class _AdminStudentManagementWidgetState extends State<AdminStudentManagementWid
         return Padding(
           padding: EdgeInsets.only(
             bottom: MediaQuery.of(context).viewInsets.bottom,
-            top: 24, left: 24, right: 24,
+            top: 24,
+            left: 24,
+            right: 24,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -55,14 +55,17 @@ class _AdminStudentManagementWidgetState extends State<AdminStudentManagementWid
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Register New Student', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                  IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
+                  const Text('Add Security Guard', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(context),
+                  ),
                 ],
               ),
               const SizedBox(height: 16),
               TextField(
                 decoration: InputDecoration(
-                  labelText: 'Student Full Name',
+                  labelText: 'Full Name',
                   prefixIcon: const Icon(Icons.person),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 ),
@@ -70,33 +73,34 @@ class _AdminStudentManagementWidgetState extends State<AdminStudentManagementWid
               const SizedBox(height: 16),
               TextField(
                 decoration: InputDecoration(
-                  labelText: 'Student CI (Optional)',
+                  labelText: 'Employee ID',
                   prefixIcon: const Icon(Icons.badge),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 ),
               ),
               const SizedBox(height: 16),
-              TextField(
+              DropdownButtonFormField<String>(
                 decoration: InputDecoration(
-                  labelText: 'Grade / Course',
-                  prefixIcon: const Icon(Icons.class_),
+                  labelText: 'Assign Shift Schedule',
+                  prefixIcon: const Icon(Icons.access_time),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                decoration: InputDecoration(
-                  labelText: 'Parent/Tutor CI',
-                  prefixIcon: const Icon(Icons.family_restroom),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                ),
+                items: const [
+                  DropdownMenuItem(value: 'Morning', child: Text('Morning (06:00 AM - 02:00 PM)')),
+                  DropdownMenuItem(value: 'Afternoon', child: Text('Afternoon (02:00 PM - 10:00 PM)')),
+                  DropdownMenuItem(value: 'Night', child: Text('Night (10:00 PM - 06:00 AM)')),
+                ],
+                onChanged: (value) {},
               ),
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: () {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Student registered successfully.'), backgroundColor: Colors.green),
+                    const SnackBar(
+                      content: Text('Guard successfully registered to system.'),
+                      backgroundColor: Colors.green,
+                    ),
                   );
                 },
                 style: ElevatedButton.styleFrom(
@@ -104,7 +108,7 @@ class _AdminStudentManagementWidgetState extends State<AdminStudentManagementWid
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                child: const Text('Save Student', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                child: const Text('Save Guard', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
               ),
               const SizedBox(height: 24),
             ],
@@ -114,8 +118,12 @@ class _AdminStudentManagementWidgetState extends State<AdminStudentManagementWid
     );
   }
 
-  Widget _buildStudentCard(Map<String, dynamic> student) {
-    bool isRegistered = student['status'] == 'Registered';
+  Widget _buildGuardCard(Map<String, dynamic> guard) {
+    Color statusColor;
+    if (guard['status'] == 'Active') statusColor = Colors.green;
+    else if (guard['status'] == 'Off-Duty') statusColor = Colors.grey;
+    else statusColor = Colors.orange;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
@@ -134,14 +142,14 @@ class _AdminStudentManagementWidgetState extends State<AdminStudentManagementWid
                 children: [
                   const CircleAvatar(
                     backgroundColor: Colors.deepPurple,
-                    child: Icon(Icons.school, color: Colors.white, size: 20),
+                    child: Icon(Icons.security, color: Colors.white, size: 20),
                   ),
                   const SizedBox(width: 12),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(student['name'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                      Text('CI: ${student["ci"]}', style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+                      Text(guard['name'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      Text(guard['id'], style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
                     ],
                   ),
                 ],
@@ -149,30 +157,38 @@ class _AdminStudentManagementWidgetState extends State<AdminStudentManagementWid
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: isRegistered ? Colors.green.shade50 : Colors.orange.shade50,
+                  color: statusColor.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  student['status'],
-                  style: TextStyle(color: isRegistered ? Colors.green : Colors.orange, fontSize: 12, fontWeight: FontWeight.bold),
+                  guard['status'],
+                  style: TextStyle(color: statusColor, fontSize: 12, fontWeight: FontWeight.bold),
                 ),
               ),
             ],
           ),
           const Divider(height: 24),
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Icon(Icons.class_, size: 16, color: Colors.grey.shade500),
-              const SizedBox(width: 6),
-              Text(student['grade'], style: TextStyle(color: Colors.grey.shade700, fontSize: 13, fontWeight: FontWeight.w600)),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Icon(Icons.family_restroom, size: 16, color: Colors.grey.shade500),
-              const SizedBox(width: 6),
-              Text('Tutor: ${student["tutor"]}', style: TextStyle(color: Colors.grey.shade700, fontSize: 13)),
+              Row(
+                children: [
+                  Icon(Icons.access_time_filled, size: 16, color: Colors.grey.shade500),
+                  const SizedBox(width: 6),
+                  Text(guard['shift'], style: TextStyle(color: Colors.grey.shade700, fontSize: 13)),
+                ],
+              ),
+              IconButton(
+                icon: const Icon(Icons.edit, color: Colors.deepPurple, size: 20),
+                onPressed: () {
+                  // Simulamos editar
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Edit schedule for ${guard["name"]}')),
+                  );
+                },
+                constraints: const BoxConstraints(),
+                padding: EdgeInsets.zero,
+              ),
             ],
           ),
         ],
@@ -185,7 +201,7 @@ class _AdminStudentManagementWidgetState extends State<AdminStudentManagementWid
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        title: const Text('Student Management', style: TextStyle(color: Colors.black)),
+        title: const Text('Staff Management', style: TextStyle(color: Colors.black)),
         backgroundColor: Colors.white,
         iconTheme: const IconThemeData(color: Colors.black),
         elevation: 0,
@@ -196,25 +212,21 @@ class _AdminStudentManagementWidgetState extends State<AdminStudentManagementWid
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Students Directory', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+              const Text(
+                'Security Guards',
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 8),
-              Text('Manage students and their associated tutors.', style: TextStyle(color: Colors.grey.shade600, fontSize: 14)),
-              const SizedBox(height: 24),
-              TextField(
-                decoration: InputDecoration(
-                  hintText: 'Search by Student Name or CI...',
-                  prefixIcon: const Icon(Icons.search),
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
-                ),
+              Text(
+                'Manage schedules and permissions for the security team.',
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
               ),
               const SizedBox(height: 24),
               Expanded(
                 child: ListView.builder(
-                  itemCount: _students.length,
+                  itemCount: _guards.length,
                   itemBuilder: (context, index) {
-                    return _buildStudentCard(_students[index]);
+                    return _buildGuardCard(_guards[index]);
                   },
                 ),
               ),
@@ -223,10 +235,10 @@ class _AdminStudentManagementWidgetState extends State<AdminStudentManagementWid
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: _showAddStudentModal,
+        onPressed: _showAddGuardModal,
         backgroundColor: Colors.deepPurple,
         icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text('New Student', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        label: const Text('Add Guard', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
     );
   }

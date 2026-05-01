@@ -1,502 +1,232 @@
-import '/components/button/button_widget.dart';
-import '/components/pickup_record_item/pickup_record_item_widget.dart';
-import '/components/text_field/text_field_widget.dart';
-import '/flutter_flow/flutter_flow_icon_button.dart';
-import '/flutter_flow/flutter_flow_theme.dart';
-import '/flutter_flow/flutter_flow_util.dart';
-import '/flutter_flow/flutter_flow_widgets.dart';
-import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart';
-
-import 'pickup_history_model.dart';
-export 'pickup_history_model.dart';
 
 class PickupHistoryWidget extends StatefulWidget {
   const PickupHistoryWidget({super.key});
 
   static String routeName = 'PickupHistory';
-  static String routePath = '/pickupHistory';
 
   @override
   State<PickupHistoryWidget> createState() => _PickupHistoryWidgetState();
 }
 
 class _PickupHistoryWidgetState extends State<PickupHistoryWidget> {
-  late PickupHistoryModel _model;
-
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
-  @override
-  void initState() {
-    super.initState();
-    _model = createModel(context, () => PickupHistoryModel());
+  Widget _buildSummaryCard(String value, String label, Color bgColor, Color textColor) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(value, style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: textColor)),
+          Text(label, style: TextStyle(fontSize: 12, color: textColor.withOpacity(0.8))),
+        ],
+      ),
+    );
   }
 
-  @override
-  void dispose() {
-    _model.dispose();
-
-    super.dispose();
+  Widget _buildHistoryItem({
+    required String studentName,
+    required String grade,
+    required String time,
+    required String authorizedBy,
+    required String guardName,
+    required bool isFlagged,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: isFlagged ? Colors.red.shade200 : Colors.grey.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(studentName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: isFlagged ? Colors.red.shade50 : Colors.green.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  isFlagged ? "Flagged" : "Completed",
+                  style: TextStyle(
+                    color: isFlagged ? Colors.red : Colors.green,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(grade, style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+          const Divider(height: 16),
+          Row(
+            children: [
+              const Icon(Icons.access_time_rounded, size: 14, color: Colors.grey),
+              const SizedBox(width: 4),
+              Text(time, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+              const Spacer(),
+              const Icon(Icons.person_outline, size: 14, color: Colors.grey),
+              const SizedBox(width: 4),
+              Text("Auth: $authorizedBy", style: const TextStyle(fontSize: 12)),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              const Icon(Icons.security, size: 14, color: Colors.grey),
+              const SizedBox(width: 4),
+              Text("Guard: $guardName", style: const TextStyle(fontSize: 12)),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        FocusScope.of(context).unfocus();
-        FocusManager.instance.primaryFocus?.unfocus();
-      },
-      child: Scaffold(
-        key: scaffoldKey,
-        backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
-        body: Column(
-          mainAxisSize: MainAxisSize.max,
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+    return Scaffold(
+      key: scaffoldKey,
+      backgroundColor: Colors.grey.shade50,
+      body: SafeArea(
+        child: Column(
           children: [
-            Container(
-              decoration: BoxDecoration(
-                color: FlutterFlowTheme.of(context).secondaryBackground,
-                shape: BoxShape.rectangle,
-              ),
-              child: Padding(
-                padding: EdgeInsetsDirectional.fromSTEB(20, 48, 20, 20),
-                child: Container(
-                  child: Row(
-                    mainAxisSize: MainAxisSize.max,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      FlutterFlowIconButton(
-                        borderRadius: 8,
-                        buttonSize: 40,
-                        fillColor: Colors.transparent,
-                        icon: Icon(
-                          Icons.arrow_back_rounded,
-                          color: FlutterFlowTheme.of(context).primaryText,
-                          size: 24,
-                        ),
-                        onPressed: () {
-                          print('IconButton pressed ...');
-                        },
-                      ),
-                      Text(
-                        'Pickup History',
-                        style: FlutterFlowTheme.of(context).titleLarge.override(
-                              font: GoogleFonts.plusJakartaSans(
-                                fontWeight: FontWeight.bold,
-                                fontStyle: FlutterFlowTheme.of(context)
-                                    .titleLarge
-                                    .fontStyle,
-                              ),
-                              color: FlutterFlowTheme.of(context).primaryText,
-                              letterSpacing: 0.0,
-                              fontWeight: FontWeight.bold,
-                              fontStyle: FlutterFlowTheme.of(context)
-                                  .titleLarge
-                                  .fontStyle,
-                              lineHeight: 1.3,
-                            ),
-                      ),
-                      FlutterFlowIconButton(
-                        borderRadius: 8,
-                        buttonSize: 40,
-                        fillColor: Colors.transparent,
-                        icon: Icon(
-                          Icons.tune_rounded,
-                          color: FlutterFlowTheme.of(context).secondary,
-                          size: 24,
-                        ),
-                        onPressed: () {
-                          print('IconButton pressed ...');
-                        },
-                      ),
-                    ],
+            // Header
+            Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back_rounded),
+                    onPressed: () => Navigator.of(context).pop(),
                   ),
-                ),
+                  const Text('Pickup History', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  IconButton(
+                    icon: const Icon(Icons.tune_rounded, color: Colors.deepPurple),
+                    onPressed: () {},
+                  ),
+                ],
               ),
             ),
+            
             Expanded(
-              flex: 1,
               child: SingleChildScrollView(
-                primary: false,
+                padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Padding(
-                      padding: EdgeInsets.all(24),
-                      child: Container(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Row(
-                              mainAxisSize: MainAxisSize.max,
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Expanded(
-                                  flex: 1,
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      color:
-                                          FlutterFlowTheme.of(context).primary,
-                                      borderRadius: BorderRadius.circular(24),
-                                      shape: BoxShape.rectangle,
-                                    ),
-                                    child: Padding(
-                                      padding: EdgeInsets.all(16),
-                                      child: Container(
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.start,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              '128',
-                                              style: FlutterFlowTheme.of(
-                                                      context)
-                                                  .headlineMedium
-                                                  .override(
-                                                    font: GoogleFonts
-                                                        .plusJakartaSans(
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      fontStyle:
-                                                          FlutterFlowTheme.of(
-                                                                  context)
-                                                              .headlineMedium
-                                                              .fontStyle,
-                                                    ),
-                                                    color: FlutterFlowTheme.of(
-                                                            context)
-                                                        .onPrimary,
-                                                    letterSpacing: 0.0,
-                                                    fontWeight: FontWeight.bold,
-                                                    fontStyle:
-                                                        FlutterFlowTheme.of(
-                                                                context)
-                                                            .headlineMedium
-                                                            .fontStyle,
-                                                    lineHeight: 1.25,
-                                                  ),
-                                            ),
-                                            Text(
-                                              'Total Today',
-                                              style:
-                                                  FlutterFlowTheme.of(context)
-                                                      .labelSmall
-                                                      .override(
-                                                        font: GoogleFonts
-                                                            .plusJakartaSans(
-                                                          fontWeight:
-                                                              FlutterFlowTheme.of(
-                                                                      context)
-                                                                  .labelSmall
-                                                                  .fontWeight,
-                                                          fontStyle:
-                                                              FlutterFlowTheme.of(
-                                                                      context)
-                                                                  .labelSmall
-                                                                  .fontStyle,
-                                                        ),
-                                                        color:
-                                                            FlutterFlowTheme.of(
-                                                                    context)
-                                                                .onPrimary80,
-                                                        letterSpacing: 0.0,
-                                                        fontWeight:
-                                                            FlutterFlowTheme.of(
-                                                                    context)
-                                                                .labelSmall
-                                                                .fontWeight,
-                                                        fontStyle:
-                                                            FlutterFlowTheme.of(
-                                                                    context)
-                                                                .labelSmall
-                                                                .fontStyle,
-                                                        lineHeight: 1.2,
-                                                      ),
-                                            ),
-                                          ].divide(SizedBox(height: 4)),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                Expanded(
-                                  flex: 1,
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      color: FlutterFlowTheme.of(context)
-                                          .secondary,
-                                      borderRadius: BorderRadius.circular(24),
-                                      shape: BoxShape.rectangle,
-                                    ),
-                                    child: Padding(
-                                      padding: EdgeInsets.all(16),
-                                      child: Container(
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.start,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              '12',
-                                              style: FlutterFlowTheme.of(
-                                                      context)
-                                                  .headlineMedium
-                                                  .override(
-                                                    font: GoogleFonts
-                                                        .plusJakartaSans(
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      fontStyle:
-                                                          FlutterFlowTheme.of(
-                                                                  context)
-                                                              .headlineMedium
-                                                              .fontStyle,
-                                                    ),
-                                                    color: FlutterFlowTheme.of(
-                                                            context)
-                                                        .primaryText,
-                                                    letterSpacing: 0.0,
-                                                    fontWeight: FontWeight.bold,
-                                                    fontStyle:
-                                                        FlutterFlowTheme.of(
-                                                                context)
-                                                            .headlineMedium
-                                                            .fontStyle,
-                                                    lineHeight: 1.25,
-                                                  ),
-                                            ),
-                                            Text(
-                                              'Pending',
-                                              style:
-                                                  FlutterFlowTheme.of(context)
-                                                      .labelSmall
-                                                      .override(
-                                                        font: GoogleFonts
-                                                            .plusJakartaSans(
-                                                          fontWeight:
-                                                              FlutterFlowTheme.of(
-                                                                      context)
-                                                                  .labelSmall
-                                                                  .fontWeight,
-                                                          fontStyle:
-                                                              FlutterFlowTheme.of(
-                                                                      context)
-                                                                  .labelSmall
-                                                                  .fontStyle,
-                                                        ),
-                                                        color:
-                                                            FlutterFlowTheme.of(
-                                                                    context)
-                                                                .primaryText80,
-                                                        letterSpacing: 0.0,
-                                                        fontWeight:
-                                                            FlutterFlowTheme.of(
-                                                                    context)
-                                                                .labelSmall
-                                                                .fontWeight,
-                                                        fontStyle:
-                                                            FlutterFlowTheme.of(
-                                                                    context)
-                                                                .labelSmall
-                                                                .fontStyle,
-                                                        lineHeight: 1.2,
-                                                      ),
-                                            ),
-                                          ].divide(SizedBox(height: 4)),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ].divide(SizedBox(width: 16)),
-                            ),
-                            Row(
-                              mainAxisSize: MainAxisSize.max,
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Expanded(
-                                  flex: 1,
-                                  child: wrapWithModel(
-                                    model: _model.textFieldModel,
-                                    updateCallback: () => safeSetState(() {}),
-                                    child: TextFieldWidget(
-                                      label: false,
-                                      helper: false,
-                                      hint: 'Search student...',
-                                      value: '',
-                                      leading_icon: Icon(
-                                        Icons.search_rounded,
-                                        color: FlutterFlowTheme.of(context)
-                                            .primaryText,
-                                        size: 16,
-                                      ),
-                                      leading_icon_present: true,
-                                      trailing_icon_present: false,
-                                      variant: 'filled',
-                                      error: false,
-                                    ),
-                                  ),
-                                ),
-                                Container(
-                                  decoration: BoxDecoration(
-                                    color: FlutterFlowTheme.of(context)
-                                        .secondaryBackground,
-                                    borderRadius: BorderRadius.circular(16),
-                                    shape: BoxShape.rectangle,
-                                    border: Border.all(
-                                      color: FlutterFlowTheme.of(context)
-                                          .alternate,
-                                      width: 1,
-                                    ),
-                                  ),
-                                  child: Padding(
-                                    padding: EdgeInsets.all(16),
-                                    child: Container(
-                                      child: Icon(
-                                        Icons.calendar_month_rounded,
-                                        color: FlutterFlowTheme.of(context)
-                                            .onSurface,
-                                        size: 24,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ].divide(SizedBox(width: 16)),
-                            ),
-                            Column(
-                              mainAxisSize: MainAxisSize.min,
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                Text(
-                                  'Recent Activity',
-                                  style: FlutterFlowTheme.of(context)
-                                      .titleMedium
-                                      .override(
-                                        font: GoogleFonts.plusJakartaSans(
-                                          fontWeight: FontWeight.w600,
-                                          fontStyle:
-                                              FlutterFlowTheme.of(context)
-                                                  .titleMedium
-                                                  .fontStyle,
-                                        ),
-                                        color: FlutterFlowTheme.of(context)
-                                            .primaryText,
-                                        letterSpacing: 0.0,
-                                        fontWeight: FontWeight.w600,
-                                        fontStyle: FlutterFlowTheme.of(context)
-                                            .titleMedium
-                                            .fontStyle,
-                                        lineHeight: 1.35,
-                                      ),
-                                ),
-                                wrapWithModel(
-                                  model: _model.pickupRecordItemModel1,
-                                  updateCallback: () => safeSetState(() {}),
-                                  child: PickupRecordItemWidget(
-                                    authorized_by: 'Lucia Garcia (Mother)',
-                                    grade: '2nd Grade - A',
-                                    guard_name: 'Rodriguez',
-                                    status: 'completed',
-                                    student_name: 'Mateo Garcia',
-                                    time: '02:45 PM',
-                                  ),
-                                ),
-                                wrapWithModel(
-                                  model: _model.pickupRecordItemModel2,
-                                  updateCallback: () => safeSetState(() {}),
-                                  child: PickupRecordItemWidget(
-                                    authorized_by: 'David Chen (Father)',
-                                    grade: '1st Grade - B',
-                                    guard_name: 'Rodriguez',
-                                    status: 'completed',
-                                    student_name: 'Sofia Chen',
-                                    time: '02:40 PM',
-                                  ),
-                                ),
-                                wrapWithModel(
-                                  model: _model.pickupRecordItemModel3,
-                                  updateCallback: () => safeSetState(() {}),
-                                  child: PickupRecordItemWidget(
-                                    authorized_by: 'Unknown / No ID',
-                                    grade: 'K-5',
-                                    guard_name: 'Rodriguez',
-                                    status: 'flagged',
-                                    student_name: 'Lucas Miller',
-                                    time: '02:32 PM',
-                                  ),
-                                ),
-                                wrapWithModel(
-                                  model: _model.pickupRecordItemModel4,
-                                  updateCallback: () => safeSetState(() {}),
-                                  child: PickupRecordItemWidget(
-                                    authorized_by: 'Marco Rossi (Uncle)',
-                                    grade: '4th Grade - C',
-                                    guard_name: 'Martinez',
-                                    status: 'completed',
-                                    student_name: 'Elena Rossi',
-                                    time: '02:15 PM',
-                                  ),
-                                ),
-                                wrapWithModel(
-                                  model: _model.pickupRecordItemModel5,
-                                  updateCallback: () => safeSetState(() {}),
-                                  child: PickupRecordItemWidget(
-                                    authorized_by: 'Sarah Wilson (Mother)',
-                                    grade: '3rd Grade - A',
-                                    guard_name: 'Martinez',
-                                    status: 'completed',
-                                    student_name: 'Liam Wilson',
-                                    time: '01:55 PM',
-                                  ),
-                                ),
-                              ].divide(SizedBox(height: 8)),
-                            ),
-                            wrapWithModel(
-                              model: _model.buttonModel,
-                              updateCallback: () => safeSetState(() {}),
-                              child: ButtonWidget(
-                                content: 'Export Daily Report',
-                                icon: Icon(
-                                  Icons.download_rounded,
-                                  color:
-                                      FlutterFlowTheme.of(context).primaryText,
-                                  size: 16,
-                                ),
-                                icon_present: true,
-                                icon_end_present: false,
-                                color: FlutterFlowTheme.of(context).primary,
-                                bg: FlutterFlowTheme.of(context).tertiary,
-                                on_tap: 'navigate:PickupHistory',
-                                variant: 'outline',
-                                size: 'medium',
-                                full_width: true,
-                                loading: false,
-                                disabled: false,
+                    // Summary Cards
+                    Row(
+                      children: [
+                        Expanded(child: _buildSummaryCard("128", "Total Today", Colors.deepPurple, Colors.white)),
+                        const SizedBox(width: 16),
+                        Expanded(child: _buildSummaryCard("12", "Pending", Colors.orange.shade100, Colors.deepOrange.shade900)),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Search & Date
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            decoration: InputDecoration(
+                              hintText: "Search student...",
+                              prefixIcon: const Icon(Icons.search_rounded, size: 20),
+                              filled: true,
+                              fillColor: Colors.white,
+                              contentPadding: EdgeInsets.zero,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(16),
+                                borderSide: BorderSide(color: Colors.grey.shade200),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(16),
+                                borderSide: BorderSide(color: Colors.grey.shade200),
                               ),
                             ),
-                            Container(
-                              height: 32,
-                            ),
-                          ].divide(SizedBox(height: 24)),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: Colors.grey.shade200),
+                          ),
+                          child: const Icon(Icons.calendar_month_rounded, color: Colors.deepPurple),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+
+                    // History List
+                    const Text('Recent Activity', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 16),
+                    _buildHistoryItem(
+                      studentName: 'Mateo Garcia',
+                      grade: '2nd Grade - A',
+                      time: '02:45 PM',
+                      authorizedBy: 'Lucia Garcia (Mother)',
+                      guardName: 'Rodriguez',
+                      isFlagged: false,
+                    ),
+                    _buildHistoryItem(
+                      studentName: 'Sofia Chen',
+                      grade: '1st Grade - B',
+                      time: '02:40 PM',
+                      authorizedBy: 'David Chen (Father)',
+                      guardName: 'Rodriguez',
+                      isFlagged: false,
+                    ),
+                    _buildHistoryItem(
+                      studentName: 'Lucas Miller',
+                      grade: 'K-5',
+                      time: '02:32 PM',
+                      authorizedBy: 'Unknown / No ID',
+                      guardName: 'Rodriguez',
+                      isFlagged: true, // Flagged for attention
+                    ),
+                    _buildHistoryItem(
+                      studentName: 'Elena Rossi',
+                      grade: '4th Grade - C',
+                      time: '02:15 PM',
+                      authorizedBy: 'Marco Rossi (Uncle)',
+                      guardName: 'Martinez',
+                      isFlagged: false,
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Export Button
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () {},
+                        icon: const Icon(Icons.download_rounded, color: Colors.deepPurple),
+                        label: const Text('Export Daily Report', style: TextStyle(color: Colors.deepPurple, fontWeight: FontWeight.bold)),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          side: const BorderSide(color: Colors.deepPurple),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                         ),
                       ),
                     ),
+                    const SizedBox(height: 40),
                   ],
                 ),
               ),
