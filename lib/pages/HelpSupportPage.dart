@@ -8,7 +8,7 @@ class HelpSupportPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Help & Support', style: TextStyle(color: Colors.black)),
+        title: const Text('Ayuda y Soporte', style: TextStyle(color: Colors.black)),
         backgroundColor: Colors.white,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black),
@@ -18,13 +18,13 @@ class HelpSupportPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('How can we help you?', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+            const Text('¿Cómo podemos ayudarte?', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
             const SizedBox(height: 24),
             
             // Search Bar
             TextField(
               decoration: InputDecoration(
-                hintText: 'Search for help topics...',
+                hintText: 'Buscar temas de ayuda...',
                 prefixIcon: const Icon(Icons.search),
                 filled: true,
                 fillColor: Colors.grey.shade100,
@@ -33,15 +33,15 @@ class HelpSupportPage extends StatelessWidget {
             ),
             
             const SizedBox(height: 32),
-            const Text('Frequently Asked Questions', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text('Preguntas Frecuentes', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
             
-            _buildFaqItem('How do I authorize a third party?', 'Go to the dashboard, click "Authorize", enter their email and they will receive a registration link.'),
-            _buildFaqItem('What if my QR code expires?', 'QR codes are dynamic and refresh every 45 seconds for security. Just wait for the next one.'),
-            _buildFaqItem('How is biometic data used?', 'Face photos are only used to verify identity at the school gate and are stored securely.'),
+            _buildFaqItem('¿Cómo autorizo a un tercero?', 'Ve al inicio, haz clic en "Autorizar", ingresa su correo y recibirán un enlace de registro.'),
+            _buildFaqItem('¿Qué pasa si mi código QR expira?', 'Los códigos QR son dinámicos y se actualizan cada 45 segundos por seguridad. Solo espera el siguiente.'),
+            _buildFaqItem('¿Cómo se usan los datos biométricos?', 'Las fotos faciales solo se usan para verificar la identidad en la entrada del colegio y se almacenan de forma segura.'),
             
             const SizedBox(height: 40),
-            const Text('Still need help?', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text('¿Aún necesitas ayuda?', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
             
             Container(
@@ -58,8 +58,8 @@ class HelpSupportPage extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Contact Support', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                        Text('Available Mon-Fri, 8am - 6pm', style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
+                        const Text('Contactar a Soporte', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                        Text('Disponible Lun-Vie, 8am - 6pm', style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
                       ],
                     ),
                   ),

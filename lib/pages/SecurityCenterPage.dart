@@ -8,7 +8,7 @@ class SecurityCenterPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Security Center', style: TextStyle(color: Colors.black)),
+        title: const Text('Centro de Seguridad', style: TextStyle(color: Colors.black)),
         backgroundColor: Colors.white,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black),
@@ -20,35 +20,35 @@ class SecurityCenterPage extends StatelessWidget {
           children: [
             const Icon(Icons.shield_rounded, size: 60, color: Colors.deepPurple),
             const SizedBox(height: 16),
-            const Text('Your Security is our Priority', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            const Text('Tu Seguridad es nuestra Prioridad', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-            Text('At EduSafe, we use military-grade encryption and biometric verification to ensure your child safety.', style: TextStyle(color: Colors.grey.shade600)),
+            Text('En EduSafe, utilizamos encriptación de grado militar y verificación biométrica para asegurar la seguridad de tu hijo.', style: TextStyle(color: Colors.grey.shade600)),
             const SizedBox(height: 32),
             _buildSecurityItem(
               Icons.lock_outline, 
-              'Data Encryption', 
-              'All personal and biometric data is hashed and encrypted before being stored.'
+              'Encriptación de Datos', 
+              'Todos los datos personales y biométricos son cifrados y encriptados antes de ser almacenados.'
             ),
             _buildSecurityItem(
               Icons.visibility_off_outlined, 
-              'Privacy Policy', 
-              'We never share your personal information with third parties without your consent.'
+              'Política de Privacidad', 
+              'Nunca compartimos tu información personal con terceros sin tu consentimiento.'
             ),
             _buildSecurityItem(
               Icons.verified_user_outlined, 
-              'Biometric Verification', 
-              'Face matching is performed locally or via secure hashes to protect identity.'
+              'Verificación Biométrica', 
+              'La coincidencia facial se realiza localmente o a través de hashes seguros para proteger la identidad.'
             ),
             const SizedBox(height: 40),
             const Divider(),
             const SizedBox(height: 16),
             TextButton(
               onPressed: () {},
-              child: const Text('Read Full Privacy Policy', style: TextStyle(color: Colors.deepPurple, fontWeight: FontWeight.bold)),
+              child: const Text('Leer Política de Privacidad Completa', style: TextStyle(color: Colors.deepPurple, fontWeight: FontWeight.bold)),
             ),
             TextButton(
               onPressed: () {},
-              child: const Text('Terms of Service', style: TextStyle(color: Colors.deepPurple, fontWeight: FontWeight.bold)),
+              child: const Text('Términos de Servicio', style: TextStyle(color: Colors.deepPurple, fontWeight: FontWeight.bold)),
             ),
           ],
         ),

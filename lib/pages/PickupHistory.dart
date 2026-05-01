@@ -59,7 +59,7 @@ class _PickupHistoryWidgetState extends State<PickupHistoryWidget> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  isFlagged ? "Flagged" : "Completed",
+                  isFlagged ? "Marcado" : "Completado",
                   style: TextStyle(
                     color: isFlagged ? Colors.red : Colors.green,
                     fontSize: 10,
@@ -80,7 +80,7 @@ class _PickupHistoryWidgetState extends State<PickupHistoryWidget> {
               const Spacer(),
               const Icon(Icons.person_outline, size: 14, color: Colors.grey),
               const SizedBox(width: 4),
-              Text("Auth: $authorizedBy", style: const TextStyle(fontSize: 12)),
+              Text("Aut: $authorizedBy", style: const TextStyle(fontSize: 12)),
             ],
           ),
           const SizedBox(height: 4),
@@ -88,7 +88,7 @@ class _PickupHistoryWidgetState extends State<PickupHistoryWidget> {
             children: [
               const Icon(Icons.security, size: 14, color: Colors.grey),
               const SizedBox(width: 4),
-              Text("Guard: $guardName", style: const TextStyle(fontSize: 12)),
+              Text("Guardia: $guardName", style: const TextStyle(fontSize: 12)),
             ],
           ),
         ],
@@ -114,7 +114,7 @@ class _PickupHistoryWidgetState extends State<PickupHistoryWidget> {
                     icon: const Icon(Icons.arrow_back_rounded),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
-                  const Text('Pickup History', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  const Text('Historial de Recogidas', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                   IconButton(
                     icon: const Icon(Icons.tune_rounded, color: Colors.deepPurple),
                     onPressed: () {},
@@ -132,9 +132,9 @@ class _PickupHistoryWidgetState extends State<PickupHistoryWidget> {
                     // Summary Cards
                     Row(
                       children: [
-                        Expanded(child: _buildSummaryCard("128", "Total Today", Colors.deepPurple, Colors.white)),
+                        Expanded(child: _buildSummaryCard("128", "Total Hoy", Colors.deepPurple, Colors.white)),
                         const SizedBox(width: 16),
-                        Expanded(child: _buildSummaryCard("12", "Pending", Colors.orange.shade100, Colors.deepOrange.shade900)),
+                        Expanded(child: _buildSummaryCard("12", "Pendientes", Colors.orange.shade100, Colors.deepOrange.shade900)),
                       ],
                     ),
                     const SizedBox(height: 24),
@@ -145,7 +145,7 @@ class _PickupHistoryWidgetState extends State<PickupHistoryWidget> {
                         Expanded(
                           child: TextField(
                             decoration: InputDecoration(
-                              hintText: "Search student...",
+                              hintText: "Buscar estudiante...",
                               prefixIcon: const Icon(Icons.search_rounded, size: 20),
                               filled: true,
                               fillColor: Colors.white,
@@ -176,21 +176,21 @@ class _PickupHistoryWidgetState extends State<PickupHistoryWidget> {
                     const SizedBox(height: 24),
 
                     // History List
-                    const Text('Recent Activity', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    const Text('Actividad Reciente', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 16),
                     _buildHistoryItem(
                       studentName: 'Mateo Garcia',
-                      grade: '2nd Grade - A',
+                      grade: '2do Grado - A',
                       time: '02:45 PM',
-                      authorizedBy: 'Lucia Garcia (Mother)',
+                      authorizedBy: 'Lucia Garcia (Madre)',
                       guardName: 'Rodriguez',
                       isFlagged: false,
                     ),
                     _buildHistoryItem(
                       studentName: 'Sofia Chen',
-                      grade: '1st Grade - B',
+                      grade: '1er Grado - B',
                       time: '02:40 PM',
-                      authorizedBy: 'David Chen (Father)',
+                      authorizedBy: 'David Chen (Padre)',
                       guardName: 'Rodriguez',
                       isFlagged: false,
                     ),
@@ -198,15 +198,15 @@ class _PickupHistoryWidgetState extends State<PickupHistoryWidget> {
                       studentName: 'Lucas Miller',
                       grade: 'K-5',
                       time: '02:32 PM',
-                      authorizedBy: 'Unknown / No ID',
+                      authorizedBy: 'Desconocido / Sin ID',
                       guardName: 'Rodriguez',
                       isFlagged: true, // Flagged for attention
                     ),
                     _buildHistoryItem(
                       studentName: 'Elena Rossi',
-                      grade: '4th Grade - C',
+                      grade: '4to Grado - C',
                       time: '02:15 PM',
-                      authorizedBy: 'Marco Rossi (Uncle)',
+                      authorizedBy: 'Marco Rossi (Tío)',
                       guardName: 'Martinez',
                       isFlagged: false,
                     ),
@@ -218,7 +218,7 @@ class _PickupHistoryWidgetState extends State<PickupHistoryWidget> {
                       child: OutlinedButton.icon(
                         onPressed: () {},
                         icon: const Icon(Icons.download_rounded, color: Colors.deepPurple),
-                        label: const Text('Export Daily Report', style: TextStyle(color: Colors.deepPurple, fontWeight: FontWeight.bold)),
+                        label: const Text('Exportar Reporte Diario', style: TextStyle(color: Colors.deepPurple, fontWeight: FontWeight.bold)),
                         style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           side: const BorderSide(color: Colors.deepPurple),

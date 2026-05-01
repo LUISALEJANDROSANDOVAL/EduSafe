@@ -23,7 +23,7 @@ class _AuthorizeThirdPartyWidgetState extends State<AuthorizeThirdPartyWidget> {
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        title: const Text('Delegate Pickup', style: TextStyle(color: Colors.black)),
+        title: const Text('Delegar Recogida', style: TextStyle(color: Colors.black)),
         backgroundColor: Colors.white,
         iconTheme: const IconThemeData(color: Colors.black),
         elevation: 0,
@@ -33,22 +33,22 @@ class _AuthorizeThirdPartyWidgetState extends State<AuthorizeThirdPartyWidget> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Send Authorization Link', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+            const Text('Enviar Enlace de Autorización', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-            Text('The authorized person will receive a secure link to provide their own identity data and photos.', style: TextStyle(color: Colors.grey.shade600, fontSize: 14)),
+            Text('La persona autorizada recibirá un enlace seguro para proveer sus datos de identidad y fotos.', style: TextStyle(color: Colors.grey.shade600, fontSize: 14)),
             
             const SizedBox(height: 32),
             
             // Child Selection
-            const Text('SELECT CHILD', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.deepPurple, letterSpacing: 1.2)),
+            const Text('SELECCIONAR HIJO', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.deepPurple, letterSpacing: 1.2)),
             const SizedBox(height: 16),
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
-                  _buildChildChip('Mateo Garcia', '2nd Grade', 'https://dimg.dreamflow.cloud/v1/image/school%20boy%20portrait'),
+                  _buildChildChip('Mateo Garcia', '2do Grado', 'https://dimg.dreamflow.cloud/v1/image/school%20boy%20portrait'),
                   const SizedBox(width: 16),
-                  _buildChildChip('Sofia Garcia', 'Kindergarten', 'https://dimg.dreamflow.cloud/v1/image/school%20girl%20portrait'),
+                  _buildChildChip('Sofia Garcia', 'Kinder', 'https://dimg.dreamflow.cloud/v1/image/school%20girl%20portrait'),
                 ],
               ),
             ),
@@ -56,14 +56,14 @@ class _AuthorizeThirdPartyWidgetState extends State<AuthorizeThirdPartyWidget> {
             const SizedBox(height: 40),
             
             // Email Input
-            const Text('THIRD PARTY EMAIL', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.deepPurple, letterSpacing: 1.2)),
+            const Text('CORREO DEL TERCERO', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.deepPurple, letterSpacing: 1.2)),
             const SizedBox(height: 16),
             TextField(
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
               decoration: InputDecoration(
-                labelText: 'Email Address',
-                hintText: 'example@email.com',
+                labelText: 'Correo Electrónico',
+                hintText: 'ejemplo@correo.com',
                 prefixIcon: const Icon(Icons.mail_outline_rounded),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
                 filled: true,
@@ -87,7 +87,7 @@ class _AuthorizeThirdPartyWidgetState extends State<AuthorizeThirdPartyWidget> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'This method is more secure and ensures the person provides their official biometric data.',
+                      'Este método es más seguro y garantiza que la persona provea sus datos biométricos oficiales.',
                       style: TextStyle(color: Colors.blue.shade900, fontSize: 13),
                     ),
                   ),
@@ -104,14 +104,14 @@ class _AuthorizeThirdPartyWidgetState extends State<AuthorizeThirdPartyWidget> {
                 onPressed: () {
                   if (!_emailController.text.contains('@')) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Please enter a valid email address')),
+                      const SnackBar(content: Text('Por favor ingresa un correo válido')),
                     );
                     return;
                   }
                   setState(() => _isSent = true);
                 },
                 icon: const Icon(Icons.send_rounded, color: Colors.white),
-                label: const Text('Send Invitation Link', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                label: const Text('Enviar Enlace de Invitación', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.deepPurple,
                   padding: const EdgeInsets.symmetric(vertical: 20),
@@ -136,10 +136,10 @@ class _AuthorizeThirdPartyWidgetState extends State<AuthorizeThirdPartyWidget> {
             children: [
               const Icon(Icons.check_circle_outline_rounded, size: 100, color: Colors.green),
               const SizedBox(height: 24),
-              const Text('Invitation Sent!', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+              const Text('¡Invitación Enviada!', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
               const SizedBox(height: 16),
               Text(
-                'An email has been sent to \${_emailController.text}. They must complete their registration before the pickup.',
+                'Se ha enviado un correo a \${_emailController.text}. Deben completar su registro antes de la recogida.',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: Colors.grey.shade600, fontSize: 16),
               ),
@@ -152,7 +152,7 @@ class _AuthorizeThirdPartyWidgetState extends State<AuthorizeThirdPartyWidget> {
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   ),
-                  child: const Text('Back to Dashboard', style: TextStyle(color: Colors.deepPurple, fontWeight: FontWeight.bold)),
+                  child: const Text('Volver al Inicio', style: TextStyle(color: Colors.deepPurple, fontWeight: FontWeight.bold)),
                 ),
               ),
             ],

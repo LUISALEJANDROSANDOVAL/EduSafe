@@ -68,7 +68,7 @@ class _AdminAnalyticsDashboardWidgetState extends State<AdminAnalyticsDashboardW
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Pickups per Hour', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              const Text('Recogidas por hora', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
               Icon(Icons.bar_chart_rounded, color: Colors.deepPurple.shade300),
             ],
           ),
@@ -90,7 +90,7 @@ class _AdminAnalyticsDashboardWidgetState extends State<AdminAnalyticsDashboardW
           ),
           const SizedBox(height: 16),
           const Text(
-            'Peak activity detected at 2:00 PM dismissal',
+            'Pico de actividad detectado a las 2:00 PM',
             textAlign: TextAlign.center,
             style: TextStyle(color: Colors.grey, fontSize: 12),
           ),
@@ -128,7 +128,7 @@ class _AdminAnalyticsDashboardWidgetState extends State<AdminAnalyticsDashboardW
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Verification Health', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          const Text('Salud de Verificación', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
           const SizedBox(height: 16),
           Row(
             children: [
@@ -157,7 +157,7 @@ class _AdminAnalyticsDashboardWidgetState extends State<AdminAnalyticsDashboardW
                       children: [
                         Container(width: 10, height: 10, decoration: const BoxDecoration(color: Colors.deepPurple, shape: BoxShape.circle)),
                         const SizedBox(width: 8),
-                        const Text('94% Biometric Match', style: TextStyle(fontSize: 12)),
+                        const Text('94% Coincidencia Biométrica', style: TextStyle(fontSize: 12)),
                       ],
                     ),
                     const SizedBox(height: 12),
@@ -165,7 +165,7 @@ class _AdminAnalyticsDashboardWidgetState extends State<AdminAnalyticsDashboardW
                       children: [
                         Container(width: 10, height: 10, decoration: BoxDecoration(color: Colors.deepPurple.shade100, shape: BoxShape.circle)),
                         const SizedBox(width: 8),
-                        const Text('6% Manual Override', style: TextStyle(fontSize: 12)),
+                        const Text('6% Aprobación Manual', style: TextStyle(fontSize: 12)),
                       ],
                     ),
                   ],
@@ -186,7 +186,7 @@ class _AdminAnalyticsDashboardWidgetState extends State<AdminAnalyticsDashboardW
         child: Icon(Icons.person, color: Colors.white),
       ),
       title: Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-      subtitle: Text('Status: $status', style: const TextStyle(color: Colors.green, fontSize: 12, fontWeight: FontWeight.w600)),
+      subtitle: Text('Estado: $status', style: const TextStyle(color: Colors.green, fontSize: 12, fontWeight: FontWeight.w600)),
       trailing: Text(time, style: const TextStyle(color: Colors.grey, fontSize: 12)),
     );
   }
@@ -214,8 +214,8 @@ class _AdminAnalyticsDashboardWidgetState extends State<AdminAnalyticsDashboardW
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('System Analytics', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-                        Text('Safe School Administrator', style: TextStyle(fontSize: 14, color: Colors.grey.shade600)),
+                        const Text('Analíticas del Sistema', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                        Text('Administrador de Colegio Seguro', style: TextStyle(fontSize: 14, color: Colors.grey.shade600)),
                       ],
                     ),
                     IconButton(
@@ -237,9 +237,9 @@ class _AdminAnalyticsDashboardWidgetState extends State<AdminAnalyticsDashboardW
                     // Métricas
                     Row(
                       children: [
-                        Expanded(child: _buildMetricCard('Total Pickups', '1,284', '+12%', true)),
+                        Expanded(child: _buildMetricCard('Total de Recogidas', '1,284', '+12%', true)),
                         const SizedBox(width: 16),
-                        Expanded(child: _buildMetricCard('Active Tutors', '856', '+3%', true)),
+                        Expanded(child: _buildMetricCard('Tutores Activos', '856', '+3%', true)),
                       ],
                     ),
                     const SizedBox(height: 24),
@@ -263,7 +263,7 @@ class _AdminAnalyticsDashboardWidgetState extends State<AdminAnalyticsDashboardW
                           );
                         },
                         icon: const Icon(Icons.security, color: Colors.white),
-                        label: const Text('Manage Security Staff', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                        label: const Text('Gestionar Personal de Seguridad', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.deepPurple,
                           padding: const EdgeInsets.symmetric(vertical: 16),
@@ -284,7 +284,7 @@ class _AdminAnalyticsDashboardWidgetState extends State<AdminAnalyticsDashboardW
                           );
                         },
                         icon: const Icon(Icons.school, color: Colors.white),
-                        label: const Text('Manage Students & Tutors', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                        label: const Text('Gestionar Estudiantes y Tutores', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.indigo,
                           padding: const EdgeInsets.symmetric(vertical: 16),
@@ -298,7 +298,7 @@ class _AdminAnalyticsDashboardWidgetState extends State<AdminAnalyticsDashboardW
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Recent Audit Logs', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                        const Text('Registros de Auditoría Recientes', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
                         TextButton(
                           onPressed: () {
                             Navigator.push(
@@ -306,7 +306,7 @@ class _AdminAnalyticsDashboardWidgetState extends State<AdminAnalyticsDashboardW
                               MaterialPageRoute(builder: (context) => const PickupHistoryWidget()),
                             );
                           },
-                          child: const Text('View All', style: TextStyle(color: Colors.red)),
+                          child: const Text('Ver todos', style: TextStyle(color: Colors.red)),
                         ),
                       ],
                     ),
@@ -319,11 +319,11 @@ class _AdminAnalyticsDashboardWidgetState extends State<AdminAnalyticsDashboardW
                       ),
                       child: Column(
                         children: [
-                          _buildAuditItem('Mateo Smith', 'Verified', '2m ago'),
+                          _buildAuditItem('Mateo Smith', 'Verificado', 'hace 2m'),
                           const Divider(height: 1),
-                          _buildAuditItem('Alana Velez', 'Verified', '15m ago'),
+                          _buildAuditItem('Alana Velez', 'Verificado', 'hace 15m'),
                           const Divider(height: 1),
-                          _buildAuditItem('Julian Ross', 'Verified', '42m ago'),
+                          _buildAuditItem('Julian Ross', 'Verificado', 'hace 42m'),
                         ],
                       ),
                     ),

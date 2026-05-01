@@ -14,23 +14,23 @@ class _AdminStudentManagementWidgetState extends State<AdminStudentManagementWid
     {
       'name': 'Mateo Garcia',
       'ci': '12345678',
-      'grade': '4th Grade - Section B',
+      'grade': '4to Grado - Sección B',
       'tutor': 'Lucia Garcia (CI: 98765432)',
-      'status': 'Registered'
+      'status': 'Registrado'
     },
     {
       'name': 'Sofia Rodriguez',
       'ci': '87654321',
-      'grade': '2nd Grade - Section A',
+      'grade': '2do Grado - Sección A',
       'tutor': 'Luis Rodriguez (CI: 55544433)',
-      'status': 'Registered'
+      'status': 'Registrado'
     },
     {
       'name': 'Lucas Miller',
       'ci': '11223344',
-      'grade': '5th Grade - Section C',
+      'grade': '5to Grado - Sección C',
       'tutor': 'John Miller (CI: 99887766)',
-      'status': 'Pending Auth'
+      'status': 'Autenticación Pendiente'
     }
   ];
 
@@ -55,14 +55,14 @@ class _AdminStudentManagementWidgetState extends State<AdminStudentManagementWid
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Register New Student', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  const Text('Registrar Nuevo Estudiante', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                   IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
                 ],
               ),
               const SizedBox(height: 16),
               TextField(
                 decoration: InputDecoration(
-                  labelText: 'Student Full Name',
+                  labelText: 'Nombre Completo del Estudiante',
                   prefixIcon: const Icon(Icons.person),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 ),
@@ -70,7 +70,7 @@ class _AdminStudentManagementWidgetState extends State<AdminStudentManagementWid
               const SizedBox(height: 16),
               TextField(
                 decoration: InputDecoration(
-                  labelText: 'Student CI (Optional)',
+                  labelText: 'CI del Estudiante (Opcional)',
                   prefixIcon: const Icon(Icons.badge),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 ),
@@ -78,7 +78,7 @@ class _AdminStudentManagementWidgetState extends State<AdminStudentManagementWid
               const SizedBox(height: 16),
               TextField(
                 decoration: InputDecoration(
-                  labelText: 'Grade / Course',
+                  labelText: 'Grado / Curso',
                   prefixIcon: const Icon(Icons.class_),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 ),
@@ -86,7 +86,7 @@ class _AdminStudentManagementWidgetState extends State<AdminStudentManagementWid
               const SizedBox(height: 16),
               TextField(
                 decoration: InputDecoration(
-                  labelText: 'Parent/Tutor CI',
+                  labelText: 'CI Padre/Tutor',
                   prefixIcon: const Icon(Icons.family_restroom),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 ),
@@ -96,7 +96,7 @@ class _AdminStudentManagementWidgetState extends State<AdminStudentManagementWid
                 onPressed: () {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Student registered successfully.'), backgroundColor: Colors.green),
+                    const SnackBar(content: Text('Estudiante registrado exitosamente.'), backgroundColor: Colors.green),
                   );
                 },
                 style: ElevatedButton.styleFrom(
@@ -104,7 +104,7 @@ class _AdminStudentManagementWidgetState extends State<AdminStudentManagementWid
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                child: const Text('Save Student', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                child: const Text('Guardar', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
               ),
               const SizedBox(height: 24),
             ],
@@ -115,7 +115,7 @@ class _AdminStudentManagementWidgetState extends State<AdminStudentManagementWid
   }
 
   Widget _buildStudentCard(Map<String, dynamic> student) {
-    bool isRegistered = student['status'] == 'Registered';
+    bool isRegistered = student['status'] == 'Registrado';
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
@@ -185,7 +185,7 @@ class _AdminStudentManagementWidgetState extends State<AdminStudentManagementWid
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        title: const Text('Student Management', style: TextStyle(color: Colors.black)),
+        title: const Text('Gestión de Estudiantes', style: TextStyle(color: Colors.black)),
         backgroundColor: Colors.white,
         iconTheme: const IconThemeData(color: Colors.black),
         elevation: 0,
@@ -196,13 +196,13 @@ class _AdminStudentManagementWidgetState extends State<AdminStudentManagementWid
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Students Directory', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+              const Text('Directorio de Estudiantes', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
-              Text('Manage students and their associated tutors.', style: TextStyle(color: Colors.grey.shade600, fontSize: 14)),
+              Text('Gestiona estudiantes y sus tutores asociados.', style: TextStyle(color: Colors.grey.shade600, fontSize: 14)),
               const SizedBox(height: 24),
               TextField(
                 decoration: InputDecoration(
-                  hintText: 'Search by Student Name or CI...',
+                  hintText: 'Buscar por Nombre o CI...',
                   prefixIcon: const Icon(Icons.search),
                   filled: true,
                   fillColor: Colors.white,
@@ -226,7 +226,7 @@ class _AdminStudentManagementWidgetState extends State<AdminStudentManagementWid
         onPressed: _showAddStudentModal,
         backgroundColor: Colors.deepPurple,
         icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text('New Student', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        label: const Text('Nuevo Estudiante', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
     );
   }
