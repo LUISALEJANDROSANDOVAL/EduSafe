@@ -6,32 +6,49 @@ class AdminStudentManagementWidget extends StatefulWidget {
   static String routeName = 'AdminStudentManagement';
 
   @override
-  State<AdminStudentManagementWidget> createState() => _AdminStudentManagementWidgetState();
+  State<AdminStudentManagementWidget> createState() =>
+      _AdminStudentManagementWidgetState();
 }
 
-class _AdminStudentManagementWidgetState extends State<AdminStudentManagementWidget> {
+class _AdminStudentManagementWidgetState
+    extends State<AdminStudentManagementWidget> {
   final List<Map<String, dynamic>> _students = [
     {
-      'name': 'Mateo Garcia',
+      'id': '101',
+      'name': 'Mateo García',
       'ci': '12345678',
       'grade': '4to Grado - Sección B',
-      'tutor': 'Lucia Garcia (CI: 98765432)',
-      'status': 'Registrado'
+      'tutor': 'Lucia Garcia',
+      'tutorCI': '98765432',
+      'status': 'Registrado',
+      'photo': 'https://i.pravatar.cc/150?u=mateo',
+      'attendance': '98%',
+      'lastPickup': 'Ayer 13:05 - Padre',
     },
     {
-      'name': 'Sofia Rodriguez',
+      'id': '102',
+      'name': 'Sofía Rodriguez',
       'ci': '87654321',
       'grade': '2do Grado - Sección A',
-      'tutor': 'Luis Rodriguez (CI: 55544433)',
-      'status': 'Registrado'
+      'tutor': 'Luis Rodriguez',
+      'tutorCI': '55544433',
+      'status': 'Registrado',
+      'photo': 'https://i.pravatar.cc/150?u=sofia',
+      'attendance': '100%',
+      'lastPickup': 'Hoy 07:45 - Ingreso',
     },
     {
+      'id': '103',
       'name': 'Lucas Miller',
       'ci': '11223344',
       'grade': '5to Grado - Sección C',
-      'tutor': 'John Miller (CI: 99887766)',
-      'status': 'Autenticación Pendiente'
-    }
+      'tutor': 'John Miller',
+      'tutorCI': '99887766',
+      'status': 'Pendiente',
+      'photo': 'https://i.pravatar.cc/150?u=lucas',
+      'attendance': '92%',
+      'lastPickup': 'N/A',
+    },
   ];
 
   void _showAddStudentModal() {
@@ -46,7 +63,9 @@ class _AdminStudentManagementWidgetState extends State<AdminStudentManagementWid
         return Padding(
           padding: EdgeInsets.only(
             bottom: MediaQuery.of(context).viewInsets.bottom,
-            top: 24, left: 24, right: 24,
+            top: 24,
+            left: 24,
+            right: 24,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -55,48 +74,54 @@ class _AdminStudentManagementWidgetState extends State<AdminStudentManagementWid
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Registrar Estudiante', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                  IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
+                  const Text(
+                    'Registrar Nuevo Estudiante',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(context),
+                  ),
                 ],
               ),
               const SizedBox(height: 16),
               TextField(
                 decoration: InputDecoration(
-                  labelText: 'Nombre Completo',
-                  prefixIcon: const Icon(Icons.person, color: Colors.deepPurple),
-                  filled: true,
-                  fillColor: Colors.grey.shade50,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                  labelText: 'Nombre Completo del Estudiante',
+                  prefixIcon: const Icon(Icons.person),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
               TextField(
                 decoration: InputDecoration(
                   labelText: 'CI del Estudiante (Opcional)',
-                  prefixIcon: const Icon(Icons.badge, color: Colors.deepPurple),
-                  filled: true,
-                  fillColor: Colors.grey.shade50,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                  prefixIcon: const Icon(Icons.badge),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
               TextField(
                 decoration: InputDecoration(
                   labelText: 'Grado / Curso',
-                  prefixIcon: const Icon(Icons.class_, color: Colors.deepPurple),
-                  filled: true,
-                  fillColor: Colors.grey.shade50,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                  prefixIcon: const Icon(Icons.class_),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
               TextField(
                 decoration: InputDecoration(
-                  labelText: 'CI del Tutor / Padre',
-                  prefixIcon: const Icon(Icons.family_restroom, color: Colors.deepPurple),
-                  filled: true,
-                  fillColor: Colors.grey.shade50,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                  labelText: 'CI del Padre/Tutor',
+                  prefixIcon: const Icon(Icons.family_restroom),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
               const SizedBox(height: 32),
@@ -104,15 +129,26 @@ class _AdminStudentManagementWidgetState extends State<AdminStudentManagementWid
                 onPressed: () {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Estudiante registrado exitosamente.'), backgroundColor: Colors.green),
+                    const SnackBar(
+                      content: Text('Estudiante registrado exitosamente.'),
+                      backgroundColor: Colors.green,
+                    ),
                   );
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.deepPurple,
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                 ),
-                child: const Text('Guardar Estudiante', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                child: const Text(
+                  'Guardar Estudiante',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
               const SizedBox(height: 24),
             ],
@@ -126,68 +162,183 @@ class _AdminStudentManagementWidgetState extends State<AdminStudentManagementWid
     bool isRegistered = student['status'] == 'Registrado';
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4)),
-        ],
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 15, offset: const Offset(0, 5))],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => _showStudentDetailAdmin(student),
+          borderRadius: BorderRadius.circular(24),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 28,
+                      backgroundImage: NetworkImage(student['photo']),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(student['name'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
+                          const SizedBox(height: 4),
+                          Text('ID: ${student['id']} • CI: ${student['ci']}', style: TextStyle(color: Colors.grey.shade500, fontSize: 12)),
+                        ],
+                      ),
+                    ),
+                    _buildStatusChip(student['status'], isRegistered),
+                  ],
+                ),
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  child: Divider(height: 1),
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _buildInfoColumn('Grado', student['grade'], Icons.class_outlined),
+                    _buildInfoColumn('Asistencia', student['attendance'], Icons.analytics_outlined),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatusChip(String status, bool isSuccess) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: isSuccess ? Colors.green.shade50 : Colors.orange.shade50,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        status,
+        style: TextStyle(color: isSuccess ? Colors.green.shade700 : Colors.orange.shade700, fontSize: 11, fontWeight: FontWeight.bold),
+      ),
+    );
+  }
+
+  Widget _buildInfoColumn(String label, String value, IconData icon) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(icon, size: 14, color: Colors.grey.shade400),
+            const SizedBox(width: 6),
+            Text(label, style: TextStyle(color: Colors.grey.shade500, fontSize: 11)),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(value, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+      ],
+    );
+  }
+
+  void _showStudentDetailAdmin(Map<String, dynamic> student) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.85,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(topLeft: Radius.circular(32), topRight: Radius.circular(32)),
+        ),
+        child: Column(
+          children: [
+            const SizedBox(height: 12),
+            Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2))),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  children: [
+                    CircleAvatar(radius: 60, backgroundImage: NetworkImage(student['photo'])),
+                    const SizedBox(height: 16),
+                    Text(student['name'], style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 32),
+                    
+                    _buildAdminDetailSection('Información del Tutor', [
+                      {'label': 'Nombre', 'value': student['tutor']},
+                      {'label': 'Cédula', 'value': student['tutorCI']},
+                      {'label': 'Relación', 'value': 'Padre/Madre'},
+                    ]),
+                    const SizedBox(height: 16),
+                    _buildAdminDetailSection('Actividad Reciente', [
+                      {'label': 'Último Registro', 'value': student['lastPickup']},
+                      {'label': 'Puerta de Salida', 'value': 'Principal - Sector A'},
+                      {'label': 'Guardia', 'value': 'R. Mendez'},
+                    ]),
+                    const SizedBox(height: 32),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () {},
+                            icon: const Icon(Icons.edit_outlined),
+                            label: const Text('Editar Datos'),
+                            style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: () {},
+                            icon: const Icon(Icons.history),
+                            label: const Text('Historial'),
+                            style: ElevatedButton.styleFrom(backgroundColor: Colors.indigo, padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 40),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAdminDetailSection(String title, List<Map<String, String>> items) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.indigo)),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(color: Colors.grey.shade50, borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.grey.shade100)),
+          child: Column(
+            children: items.map((item) => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  CircleAvatar(
-                    backgroundColor: Colors.indigo.shade50,
-                    radius: 22,
-                    child: const Icon(Icons.school, color: Colors.indigo, size: 22),
-                  ),
-                  const SizedBox(width: 16),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(student['name'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                      Text('CI: ${student["ci"]}', style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
-                    ],
-                  ),
+                  Text(item['label']!, style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
+                  Text(item['value']!, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
                 ],
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  color: isRegistered ? Colors.green.shade50 : Colors.orange.shade50,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  student['status'],
-                  style: TextStyle(color: isRegistered ? Colors.green : Colors.orange, fontSize: 12, fontWeight: FontWeight.bold),
-                ),
-              ),
-            ],
+            )).toList(),
           ),
-          const Divider(height: 32, thickness: 1),
-          Row(
-            children: [
-              Icon(Icons.class_, size: 16, color: Colors.grey.shade500),
-              const SizedBox(width: 8),
-              Text(student['grade'], style: TextStyle(color: Colors.grey.shade700, fontSize: 13, fontWeight: FontWeight.w600)),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Icon(Icons.family_restroom, size: 16, color: Colors.grey.shade500),
-              const SizedBox(width: 8),
-              Text('Tutor: ${student["tutor"]}', style: TextStyle(color: Colors.grey.shade700, fontSize: 13)),
-            ],
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -196,8 +347,11 @@ class _AdminStudentManagementWidgetState extends State<AdminStudentManagementWid
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
-        title: const Text('Directorio de Estudiantes', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.transparent,
+        title: const Text(
+          'Gestión de Estudiantes',
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Colors.white,
         iconTheme: const IconThemeData(color: Colors.black),
         elevation: 0,
         centerTitle: true,
@@ -208,23 +362,25 @@ class _AdminStudentManagementWidgetState extends State<AdminStudentManagementWid
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Estudiantes', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, letterSpacing: -0.5)),
-              const SizedBox(height: 4),
-              Text('Administra el directorio de estudiantes y sus tutores autorizados.', style: TextStyle(color: Colors.grey.shade600, fontSize: 14)),
+              const Text(
+                'Directorio de Alumnos',
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Administra los estudiantes y sus tutores asociados.',
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+              ),
               const SizedBox(height: 24),
-              Container(
-                decoration: BoxDecoration(
-                  boxShadow: [
-                    BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4)),
-                  ],
-                ),
-                child: TextField(
-                  decoration: InputDecoration(
-                    hintText: 'Buscar por nombre o CI...',
-                    prefixIcon: const Icon(Icons.search, color: Colors.deepPurple),
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide.none),
+              TextField(
+                decoration: InputDecoration(
+                  hintText: 'Buscar por nombre o CI...',
+                  prefixIcon: const Icon(Icons.search),
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide.none,
                   ),
                 ),
               ),
@@ -246,7 +402,10 @@ class _AdminStudentManagementWidgetState extends State<AdminStudentManagementWid
         backgroundColor: Colors.indigo,
         elevation: 4,
         icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text('Nuevo Estudiante', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        label: const Text(
+          'Nuevo Estudiante',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
       ),
     );
   }
