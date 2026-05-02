@@ -304,3 +304,4 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
     );
   }
 }
+// Actualización de seguridad y diseño
