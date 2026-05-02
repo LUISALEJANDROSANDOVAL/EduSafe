@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'GuardProfile.dart';
-
+import 'IdentityValidation.dart';
 class GuardScannerWidget extends StatefulWidget {
   const GuardScannerWidget({super.key});
 
@@ -37,7 +37,7 @@ class _GuardScannerWidgetState extends State<GuardScannerWidget> {
                   children: [
                     Icon(Icons.qr_code_scanner_rounded, color: _isScannerActive ? Colors.white : Colors.grey.shade600, size: 20),
                     const SizedBox(width: 8),
-                    Text('Scanner', style: TextStyle(color: _isScannerActive ? Colors.white : Colors.grey.shade600, fontWeight: FontWeight.bold)),
+                    Text('Escáner', style: TextStyle(color: _isScannerActive ? Colors.white : Colors.grey.shade600, fontWeight: FontWeight.bold)),
                   ],
                 ),
               ),
@@ -57,7 +57,7 @@ class _GuardScannerWidgetState extends State<GuardScannerWidget> {
                   children: [
                     Icon(Icons.history_rounded, color: !_isScannerActive ? Colors.white : Colors.grey.shade600, size: 20),
                     const SizedBox(width: 8),
-                    Text('History', style: TextStyle(color: !_isScannerActive ? Colors.white : Colors.grey.shade600, fontWeight: FontWeight.bold)),
+                    Text('Historial', style: TextStyle(color: !_isScannerActive ? Colors.white : Colors.grey.shade600, fontWeight: FontWeight.bold)),
                   ],
                 ),
               ),
@@ -105,11 +105,65 @@ class _GuardScannerWidgetState extends State<GuardScannerWidget> {
                 color: Colors.black.withOpacity(0.6),
                 borderRadius: BorderRadius.circular(30),
               ),
-              child: const Text('Align QR code within frame', style: TextStyle(color: Colors.white)),
+              child: const Text('Alinea el código QR en el marco', style: TextStyle(color: Colors.white)),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  void _showManualEntryDialog(BuildContext context) {
+    final TextEditingController idController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Text('Ingreso Manual', style: TextStyle(fontWeight: FontWeight.bold)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Ingresa el código de autorización o número de documento:', style: TextStyle(fontSize: 14)),
+              const SizedBox(height: 16),
+              TextField(
+                controller: idController,
+                decoration: InputDecoration(
+                  hintText: 'Ej. DNI, Código...',
+                  prefixIcon: const Icon(Icons.badge_outlined, color: Colors.deepPurple),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.deepPurple, width: 2),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancelar', style: TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (idController.text.isNotEmpty) {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const IdentityValidationWidget()),
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.deepPurple,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: const Text('Validar', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -187,7 +241,7 @@ class _GuardScannerWidgetState extends State<GuardScannerWidget> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Guard Scanner', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                      const Text('Escáner de Guardia', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
                       Text('SafeGuard School', style: TextStyle(color: Colors.deepPurple.shade300, fontWeight: FontWeight.w600)),
                     ],
                   ),
@@ -219,9 +273,9 @@ class _GuardScannerWidgetState extends State<GuardScannerWidget> {
                       SizedBox(
                         width: double.infinity,
                         child: OutlinedButton.icon(
-                          onPressed: () {},
+                          onPressed: () => _showManualEntryDialog(context),
                           icon: const Icon(Icons.keyboard, color: Colors.deepPurple),
-                          label: const Text('Manual Entry', style: TextStyle(color: Colors.deepPurple, fontWeight: FontWeight.bold)),
+                          label: const Text('Ingreso Manual', style: TextStyle(color: Colors.deepPurple, fontWeight: FontWeight.bold)),
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             side: const BorderSide(color: Colors.deepPurple),
@@ -233,23 +287,23 @@ class _GuardScannerWidgetState extends State<GuardScannerWidget> {
                       // History View (Metrics & Validations)
                       Row(
                         children: [
-                          Expanded(child: _buildMetricsCard('Today', '142', 'Students Exit', Colors.deepPurple)),
+                          Expanded(child: _buildMetricsCard('Hoy', '142', 'Salida de Estudiantes', Colors.deepPurple)),
                           const SizedBox(width: 16),
-                          Expanded(child: _buildMetricsCard('Pending', '28', 'Remaining', Colors.black87)),
+                          Expanded(child: _buildMetricsCard('Pendientes', '28', 'Restantes', Colors.black87)),
                         ],
                       ),
                       const SizedBox(height: 24),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text('Recent Validations', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                          Text('See All', style: TextStyle(color: Colors.deepPurple.shade400, fontWeight: FontWeight.bold)),
+                          const Text('Validaciones Recientes', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                          Text('Ver Todos', style: TextStyle(color: Colors.deepPurple.shade400, fontWeight: FontWeight.bold)),
                         ],
                       ),
                       const SizedBox(height: 16),
-                      _buildValidationCard('Mateo Garcia', 'Sofia Garcia (Mother)', '14:22'),
-                      _buildValidationCard('Lucia Torres', 'Carlos Mendez (Uncle)', '14:15'),
-                      _buildValidationCard('Emma Wilson', 'David Wilson (Father)', '14:05'),
+                      _buildValidationCard('Mateo Garcia', 'Sofia Garcia (Madre)', '14:22'),
+                      _buildValidationCard('Lucia Torres', 'Carlos Mendez (Tío)', '14:15'),
+                      _buildValidationCard('Emma Wilson', 'David Wilson (Padre)', '14:05'),
                     ],
                   ],
                 ),

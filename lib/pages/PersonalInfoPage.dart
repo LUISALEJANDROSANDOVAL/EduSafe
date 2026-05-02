@@ -18,7 +18,7 @@ class _PersonalInfoPageState extends State<PersonalInfoPage> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Personal Information', style: TextStyle(color: Colors.black)),
+        title: const Text('Información Personal', style: TextStyle(color: Colors.black)),
         backgroundColor: Colors.white,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black),
@@ -49,20 +49,20 @@ class _PersonalInfoPageState extends State<PersonalInfoPage> {
               ),
             ),
             const SizedBox(height: 32),
-            _buildField('Full Name', _nameController, Icons.person_outline),
+            _buildField('Nombre Completo', _nameController, Icons.person_outline),
             const SizedBox(height: 16),
-            _buildField('DNI / Identification', _dniController, Icons.badge_outlined),
+            _buildField('DNI / Identificación', _dniController, Icons.badge_outlined),
             const SizedBox(height: 16),
-            _buildField('Phone Number', _phoneController, Icons.phone_android_rounded),
+            _buildField('Número de Teléfono', _phoneController, Icons.phone_android_rounded),
             const SizedBox(height: 16),
-            _buildField('Home Address', _addressController, Icons.location_on_outlined, maxLines: 2),
+            _buildField('Dirección de Domicilio', _addressController, Icons.location_on_outlined, maxLines: 2),
             const SizedBox(height: 40),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Changes saved successfully')),
+                    const SnackBar(content: Text('Cambios guardados exitosamente')),
                   );
                 },
                 style: ElevatedButton.styleFrom(
@@ -70,7 +70,7 @@ class _PersonalInfoPageState extends State<PersonalInfoPage> {
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                child: const Text('Save Changes', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                child: const Text('Guardar Cambios', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
               ),
             ),
           ],

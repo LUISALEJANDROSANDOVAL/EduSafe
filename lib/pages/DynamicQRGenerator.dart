@@ -44,7 +44,7 @@ class _DynamicQRGeneratorWidgetState extends State<DynamicQRGeneratorWidget> {
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        title: Text(isThirdParty ? 'Third Party QR' : 'My Pickup QR', style: const TextStyle(color: Colors.black)),
+        title: Text(isThirdParty ? 'QR de Tercero' : 'Mi QR de Recogida', style: const TextStyle(color: Colors.black)),
         backgroundColor: Colors.white,
         iconTheme: const IconThemeData(color: Colors.black),
         elevation: 0,
@@ -72,7 +72,7 @@ class _DynamicQRGeneratorWidgetState extends State<DynamicQRGeneratorWidget> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(isThirdParty ? 'Authorized Person' : 'Pickup Authorized', style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+                        Text(isThirdParty ? 'Persona Autorizada' : 'Recogida Autorizada', style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
                         Text(isThirdParty ? widget.thirdPartyName! : 'Mateo Garcia', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
                       ],
                     ),
@@ -121,11 +121,11 @@ class _DynamicQRGeneratorWidgetState extends State<DynamicQRGeneratorWidget> {
                         ),
                       ),
                       const SizedBox(width: 12),
-                      Text('Refreshes in \${_secondsLeft}s', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.deepPurple)),
+                      Text('Se actualiza en \${_secondsLeft}s', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.deepPurple)),
                     ],
                   ),
                   const SizedBox(height: 8),
-                  Text('Valid only for today\'s pickup', style: TextStyle(color: Colors.grey.shade500, fontSize: 12)),
+                  Text('Válido solo para la recogida de hoy', style: TextStyle(color: Colors.grey.shade500, fontSize: 12)),
                 ],
               ),
             ),
@@ -142,11 +142,11 @@ class _DynamicQRGeneratorWidgetState extends State<DynamicQRGeneratorWidget> {
               ),
               child: Column(
                 children: [
-                  _buildDetailRow(Icons.school_rounded, 'Student', 'Mateo Lopez - 2nd Grade A'),
+                  _buildDetailRow(Icons.school_rounded, 'Estudiante', 'Mateo Lopez - 2do Grado A'),
                   const Divider(height: 32),
-                  _buildDetailRow(Icons.schedule_rounded, 'Valid Until', 'Today, 4:30 PM'),
+                  _buildDetailRow(Icons.schedule_rounded, 'Válido Hasta', 'Hoy, 4:30 PM'),
                   const Divider(height: 32),
-                  _buildDetailRow(Icons.verified_user_rounded, 'Security', 'Encrypted Dynamic Token'),
+                  _buildDetailRow(Icons.verified_user_rounded, 'Seguridad', 'Token Dinámico Encriptado'),
                 ],
               ),
             ),
@@ -159,7 +159,7 @@ class _DynamicQRGeneratorWidgetState extends State<DynamicQRGeneratorWidget> {
               child: ElevatedButton.icon(
                 onPressed: () {},
                 icon: const Icon(Icons.share_rounded, color: Colors.white),
-                label: const Text('Share QR with \${isThirdParty ? "Third Party" : "Authorized"}', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                label: Text('Compartir QR con \${isThirdParty ? "Tercero" : "Autorizado"}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.deepPurple,
                   padding: const EdgeInsets.symmetric(vertical: 16),
@@ -170,7 +170,7 @@ class _DynamicQRGeneratorWidgetState extends State<DynamicQRGeneratorWidget> {
             const SizedBox(height: 16),
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Back to Dashboard', style: TextStyle(color: Colors.grey)),
+              child: const Text('Volver al Inicio', style: TextStyle(color: Colors.grey)),
             ),
           ],
         ),
