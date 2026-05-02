@@ -16,6 +16,7 @@ class _AdminStudentManagementWidgetState
   bool _isLoading = true;
   List<Map<String, dynamic>> _allStudents = [];
   List<Map<String, dynamic>> _filteredStudents = [];
+  List<Map<String, dynamic>> _tutors = [];
   final TextEditingController _searchController = TextEditingController();
   
   final _nombreController = TextEditingController();
@@ -80,10 +81,14 @@ class _AdminStudentManagementWidgetState
         });
       }
       
+      final tutorRes = await supabase.from('perfiles').select('id, nombre_completo, cedula_identidad').eq('rol', 'Tutor');
+      List<Map<String, dynamic>> loadedTutors = List<Map<String, dynamic>>.from(tutorRes);
+
       if (mounted) {
         setState(() {
           _allStudents = loaded;
           _filteredStudents = loaded;
+          _tutors = loadedTutors;
           _isLoading = false;
         });
       }
@@ -100,6 +105,11 @@ class _AdminStudentManagementWidgetState
   }
 
   void _showAddStudentModal() {
+    _nombreController.clear();
+    _ciEstudianteController.clear();
+    _cursoController.clear();
+    String? localSelectedTutorId;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -108,30 +118,32 @@ class _AdminStudentManagementWidgetState
         borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
       ),
       builder: (context) {
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-            top: 24,
-            left: 24,
-            right: 24,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Registrar Nuevo Estudiante',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ],
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setModalState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+                top: 24,
+                left: 24,
+                right: 24,
               ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Registrar Nuevo Estudiante',
+                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ],
+                  ),
               const SizedBox(height: 16),
               TextField(
                 controller: _nombreController,
@@ -166,32 +178,38 @@ class _AdminStudentManagementWidgetState
                 ),
               ),
               const SizedBox(height: 16),
-              TextField(
-                controller: _ciTutorController,
+              DropdownButtonFormField<String>(
+                value: localSelectedTutorId,
                 decoration: InputDecoration(
-                  labelText: 'CI del Padre/Tutor',
+                  labelText: 'Seleccionar Padre/Tutor',
                   prefixIcon: const Icon(Icons.family_restroom),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
+                items: _tutors.map((t) {
+                  return DropdownMenuItem<String>(
+                    value: t['id'],
+                    child: Text('${t['nombre_completo']} (CI: ${t['cedula_identidad']})'),
+                  );
+                }).toList(),
+                onChanged: (val) {
+                  setModalState(() {
+                    localSelectedTutorId = val;
+                  });
+                },
               ),
               const SizedBox(height: 32),
               ElevatedButton(
                 onPressed: () async {
-                  if (_nombreController.text.isEmpty || _cursoController.text.isEmpty || _ciTutorController.text.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Llene nombre, grado y CI del tutor')));
+                  if (_nombreController.text.isEmpty || _cursoController.text.isEmpty || localSelectedTutorId == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Llene nombre, grado y seleccione un tutor')));
                     return;
                   }
                   try {
                     final supabase = Supabase.instance.client;
-                    final tutorRes = await supabase.from('perfiles').select('id').eq('cedula_identidad', _ciTutorController.text).maybeSingle();
-                    if (tutorRes == null) {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Tutor no encontrado con esa CI')));
-                      return;
-                    }
                     await supabase.from('estudiantes').insert({
-                      'tutor_id': tutorRes['id'],
+                      'tutor_id': localSelectedTutorId,
                       'nombre': _nombreController.text,
                       'curso': _cursoController.text,
                       'cedula_identidad': _ciEstudianteController.text.isEmpty ? null : _ciEstudianteController.text,
@@ -199,10 +217,6 @@ class _AdminStudentManagementWidgetState
                     if (mounted) Navigator.pop(context);
                     _fetchStudents();
                     if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Estudiante registrado exitosamente.'), backgroundColor: Colors.green));
-                    _nombreController.clear();
-                    _cursoController.clear();
-                    _ciEstudianteController.clear();
-                    _ciTutorController.clear();
                   } catch (e) {
                     if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red));
                   }
@@ -225,6 +239,8 @@ class _AdminStudentManagementWidgetState
               const SizedBox(height: 24),
             ],
           ),
+        );
+        },
         );
       },
     );
