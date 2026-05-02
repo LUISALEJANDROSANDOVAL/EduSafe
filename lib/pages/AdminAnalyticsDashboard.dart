@@ -285,6 +285,7 @@ class _AdminAnalyticsDashboardWidgetState extends State<AdminAnalyticsDashboardW
     );
   }
 
+<<<<<<< HEAD
   Widget _buildLegendItem(Color color, String text) {
     return Row(
       children: [
@@ -405,6 +406,113 @@ class _AdminAnalyticsDashboardWidgetState extends State<AdminAnalyticsDashboardW
           ),
         ],
       ),
+=======
+  void _showAuditDetail(String name, String status, String time) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.7,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(topLeft: Radius.circular(32), topRight: Radius.circular(32)),
+        ),
+        child: Column(
+          children: [
+            const SizedBox(height: 12),
+            Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2))),
+            const SizedBox(height: 24),
+            const Text('Audit Log Detail', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 24),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  children: [
+                    const CircleAvatar(
+                      radius: 40,
+                      backgroundColor: Colors.deepPurple,
+                      child: Icon(Icons.person, size: 40, color: Colors.white),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    Text(status, style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 32),
+                    
+                    _buildModalRow(Icons.access_time_filled_rounded, 'Time Ago', time),
+                    _buildModalRow(Icons.calendar_today_rounded, 'Date', 'May 01, 2026'),
+                    _buildModalRow(Icons.security_rounded, 'Verified by Staff', 'Guard Rodriguez'),
+                    _buildModalRow(Icons.location_on_rounded, 'Gate', 'Main Entrance (North)'),
+                    
+                    const SizedBox(height: 32),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.deepPurple.shade50,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: const Row(
+                        children: [
+                          Icon(Icons.info_outline, color: Colors.deepPurple),
+                          SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              'This record has been digitally signed and stored in the secure audit trail.',
+                              style: TextStyle(fontSize: 12, color: Colors.deepPurple),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildModalRow(IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12.0),
+      child: Row(
+        children: [
+          Icon(icon, color: Colors.deepPurple, size: 20),
+          const SizedBox(width: 16),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label, style: TextStyle(color: Colors.grey.shade500, fontSize: 11)),
+              Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAuditItem(String name, String status, String time) {
+    return ListTile(
+      onTap: () => _showAuditDetail(name, status, time),
+      contentPadding: EdgeInsets.zero,
+      leading: const CircleAvatar(
+        backgroundColor: Colors.deepPurple,
+        child: Icon(Icons.person, color: Colors.white),
+      ),
+      title: Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+      subtitle: Text('Status: $status', style: const TextStyle(color: Colors.green, fontSize: 12, fontWeight: FontWeight.w600)),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(time, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+          const SizedBox(width: 4),
+          const Icon(Icons.chevron_right, size: 16, color: Colors.grey),
+        ],
+      ),
+>>>>>>> origin/feature
     );
   }
 
