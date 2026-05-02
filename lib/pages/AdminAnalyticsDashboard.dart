@@ -9,41 +9,142 @@ class AdminAnalyticsDashboardWidget extends StatefulWidget {
   static String routeName = 'AdminAnalyticsDashboard';
 
   @override
-  State<AdminAnalyticsDashboardWidget> createState() => _AdminAnalyticsDashboardWidgetState();
+  State<AdminAnalyticsDashboardWidget> createState() =>
+      _AdminAnalyticsDashboardWidgetState();
 }
 
-class _AdminAnalyticsDashboardWidgetState extends State<AdminAnalyticsDashboardWidget> {
+class _AdminAnalyticsDashboardWidgetState
+    extends State<AdminAnalyticsDashboardWidget> {
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
-  Widget _buildMetricCard(String label, String value, String delta, bool trendUp) {
-    return Container(
+  bool _showAlert = true;
+  String _selectedTimeFilter = 'Hoy';
+
+  final Map<String, List<double>> _chartData = {
+    'Hoy': [30, 60, 90, 140, 100, 50],
+    'Semana': [200, 400, 350, 600, 500, 250],
+    'Mes': [800, 1500, 1200, 2400, 2000, 900],
+  };
+
+  final Map<String, double> _chartMaxFlex = {
+    'Hoy': 140,
+    'Semana': 600,
+    'Mes': 2400,
+  };
+
+  Widget _buildCriticalAlert() {
+    if (!_showAlert) return const SizedBox.shrink();
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      margin: const EdgeInsets.fromLTRB(24, 24, 24, 0),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Colors.orange.shade50,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: Colors.orange.shade200),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.warning_amber_rounded,
+            color: Colors.orange.shade800,
+            size: 28,
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Anomalía Crítica Detectada',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.orange.shade900,
+                  ),
+                ),
+                Text(
+                  '3 validaciones manuales consecutivas en la Puerta B.',
+                  style: TextStyle(color: Colors.orange.shade800, fontSize: 13),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: Icon(Icons.close, color: Colors.orange.shade800),
+            onPressed: () => setState(() => _showAlert = false),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMetricCard(
+    String label,
+    String value,
+    String delta,
+    bool trendUp,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: TextStyle(color: Colors.grey.shade600, fontSize: 12, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
+          Text(
+            label,
+            style: TextStyle(
+              color: Colors.grey.shade600,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(value, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.deepPurple)),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.deepPurple,
+                ),
+              ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: trendUp ? Colors.green.shade50 : Colors.red.shade50,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
                   children: [
-                    Icon(trendUp ? Icons.arrow_upward : Icons.arrow_downward, 
-                        color: trendUp ? Colors.green : Colors.red, size: 12),
+                    Icon(
+                      trendUp ? Icons.arrow_upward : Icons.arrow_downward,
+                      color: trendUp ? Colors.green : Colors.red,
+                      size: 14,
+                    ),
                     const SizedBox(width: 4),
-                    Text(delta, style: TextStyle(color: trendUp ? Colors.green : Colors.red, fontSize: 12, fontWeight: FontWeight.bold)),
+                    Text(
+                      delta,
+                      style: TextStyle(
+                        color: trendUp ? Colors.green : Colors.red,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -54,13 +155,58 @@ class _AdminAnalyticsDashboardWidgetState extends State<AdminAnalyticsDashboardW
     );
   }
 
+  Widget _buildTimeFilters() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: ['Hoy', 'Semana', 'Mes'].map((filter) {
+        bool isSelected = _selectedTimeFilter == filter;
+        return Padding(
+          padding: const EdgeInsets.only(left: 8),
+          child: InkWell(
+            onTap: () => setState(() => _selectedTimeFilter = filter),
+            borderRadius: BorderRadius.circular(20),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? Colors.deepPurple
+                    : Colors.deepPurple.shade50,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                filter,
+                style: TextStyle(
+                  color: isSelected ? Colors.white : Colors.deepPurple,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
   Widget _buildBarChartSimulation() {
+    List<double> currentData =
+        _chartData[_selectedTimeFilter] ?? _chartData['Hoy']!;
+    double maxFlex =
+        _chartMaxFlex[_selectedTimeFilter] ?? _chartMaxFlex['Hoy']!;
+
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -68,107 +214,330 @@ class _AdminAnalyticsDashboardWidgetState extends State<AdminAnalyticsDashboardW
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Recogidas por hora', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              const Text(
+                'Pickups per Hour',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
               Icon(Icons.bar_chart_rounded, color: Colors.deepPurple.shade300),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
           SizedBox(
-            height: 150,
+            height: 180,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                _buildBarItem('8am', 30),
-                _buildBarItem('10am', 60),
-                _buildBarItem('12pm', 90),
-                _buildBarItem('2pm', 140),
-                _buildBarItem('4pm', 100),
-                _buildBarItem('6pm', 50),
+                _buildBarItem('8am', currentData[0], maxFlex),
+                _buildBarItem('10am', currentData[1], maxFlex),
+                _buildBarItem('12pm', currentData[2], maxFlex),
+                _buildBarItem('2pm', currentData[3], maxFlex),
+                _buildBarItem('4pm', currentData[4], maxFlex),
+                _buildBarItem('6pm', currentData[5], maxFlex),
               ],
             ),
           ),
           const SizedBox(height: 16),
           const Text(
-            'Pico de actividad detectado a las 2:00 PM',
+            'Peak activity detected at 2:00 PM dismissal',
             textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.grey, fontSize: 12),
+            style: TextStyle(
+              color: Colors.grey.shade500,
+              fontSize: 13,
+              fontStyle: FontStyle.italic,
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildBarItem(String label, double height) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        Container(
-          width: 20,
-          height: height,
-          decoration: BoxDecoration(
-            color: Colors.deepPurple,
-            borderRadius: BorderRadius.circular(4),
+  Widget _buildBarItem(String label, double flexValue, double maxFlex) {
+    return Expanded(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          Expanded(
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: AnimatedFractionallySizedBox(
+                duration: const Duration(milliseconds: 500),
+                curve: Curves.easeOutCubic,
+                heightFactor: flexValue / maxFlex,
+                child: Container(
+                  width: 24,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Colors.deepPurple.shade300, Colors.deepPurple],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                    ),
+                    borderRadius: BorderRadius.circular(6),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.deepPurple.withOpacity(0.3),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           ),
-        ),
-        const SizedBox(height: 8),
-        Text(label, style: const TextStyle(fontSize: 10, color: Colors.grey)),
-      ],
+          const SizedBox(height: 8),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 12,
+              color: Colors.grey,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildVerificationHealth() {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Salud de Verificación', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          const Text(
+            'Verification Health',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          ),
           const SizedBox(height: 16),
           Row(
             children: [
-              // Circular progress indicator simulado
               Stack(
                 alignment: Alignment.center,
                 children: [
                   SizedBox(
-                    width: 80,
-                    height: 80,
+                    width: 100,
+                    height: 100,
                     child: CircularProgressIndicator(
                       value: 0.94,
-                      strokeWidth: 8,
-                      backgroundColor: Colors.deepPurple.shade100,
+                      strokeWidth: 10,
+                      backgroundColor: Colors.deepPurple.shade50,
                       color: Colors.deepPurple,
+                      strokeCap: StrokeCap.round,
                     ),
                   ),
-                  const Text('94%', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                  const Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '94%',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 24,
+                          color: Colors.deepPurple,
+                        ),
+                      ),
+                      Text(
+                        'Precisión',
+                        style: TextStyle(fontSize: 10, color: Colors.grey),
+                      ),
+                    ],
+                  ),
                 ],
               ),
-              const SizedBox(width: 24),
+              const SizedBox(width: 32),
               Expanded(
                 child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        Container(width: 10, height: 10, decoration: const BoxDecoration(color: Colors.deepPurple, shape: BoxShape.circle)),
+                        Container(
+                          width: 10,
+                          height: 10,
+                          decoration: const BoxDecoration(
+                            color: Colors.deepPurple,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
                         const SizedBox(width: 8),
-                        const Text('94% Coincidencia Biométrica', style: TextStyle(fontSize: 12)),
+                        const Text(
+                          '94% Biometric Match',
+                          style: TextStyle(fontSize: 12),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 12),
                     Row(
                       children: [
-                        Container(width: 10, height: 10, decoration: BoxDecoration(color: Colors.deepPurple.shade100, shape: BoxShape.circle)),
+                        Container(
+                          width: 10,
+                          height: 10,
+                          decoration: BoxDecoration(
+                            color: Colors.deepPurple.shade100,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
                         const SizedBox(width: 8),
-                        const Text('6% Aprobación Manual', style: TextStyle(fontSize: 12)),
+                        const Text(
+                          '6% Manual Override',
+                          style: TextStyle(fontSize: 12),
+                        ),
                       ],
                     ),
                   ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showAuditDetail(String name, String status, String time) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.7,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(32),
+            topRight: Radius.circular(32),
+          ),
+        ),
+        child: Column(
+          children: [
+            const SizedBox(height: 12),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              'Audit Log Detail',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 24),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  children: [
+                    const CircleAvatar(
+                      radius: 40,
+                      backgroundColor: Colors.deepPurple,
+                      child: Icon(Icons.person, size: 40, color: Colors.white),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      name,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      status,
+                      style: const TextStyle(
+                        color: Colors.green,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+
+                    _buildModalRow(
+                      Icons.access_time_filled_rounded,
+                      'Time Ago',
+                      time,
+                    ),
+                    _buildModalRow(
+                      Icons.calendar_today_rounded,
+                      'Date',
+                      'May 01, 2026',
+                    ),
+                    _buildModalRow(
+                      Icons.security_rounded,
+                      'Verified by Staff',
+                      'Guard Rodriguez',
+                    ),
+                    _buildModalRow(
+                      Icons.location_on_rounded,
+                      'Gate',
+                      'Main Entrance (North)',
+                    ),
+
+                    const SizedBox(height: 32),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.deepPurple.shade50,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: const Row(
+                        children: [
+                          Icon(Icons.info_outline, color: Colors.deepPurple),
+                          SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              'This record has been digitally signed and stored in the secure audit trail.',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.deepPurple,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildModalRow(IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12.0),
+      child: Row(
+        children: [
+          Icon(icon, color: Colors.deepPurple, size: 20),
+          const SizedBox(width: 16),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(color: Colors.grey.shade500, fontSize: 11),
+              ),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
                 ),
               ),
             ],
@@ -180,14 +549,28 @@ class _AdminAnalyticsDashboardWidgetState extends State<AdminAnalyticsDashboardW
 
   Widget _buildAuditItem(String name, String status, String time) {
     return ListTile(
+      onTap: () => _showAuditDetail(name, status, time),
       contentPadding: EdgeInsets.zero,
       leading: const CircleAvatar(
         backgroundColor: Colors.deepPurple,
         child: Icon(Icons.person, color: Colors.white),
       ),
-      title: Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-      subtitle: Text('Estado: $status', style: const TextStyle(color: Colors.green, fontSize: 12, fontWeight: FontWeight.w600)),
-      trailing: Text(time, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+      title: Text(
+        name,
+        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+      ),
+      subtitle: Text(
+        'Status: $status',
+        style: const TextStyle(
+          color: Colors.green,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      trailing: Text(
+        time,
+        style: const TextStyle(color: Colors.grey, fontSize: 12),
+      ),
     );
   }
 
@@ -195,7 +578,7 @@ class _AdminAnalyticsDashboardWidgetState extends State<AdminAnalyticsDashboardW
   Widget build(BuildContext context) {
     return Scaffold(
       key: scaffoldKey,
-      backgroundColor: Colors.grey.shade50,
+      backgroundColor: const Color(0xFFF8F9FA),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
@@ -203,10 +586,25 @@ class _AdminAnalyticsDashboardWidgetState extends State<AdminAnalyticsDashboardW
             children: [
               // Header
               Container(
-                padding: const EdgeInsets.all(24),
-                decoration: const BoxDecoration(
+                padding: const EdgeInsets.only(
+                  top: 24,
+                  left: 24,
+                  right: 24,
+                  bottom: 32,
+                ),
+                decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.only(bottomLeft: Radius.circular(24), bottomRight: Radius.circular(24)),
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(32),
+                    bottomRight: Radius.circular(32),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.deepPurple.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -214,22 +612,46 @@ class _AdminAnalyticsDashboardWidgetState extends State<AdminAnalyticsDashboardW
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Analíticas del Sistema', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-                        Text('Administrador de Colegio Seguro', style: TextStyle(fontSize: 14, color: Colors.grey.shade600)),
+                        const Text(
+                          'System Analytics',
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          'Safe School Administrator',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
                       ],
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.settings_rounded, color: Colors.grey),
-                      onPressed: () {
-                        // Navegar a settings o logout
-                        Navigator.of(context).popUntil((route) => route.isFirst);
-                      },
-                      tooltip: "Cerrar sesión (Temporal)",
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.deepPurple.shade50,
+                        shape: BoxShape.circle,
+                      ),
+                      child: IconButton(
+                        icon: const Icon(
+                          Icons.settings_rounded,
+                          color: Colors.deepPurple,
+                        ),
+                        onPressed: () {
+                          Navigator.of(
+                            context,
+                          ).popUntil((route) => route.isFirst);
+                        },
+                        tooltip: "Cerrar sesión",
+                      ),
                     ),
                   ],
                 ),
               ),
-              
+
+              _buildCriticalAlert(),
+
               Padding(
                 padding: const EdgeInsets.all(24),
                 child: Column(
@@ -237,9 +659,23 @@ class _AdminAnalyticsDashboardWidgetState extends State<AdminAnalyticsDashboardW
                     // Métricas
                     Row(
                       children: [
-                        Expanded(child: _buildMetricCard('Total de Recogidas', '1,284', '+12%', true)),
+                        Expanded(
+                          child: _buildMetricCard(
+                            'Total Pickups',
+                            '1,284',
+                            '+12%',
+                            true,
+                          ),
+                        ),
                         const SizedBox(width: 16),
-                        Expanded(child: _buildMetricCard('Tutores Activos', '856', '+3%', true)),
+                        Expanded(
+                          child: _buildMetricCard(
+                            'Tutores Activos',
+                            '856',
+                            '+3%',
+                            true,
+                          ),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 24),
@@ -259,15 +695,27 @@ class _AdminAnalyticsDashboardWidgetState extends State<AdminAnalyticsDashboardW
                         onPressed: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => const AdminGuardManagementWidget()),
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  const AdminGuardManagementWidget(),
+                            ),
                           );
                         },
                         icon: const Icon(Icons.security, color: Colors.white),
-                        label: const Text('Gestionar Personal de Seguridad', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                        label: const Text(
+                          'Manage Security Staff',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.deepPurple,
                           padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
                         ),
                       ),
                     ),
@@ -280,50 +728,80 @@ class _AdminAnalyticsDashboardWidgetState extends State<AdminAnalyticsDashboardW
                         onPressed: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => const AdminStudentManagementWidget()),
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  const AdminStudentManagementWidget(),
+                            ),
                           );
                         },
                         icon: const Icon(Icons.school, color: Colors.white),
-                        label: const Text('Gestionar Estudiantes y Tutores', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                        label: const Text(
+                          'Manage Students & Tutors',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.indigo,
                           padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
                         ),
                       ),
                     ),
                     const SizedBox(height: 24),
 
-                    // Audit Logs
+                    // Audit Logs Expandibles
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Registros de Auditoría Recientes', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                        const Text(
+                          'Recent Audit Logs',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                          ),
+                        ),
                         TextButton(
                           onPressed: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => const PickupHistoryWidget()),
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const PickupHistoryWidget(),
+                              ),
                             );
                           },
-                          child: const Text('Ver todos', style: TextStyle(color: Colors.red)),
+                          child: const Text(
+                            'View All',
+                            style: TextStyle(color: Colors.red),
+                          ),
                         ),
                       ],
                     ),
+                    const SizedBox(height: 12),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.grey.shade200),
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.04),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                       ),
                       child: Column(
                         children: [
-                          _buildAuditItem('Mateo Smith', 'Verificado', 'hace 2m'),
+                          _buildAuditItem('Mateo Smith', 'Verified', '2m ago'),
                           const Divider(height: 1),
-                          _buildAuditItem('Alana Velez', 'Verificado', 'hace 15m'),
+                          _buildAuditItem('Alana Velez', 'Verified', '15m ago'),
                           const Divider(height: 1),
-                          _buildAuditItem('Julian Ross', 'Verificado', 'hace 42m'),
+                          _buildAuditItem('Julian Ross', 'Verified', '42m ago'),
                         ],
                       ),
                     ),
