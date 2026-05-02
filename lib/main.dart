@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'config/env_config.dart';
 import 'services/supabase_service.dart';
 import 'pages/Login.dart'; // Importamos tu pantalla de Login real
+import 'pages/TerceroWebFormPage.dart'; // Para probar el formulario directo
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,8 +24,8 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      // Apuntamos directamente al Widget de tu Login en vez del contador
-      home: const LoginScreenWidget(),
+      // home: const LoginScreenWidget(),
+      home: const TerceroWebFormPage(), // Cargamos el formulario directamente
     );
   }
 }
