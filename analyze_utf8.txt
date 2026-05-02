@@ -1,0 +1,56 @@
+﻿Analyzing EduSafe...
+
+warning - lib\pages\AdminAnalyticsDashboard.dart:158:10 - The declaration '_buildTimeFilters' isn't referenced. Try removing the declaration of '_buildTimeFilters'. - unused_element
+warning - lib\pages\AdminGuardManagement.dart:152:8 - The declaration '_showEditGuardModal' isn't referenced. Try removing the declaration of '_showEditGuardModal'. - unused_element
+warning - lib\pages\PickupHistory.dart:200:8 - The declaration '_showDetailModal' isn't referenced. Try removing the declaration of '_showDetailModal'. - unused_element
+warning - lib\services\pinata_service.dart:4:8 - Unused import: '../config/env_config.dart'. Try removing the import directive. - unused_import
+   info - lib\pages\AdminAnalyticsDashboard.dart:1:1 - The file name 'AdminAnalyticsDashboard.dart' isn't a lower_case_with_underscores identifier. Try changing the name to follow the lower_case_with_underscores style. - file_names
+   info - lib\pages\AdminAnalyticsDashboard.dart:94:33 - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement. - deprecated_member_use
+   info - lib\pages\AdminAnalyticsDashboard.dart:205:33 - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement. - deprecated_member_use
+   info - lib\pages\AdminAnalyticsDashboard.dart:278:50 - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement. - deprecated_member_use
+   info - lib\pages\AdminAnalyticsDashboard.dart:310:33 - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement. - deprecated_member_use
+   info - lib\pages\AdminAnalyticsDashboard.dart:603:48 - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement. - deprecated_member_use
+   info - lib\pages\AdminAnalyticsDashboard.dart:792:49 - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement. - deprecated_member_use
+   info - lib\pages\AdminGuardManagement.dart:1:1 - The file name 'AdminGuardManagement.dart' isn't a lower_case_with_underscores identifier. Try changing the name to follow the lower_case_with_underscores style. - file_names
+   info - lib\pages\AdminGuardManagement.dart:200:21 - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre. Try replacing the use of the deprecated member with the replacement. - deprecated_member_use
+   info - lib\pages\AdminGuardManagement.dart:230:25 - Statements in an if should be enclosed in a block. Try wrapping the statement in a block. - curly_braces_in_flow_control_structures
+   info - lib\pages\AdminGuardManagement.dart:235:21 - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre. Try replacing the use of the deprecated member with the replacement. - deprecated_member_use
+   info - lib\pages\AdminGuardManagement.dart:262:25 - Statements in an if should be enclosed in a block. Try wrapping the statement in a block. - curly_braces_in_flow_control_structures
+   info - lib\pages\AdminGuardManagement.dart:309:7 - Statements in an if should be enclosed in a block. Try wrapping the statement in a block. - curly_braces_in_flow_control_structures
+   info - lib\pages\AdminGuardManagement.dart:311:7 - Statements in an if should be enclosed in a block. Try wrapping the statement in a block. - curly_braces_in_flow_control_structures
+   info - lib\pages\AdminGuardManagement.dart:313:7 - Statements in an if should be enclosed in a block. Try wrapping the statement in a block. - curly_braces_in_flow_control_structures
+   info - lib\pages\AdminGuardManagement.dart:323:33 - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement. - deprecated_member_use
+   info - lib\pages\AdminGuardManagement.dart:374:38 - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement. - deprecated_member_use
+   info - lib\pages\AdminStudentManagement.dart:1:1 - The file name 'AdminStudentManagement.dart' isn't a lower_case_with_underscores identifier. Try changing the name to follow the lower_case_with_underscores style. - file_names
+   info - lib\pages\AdminStudentManagement.dart:156:33 - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement. - deprecated_member_use
+   info - lib\pages\AuthorizeThirdParty.dart:1:1 - The file name 'AuthorizeThirdParty.dart' isn't a lower_case_with_underscores identifier. Try changing the name to follow the lower_case_with_underscores style. - file_names
+   info - lib\pages\DynamicQRGenerator.dart:1:1 - The file name 'DynamicQRGenerator.dart' isn't a lower_case_with_underscores identifier. Try changing the name to follow the lower_case_with_underscores style. - file_names
+   info - lib\pages\DynamicQRGenerator.dart:93:49 - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement. - deprecated_member_use
+   info - lib\pages\GuardProfile.dart:1:1 - The file name 'GuardProfile.dart' isn't a lower_case_with_underscores identifier. Try changing the name to follow the lower_case_with_underscores style. - file_names
+   info - lib\pages\GuardScanner.dart:1:1 - The file name 'GuardScanner.dart' isn't a lower_case_with_underscores identifier. Try changing the name to follow the lower_case_with_underscores style. - file_names
+   info - lib\pages\GuardScanner.dart:105:37 - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement. - deprecated_member_use
+   info - lib\pages\HelpSupportPage.dart:1:1 - The file name 'HelpSupportPage.dart' isn't a lower_case_with_underscores identifier. Try changing the name to follow the lower_case_with_underscores style. - file_names
+   info - lib\pages\HelpSupportPage.dart:83:7 - The 'children' argument should be last in widget constructor invocations. Try moving the argument to the end of the argument list. - sort_child_properties_last
+   info - lib\pages\IdentityValidation.dart:1:1 - The file name 'IdentityValidation.dart' isn't a lower_case_with_underscores identifier. Try changing the name to follow the lower_case_with_underscores style. - file_names
+   info - lib\pages\Login.dart:1:1 - The file name 'Login.dart' isn't a lower_case_with_underscores identifier. Try changing the name to follow the lower_case_with_underscores style. - file_names
+   info - lib\pages\Login.dart:45:49 - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement. - deprecated_member_use
+   info - lib\pages\Login.dart:232:23 - Don't invoke 'print' in production code. Try using a logging framework. - avoid_print
+   info - lib\pages\Login.dart:269:21 - Don't invoke 'print' in production code. Try using a logging framework. - avoid_print
+   info - lib\pages\ParentDashboard.dart:1:1 - The file name 'ParentDashboard.dart' isn't a lower_case_with_underscores identifier. Try changing the name to follow the lower_case_with_underscores style. - file_names
+   info - lib\pages\PersonalInfoPage.dart:1:1 - The file name 'PersonalInfoPage.dart' isn't a lower_case_with_underscores identifier. Try changing the name to follow the lower_case_with_underscores style. - file_names
+   info - lib\pages\PickupHistory.dart:1:1 - The file name 'PickupHistory.dart' isn't a lower_case_with_underscores identifier. Try changing the name to follow the lower_case_with_underscores style. - file_names
+   info - lib\pages\PickupHistory.dart:193:61 - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement. - deprecated_member_use
+   info - lib\pages\SecurityCenterPage.dart:1:1 - The file name 'SecurityCenterPage.dart' isn't a lower_case_with_underscores identifier. Try changing the name to follow the lower_case_with_underscores style. - file_names
+   info - lib\pages\ThirdPartyRegistration.dart:1:1 - The file name 'ThirdPartyRegistration.dart' isn't a lower_case_with_underscores identifier. Try changing the name to follow the lower_case_with_underscores style. - file_names
+   info - lib\pages\UserProfileSettings.dart:1:1 - The file name 'UserProfileSettings.dart' isn't a lower_case_with_underscores identifier. Try changing the name to follow the lower_case_with_underscores style. - file_names
+   info - lib\pages\UserProfileSettings.dart:102:57 - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement. - deprecated_member_use
+   info - lib\pages\UserProfileSettings.dart:168:27 - 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre. Try replacing the use of the deprecated member with the replacement. - deprecated_member_use
+   info - lib\pages\UserProfileSettings.dart:176:27 - 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre. Try replacing the use of the deprecated member with the replacement. - deprecated_member_use
+   info - lib\services\biometric_service.dart:14:5 - Don't invoke 'print' in production code. Try using a logging framework. - avoid_print
+   info - lib\services\pinata_service.dart:36:9 - Don't invoke 'print' in production code. Try using a logging framework. - avoid_print
+   info - lib\services\pinata_service.dart:40:7 - Don't invoke 'print' in production code. Try using a logging framework. - avoid_print
+   info - lib\services\supabase_service.dart:79:7 - Don't invoke 'print' in production code. Try using a logging framework. - avoid_print
+   info - lib\utils\csv_exporter_stub.dart:3:3 - Don't invoke 'print' in production code. Try using a logging framework. - avoid_print
+   info - lib\utils\csv_exporter_web.dart:3:1 - 'dart:html' is deprecated and shouldn't be used. Use package:web and dart:js_interop instead. Try replacing the use of the deprecated member with the replacement. - deprecated_member_use
+
+52 issues found.

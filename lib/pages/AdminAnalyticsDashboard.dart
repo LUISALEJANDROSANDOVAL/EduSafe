@@ -238,7 +238,7 @@ class _AdminAnalyticsDashboardWidgetState
             ),
           ),
           const SizedBox(height: 16),
-          const Text(
+          Text(
             'Peak activity detected at 2:00 PM dismissal',
             textAlign: TextAlign.center,
             style: TextStyle(

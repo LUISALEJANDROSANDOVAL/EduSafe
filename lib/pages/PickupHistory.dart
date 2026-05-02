@@ -704,7 +704,14 @@ class _PickupHistoryWidgetState extends State<PickupHistoryWidget> {
                         ),
                       )
                     else
-                      ...filteredList.map((item) => _buildHistoryItem(item)),
+                      ...filteredList.map((item) => _buildHistoryItem(
+                            studentName: item['studentName'],
+                            grade: item['grade'],
+                            time: item['time'],
+                            authorizedBy: item['authorizedBy'],
+                            guardName: item['guardName'],
+                            isFlagged: item['isFlagged'],
+                          )),
 
                     const SizedBox(height: 16),
 
