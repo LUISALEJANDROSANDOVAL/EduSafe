@@ -215,7 +215,7 @@ class _AdminAnalyticsDashboardWidgetState
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
-                'Pickups per Hour',
+                'Retiros por Hora',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
               ),
               Icon(Icons.bar_chart_rounded, color: Colors.deepPurple.shade300),
@@ -239,7 +239,7 @@ class _AdminAnalyticsDashboardWidgetState
           ),
           const SizedBox(height: 16),
           Text(
-            'Peak activity detected at 2:00 PM dismissal',
+            'Actividad máxima detectada a las 2:00 PM (Salida)',
             textAlign: TextAlign.center,
             style: TextStyle(
               color: Colors.grey.shade500,
@@ -317,7 +317,7 @@ class _AdminAnalyticsDashboardWidgetState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Verification Health',
+            'Salud de Verificación',
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           ),
           const SizedBox(height: 16),
@@ -362,9 +362,9 @@ class _AdminAnalyticsDashboardWidgetState
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                  _buildLegendItem(Colors.deepPurple, '94% Coincidencia Biométrica'),
+                  _buildLegendItem(Colors.deepPurple, '94% Biometría'),
                     const SizedBox(height: 12),
-                    _buildLegendItem(Colors.deepPurple.withOpacity(0.2), '6% Validación Manual'),
+                    _buildLegendItem(Colors.deepPurple.withOpacity(0.2), '6% Manual'),
                   ],
                 ),
               ),
@@ -402,7 +402,7 @@ class _AdminAnalyticsDashboardWidgetState
             ),
             const SizedBox(height: 24),
             const Text(
-              'Audit Log Detail',
+              'Detalle de Auditoría',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 24),
@@ -424,9 +424,9 @@ class _AdminAnalyticsDashboardWidgetState
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    Text(
-                      status,
-                      style: const TextStyle(
+                    const Text(
+                      'Validado',
+                      style: TextStyle(
                         color: Colors.green,
                         fontWeight: FontWeight.bold,
                       ),
@@ -435,23 +435,23 @@ class _AdminAnalyticsDashboardWidgetState
 
                     _buildModalRow(
                       Icons.access_time_filled_rounded,
-                      'Time Ago',
+                      'Tiempo transcurrido',
                       time,
                     ),
                     _buildModalRow(
                       Icons.calendar_today_rounded,
-                      'Date',
-                      'May 01, 2026',
+                      'Fecha',
+                      '01 de Mayo, 2026',
                     ),
                     _buildModalRow(
                       Icons.security_rounded,
-                      'Verified by Staff',
-                      'Guard Rodriguez',
+                      'Verificado por',
+                      'Guardia Rodriguez',
                     ),
                     _buildModalRow(
                       Icons.location_on_rounded,
-                      'Gate',
-                      'Main Entrance (North)',
+                      'Puerta',
+                      'Entrada Principal (Norte)',
                     ),
 
                     const SizedBox(height: 32),
@@ -467,7 +467,7 @@ class _AdminAnalyticsDashboardWidgetState
                           SizedBox(width: 12),
                           Expanded(
                             child: Text(
-                              'This record has been digitally signed and stored in the secure audit trail.',
+                              'Este registro ha sido firmado digitalmente y almacenado en la pista de auditoría segura.',
                               style: TextStyle(
                                 fontSize: 12,
                                 color: Colors.deepPurple,
@@ -578,7 +578,7 @@ class _AdminAnalyticsDashboardWidgetState
                   children: [
                     _buildGuardStat(Icons.verified_user_rounded, 'Confianza', '98.2%'),
                     _buildGuardStat(Icons.timer_outlined, 'Duración', '45s'),
-                    _buildGuardStat(Icons.location_on_outlined, 'Puerta', 'A-Principal'),
+                    _buildGuardStat(Icons.location_on_outlined, 'Puerta', 'Principal'),
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -669,33 +669,6 @@ class _AdminAnalyticsDashboardWidgetState
     );
   }
 
-  Widget _buildAuditItem(String name, String status, String time) {
-    return ListTile(
-      onTap: () => _showAuditDetail(name, status, time),
-      contentPadding: EdgeInsets.zero,
-      leading: const CircleAvatar(
-        backgroundColor: Colors.deepPurple,
-        child: Icon(Icons.person, color: Colors.white),
-      ),
-      title: Text(
-        name,
-        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-      ),
-      subtitle: Text(
-        'Status: $status',
-        style: const TextStyle(
-          color: Colors.green,
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-      trailing: Text(
-        time,
-        style: const TextStyle(color: Colors.grey, fontSize: 12),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -735,14 +708,14 @@ class _AdminAnalyticsDashboardWidgetState
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text(
-                          'System Analytics',
+                          'Análisis del Sistema',
                           style: TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         Text(
-                          'Safe School Administrator',
+                          'Administrador de Escuela Segura',
                           style: TextStyle(
                             fontSize: 14,
                             color: Colors.grey.shade600,
@@ -783,7 +756,7 @@ class _AdminAnalyticsDashboardWidgetState
                       children: [
                         Expanded(
                           child: _buildMetricCard(
-                            'Total Pickups',
+                            'Retiros Totales',
                             '1,284',
                             '+12%',
                             true,
@@ -801,12 +774,38 @@ class _AdminAnalyticsDashboardWidgetState
                       ],
                     ),
                     const SizedBox(height: 24),
+                    
+                    // Controles Rápidos de Navegación
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildQuickNavButton(
+                            'Estudiantes', 
+                            Icons.school_rounded, 
+                            Colors.blue,
+                            () => Navigator.push(context, MaterialPageRoute(builder: (context) => const AdminStudentManagementWidget())),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _buildQuickNavButton(
+                            'Guardias', 
+                            Icons.security_rounded, 
+                            Colors.indigo,
+                            () => Navigator.push(context, MaterialPageRoute(builder: (context) => const AdminGuardManagementWidget())),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
 
-                    // Gráfico
+                    // Gráfico y Filtros
+                    _buildTimeFilters(),
+                    const SizedBox(height: 16),
                     _buildBarChartSimulation(),
                     const SizedBox(height: 24),
 
-                    // Salud del sistema
+                    // Salud del Sistema
                     _buildVerificationHealth(),
                     const SizedBox(height: 24),
 
@@ -814,102 +813,9 @@ class _AdminAnalyticsDashboardWidgetState
                     _buildGuardPerformance(),
                     const SizedBox(height: 24),
 
-                    // Gestión de Guardias
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  const AdminGuardManagementWidget(),
-                            ),
-                          );
-                        },
-                        icon: const Icon(Icons.security, color: Colors.white),
-                        label: const Text(
-                          'Manage Security Staff',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.deepPurple,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Gestión de Estudiantes y Padres
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  const AdminStudentManagementWidget(),
-                            ),
-                          );
-                        },
-                        icon: const Icon(Icons.school, color: Colors.white),
-                        label: const Text(
-                          'Manage Students & Tutors',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.indigo,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Audit Logs Expandibles
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Recent Audit Logs',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                          ),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    const PickupHistoryWidget(),
-                              ),
-                            );
-                          },
-                          child: const Text(
-                            'View All',
-                            style: TextStyle(color: Colors.red),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
+                    // Registro de Auditoría
                     Container(
+                      padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(20),
@@ -922,12 +828,44 @@ class _AdminAnalyticsDashboardWidgetState
                         ],
                       ),
                       child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildExpandableAuditItem('Mateo Smith', 'Verificado', 'hace 2m'),
-                          const Divider(height: 1, indent: 16, endIndent: 16),
-                          _buildExpandableAuditItem('Alana Velez', 'Verificado', 'hace 15m'),
-                          const Divider(height: 1, indent: 16, endIndent: 16),
-                          _buildExpandableAuditItem('Julian Ross', 'Verificado', 'hace 42m'),
+                          const Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Registro de Auditoría Reciente',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              Icon(Icons.history_rounded, color: Colors.grey),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          _buildExpandableAuditItem('Mateo García', 'Validado', 'hace 2m'),
+                          _buildExpandableAuditItem('Sofía Rodríguez', 'Validado', 'hace 15m'),
+                          _buildExpandableAuditItem('Lucas Miller', 'Validado', 'hace 45m'),
+                          const SizedBox(height: 16),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const PickupHistoryWidget(),
+                                ),
+                              );
+                            },
+                            child: const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text('Ver Todos los Registros'),
+                                Icon(Icons.chevron_right),
+                              ],
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -937,6 +875,28 @@ class _AdminAnalyticsDashboardWidgetState
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuickNavButton(String label, IconData icon, Color color, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: color.withOpacity(0.2)),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: color),
+            const SizedBox(height: 8),
+            Text(label, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 13)),
+          ],
         ),
       ),
     );

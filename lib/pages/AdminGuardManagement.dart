@@ -12,7 +12,7 @@ class AdminGuardManagementWidget extends StatefulWidget {
 
 class _AdminGuardManagementWidgetState
     extends State<AdminGuardManagementWidget> {
-  // Simulated list of guards
+  // Lista simulada de guardias
   final List<Map<String, dynamic>> _guards = [
     {
       'name': 'Carlos Rodriguez',
@@ -70,7 +70,7 @@ class _AdminGuardManagementWidgetState
               const SizedBox(height: 16),
               TextField(
                 decoration: InputDecoration(
-                  labelText: 'Full Name',
+                  labelText: 'Nombre Completo',
                   prefixIcon: const Icon(Icons.person),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -80,7 +80,7 @@ class _AdminGuardManagementWidgetState
               const SizedBox(height: 16),
               TextField(
                 decoration: InputDecoration(
-                  labelText: 'Employee ID',
+                  labelText: 'ID de Empleado',
                   prefixIcon: const Icon(Icons.badge),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -90,7 +90,7 @@ class _AdminGuardManagementWidgetState
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
                 decoration: InputDecoration(
-                  labelText: 'Assign Shift Schedule',
+                  labelText: 'Asignar Horario de Turno',
                   prefixIcon: const Icon(Icons.access_time),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -98,16 +98,16 @@ class _AdminGuardManagementWidgetState
                 ),
                 items: const [
                   DropdownMenuItem(
-                    value: 'Morning',
-                    child: Text('Morning (06:00 AM - 02:00 PM)'),
+                    value: 'Mañana',
+                    child: Text('Mañana (06:00 AM - 02:00 PM)'),
                   ),
                   DropdownMenuItem(
-                    value: 'Afternoon',
-                    child: Text('Afternoon (02:00 PM - 10:00 PM)'),
+                    value: 'Tarde',
+                    child: Text('Tarde (02:00 PM - 10:00 PM)'),
                   ),
                   DropdownMenuItem(
-                    value: 'Night',
-                    child: Text('Night (10:00 PM - 06:00 AM)'),
+                    value: 'Noche',
+                    child: Text('Noche (10:00 PM - 06:00 AM)'),
                   ),
                 ],
                 onChanged: (value) {},
@@ -133,7 +133,7 @@ class _AdminGuardManagementWidgetState
                   ),
                 ),
                 child: const Text(
-                  'Save Guard',
+                  'Guardar Guardia',
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -414,12 +414,7 @@ class _AdminGuardManagementWidgetState
                   size: 20,
                 ),
                 onPressed: () {
-                  // Simulamos editar
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Edit schedule for ${guard["name"]}'),
-                    ),
-                  );
+                  _showEditGuardModal(index);
                 },
                 constraints: const BoxConstraints(),
                 padding: EdgeInsets.zero,
@@ -437,8 +432,8 @@ class _AdminGuardManagementWidgetState
       backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
         title: const Text(
-          'Staff Management',
-          style: TextStyle(color: Colors.black),
+          'Gestión de Personal',
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.white,
         iconTheme: const IconThemeData(color: Colors.black),
@@ -452,12 +447,12 @@ class _AdminGuardManagementWidgetState
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'Security Guards',
+                'Guardias de Seguridad',
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 4),
               Text(
-                'Manage schedules and permissions for the security team.',
+                'Administra horarios y permisos para el equipo de seguridad.',
                 style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
               ),
               const SizedBox(height: 24),
@@ -479,7 +474,7 @@ class _AdminGuardManagementWidgetState
         elevation: 4,
         icon: const Icon(Icons.add, color: Colors.white),
         label: const Text(
-          'Add Guard',
+          'Agregar Guardia',
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
       ),

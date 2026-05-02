@@ -304,8 +304,8 @@ class _TerceroWebFormPageState extends State<TerceroWebFormPage> {
                         colors: [Color(0xFF4A00E0), Color(0xFF8E2DE2)],
                       ),
                     ),
-                    child: const Row(
-                      children: [
+                    child: Row(
+                      children: const [
                         Icon(Icons.security_rounded, color: Colors.white, size: 32),
                         SizedBox(width: 16),
                         Text(

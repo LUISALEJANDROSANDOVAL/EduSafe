@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'config/env_config.dart';
 import 'services/supabase_service.dart';
-import 'pages/Login.dart'; // Importamos tu pantalla de Login real
-import 'pages/TerceroWebFormPage.dart'; // Para probar el formulario directo
+import 'pages/Login.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await EnvConfig.init();
-  await SupabaseService().init();
+  try {
+    await EnvConfig.init();
+    await SupabaseService().init();
+  } catch (e) {
+    debugPrint("Error inicializando servicios: $e");
+  }
   
   runApp(const MyApp());
 }
@@ -18,14 +21,13 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Edusafe',
-      debugShowCheckedModeBanner: false, // Quitamos la etiqueta "DEBUG"
+      title: 'EduSafe',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      // home: const LoginScreenWidget(),
-      home: const TerceroWebFormPage(), // Cargamos el formulario directamente
+      home: const LoginScreenWidget(),
     );
   }
 }
