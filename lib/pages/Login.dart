@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'ParentDashboard.dart';
 import 'AdminAnalyticsDashboard.dart';
 import 'GuardScanner.dart';
+import '../services/supabase_service.dart';
 
 class LoginScreenWidget extends StatefulWidget {
   const LoginScreenWidget({super.key});
@@ -17,6 +18,7 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _passwordVisible = false;
+  bool _isLoading = false;
 
   // Estado para la tarjeta de rol seleccionada
   String _selectedRole = 'Parent';
@@ -211,27 +213,77 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
 
                 // --- BOTONES DE ACCIÓN ---
                 ElevatedButton(
-                  onPressed: () {
-                    // Lógica de inicio de sesión y enrutamiento
-                    if (_selectedRole == 'Parent') {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (context) => const ParentDashboardWidget()),
-                      );
-                    } else if (_selectedRole == 'Admin') {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (context) => const AdminAnalyticsDashboardWidget()),
-                      );
-                    } else if (_selectedRole == 'Guard') {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (context) => const GuardScannerWidget()),
-                      );
-                    } else {
-                      print("Iniciando sesión como \$_selectedRole (Falta implementar destino)");
-                    }
-                  },
+                  onPressed: _isLoading
+                      ? null
+                      : () async {
+                          if (_emailController.text.trim().isEmpty || _passwordController.text.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Por favor, ingresa correo y contraseña.')),
+                            );
+                            return;
+                          }
+
+                          setState(() => _isLoading = true);
+
+                          try {
+                            final profile = await SupabaseService().signIn(
+                              email: _emailController.text.trim(),
+                              password: _passwordController.text,
+                            );
+
+                            final String realRole = profile['rol'];
+                            
+                            // Map the selected UI role to the DB role
+                            String expectedRole = '';
+                            if (_selectedRole == 'Parent') expectedRole = 'Tutor';
+                            if (_selectedRole == 'Guard') expectedRole = 'Encargado';
+                            if (_selectedRole == 'Admin') expectedRole = 'Administrador';
+
+                            if (realRole != expectedRole) {
+                              // Sign out immediately if role is wrong
+                              await SupabaseService().signOut();
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Acceso denegado. Tu cuenta es de $realRole, pero seleccionaste $_selectedRole.'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                              setState(() => _isLoading = false);
+                              return;
+                            }
+
+                            // Enrutamiento si es exitoso
+                            if (!mounted) return;
+                            
+                            if (realRole == 'Tutor') {
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(builder: (context) => const ParentDashboardWidget()),
+                              );
+                            } else if (realRole == 'Administrador') {
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(builder: (context) => const AdminAnalyticsDashboardWidget()),
+                              );
+                            } else if (realRole == 'Encargado') {
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(builder: (context) => const GuardScannerWidget()),
+                              );
+                            }
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Error al iniciar sesión: ${e.toString().replaceAll('Exception: ', '')}'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          } finally {
+                            if (mounted) {
+                              setState(() => _isLoading = false);
+                            }
+                          }
+                        },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.deepPurple,
                     padding: const EdgeInsets.symmetric(vertical: 16),
@@ -242,9 +294,17 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text('Iniciar Sesión', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
-                      const SizedBox(width: 8),
-                      const Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 20),
+                      if (_isLoading)
+                        const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                        )
+                      else ...[
+                        const Text('Iniciar Sesión', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                        const SizedBox(width: 8),
+                        const Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 20),
+                      ],
                     ],
                   ),
                 ),
