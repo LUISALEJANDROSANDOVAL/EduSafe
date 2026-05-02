@@ -8,7 +8,7 @@ class GuardProfileWidget extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        title: const Text('Security Guard Profile', style: TextStyle(color: Colors.black)),
+        title: const Text('Perfil del Guardia de Seguridad', style: TextStyle(color: Colors.black)),
         backgroundColor: Colors.white,
         iconTheme: const IconThemeData(color: Colors.black),
         elevation: 0,
@@ -24,7 +24,7 @@ class GuardProfileWidget extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             const Text('Carlos Rodriguez', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-            Text('Senior Security Officer', style: TextStyle(color: Colors.grey.shade600, fontSize: 16)),
+            Text('Oficial de Seguridad Senior', style: TextStyle(color: Colors.grey.shade600, fontSize: 16)),
             const SizedBox(height: 32),
             Container(
               padding: const EdgeInsets.all(20),
@@ -36,15 +36,15 @@ class GuardProfileWidget extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Personal Information', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.deepPurple)),
+                  const Text('Información Personal', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.deepPurple)),
                   const Divider(height: 32),
-                  _buildInfoRow(Icons.badge_rounded, 'Employee ID', 'SEC-8942-A'),
+                  _buildInfoRow(Icons.badge_rounded, 'ID de Empleado', 'SEC-8942-A'),
                   const SizedBox(height: 16),
-                  _buildInfoRow(Icons.email_rounded, 'Work Email', 'crodriguez@safeguard.edu'),
+                  _buildInfoRow(Icons.email_rounded, 'Correo Laboral', 'crodriguez@safeguard.edu'),
                   const SizedBox(height: 16),
-                  _buildInfoRow(Icons.phone_rounded, 'Emergency Contact', '+1 555-0198'),
+                  _buildInfoRow(Icons.phone_rounded, 'Contacto de Emergencia', '+1 555-0198'),
                   const SizedBox(height: 16),
-                  _buildInfoRow(Icons.access_time_filled_rounded, 'Shift Schedule', 'Morning (06:00 AM - 02:00 PM)'),
+                  _buildInfoRow(Icons.access_time_filled_rounded, 'Turno', 'Mañana (06:00 AM - 02:00 PM)'),
                 ],
               ),
             ),
@@ -59,11 +59,11 @@ class GuardProfileWidget extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Security Clearance', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.deepPurple)),
+                  const Text('Nivel de Autorización', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.deepPurple)),
                   const Divider(height: 32),
-                  _buildInfoRow(Icons.verified_user_rounded, 'Clearance Level', 'Level 3 (Main Gates & Primary Pickups)'),
+                  _buildInfoRow(Icons.verified_user_rounded, 'Nivel de Autorización', 'Nivel 3 (Puertas Principales y Recogidas)'),
                   const SizedBox(height: 16),
-                  _buildInfoRow(Icons.shield_rounded, 'Active Certifications', 'CPR, First Aid, Crisis Mgmt'),
+                  _buildInfoRow(Icons.shield_rounded, 'Certificaciones Activas', 'RCP, Primeros Auxilios, Gestión de Crisis'),
                 ],
               ),
             ),
@@ -73,7 +73,7 @@ class GuardProfileWidget extends StatelessWidget {
               child: ElevatedButton.icon(
                 onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
                 icon: const Icon(Icons.logout_rounded),
-                label: const Text('Log Out'),
+                label: const Text('Cerrar Sesión'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red.shade50,
                   foregroundColor: Colors.red,

@@ -41,10 +41,21 @@ class SecurityCenterPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+<<<<<<< HEAD
       backgroundColor: Colors.grey.shade50,
+=======
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: const Text('Centro de Seguridad', style: TextStyle(color: Colors.black)),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.black),
+      ),
+>>>>>>> 6471b013fda23564e8df47e77326576b4c5aa486
       body: SingleChildScrollView(
         child: Column(
           children: [
+<<<<<<< HEAD
             // Header
             Container(
               padding: const EdgeInsets.only(top: 60, left: 16, right: 16, bottom: 40),
@@ -185,6 +196,39 @@ Cualquier controversia relacionada con estas plataformas o acuerdos deberá siem
                   const SizedBox(height: 40),
                 ],
               ),
+=======
+            const Icon(Icons.shield_rounded, size: 60, color: Colors.deepPurple),
+            const SizedBox(height: 16),
+            const Text('Tu Seguridad es nuestra Prioridad', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Text('En EduSafe, utilizamos encriptación de grado militar y verificación biométrica para asegurar la seguridad de tu hijo.', style: TextStyle(color: Colors.grey.shade600)),
+            const SizedBox(height: 32),
+            _buildSecurityItem(
+              Icons.lock_outline, 
+              'Encriptación de Datos', 
+              'Todos los datos personales y biométricos son cifrados y encriptados antes de ser almacenados.'
+            ),
+            _buildSecurityItem(
+              Icons.visibility_off_outlined, 
+              'Política de Privacidad', 
+              'Nunca compartimos tu información personal con terceros sin tu consentimiento.'
+            ),
+            _buildSecurityItem(
+              Icons.verified_user_outlined, 
+              'Verificación Biométrica', 
+              'La coincidencia facial se realiza localmente o a través de hashes seguros para proteger la identidad.'
+            ),
+            const SizedBox(height: 40),
+            const Divider(),
+            const SizedBox(height: 16),
+            TextButton(
+              onPressed: () {},
+              child: const Text('Leer Política de Privacidad Completa', style: TextStyle(color: Colors.deepPurple, fontWeight: FontWeight.bold)),
+            ),
+            TextButton(
+              onPressed: () {},
+              child: const Text('Términos de Servicio', style: TextStyle(color: Colors.deepPurple, fontWeight: FontWeight.bold)),
+>>>>>>> 6471b013fda23564e8df47e77326576b4c5aa486
             ),
           ],
         ),

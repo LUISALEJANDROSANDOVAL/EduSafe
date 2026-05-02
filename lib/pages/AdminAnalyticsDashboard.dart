@@ -9,10 +9,12 @@ class AdminAnalyticsDashboardWidget extends StatefulWidget {
   static String routeName = 'AdminAnalyticsDashboard';
 
   @override
-  State<AdminAnalyticsDashboardWidget> createState() => _AdminAnalyticsDashboardWidgetState();
+  State<AdminAnalyticsDashboardWidget> createState() =>
+      _AdminAnalyticsDashboardWidgetState();
 }
 
-class _AdminAnalyticsDashboardWidgetState extends State<AdminAnalyticsDashboardWidget> {
+class _AdminAnalyticsDashboardWidgetState
+    extends State<AdminAnalyticsDashboardWidget> {
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
   bool _showAlert = true;
@@ -23,7 +25,7 @@ class _AdminAnalyticsDashboardWidgetState extends State<AdminAnalyticsDashboardW
     'Semana': [200, 400, 350, 600, 500, 250],
     'Mes': [800, 1500, 1200, 2400, 2000, 900],
   };
-  
+
   final Map<String, double> _chartMaxFlex = {
     'Hoy': 140,
     'Semana': 600,
@@ -43,14 +45,27 @@ class _AdminAnalyticsDashboardWidgetState extends State<AdminAnalyticsDashboardW
       ),
       child: Row(
         children: [
-          Icon(Icons.warning_amber_rounded, color: Colors.orange.shade800, size: 28),
+          Icon(
+            Icons.warning_amber_rounded,
+            color: Colors.orange.shade800,
+            size: 28,
+          ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Anomalía Crítica Detectada', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orange.shade900)),
-                Text('3 validaciones manuales consecutivas en la Puerta B.', style: TextStyle(color: Colors.orange.shade800, fontSize: 13)),
+                Text(
+                  'Anomalía Crítica Detectada',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.orange.shade900,
+                  ),
+                ),
+                Text(
+                  '3 validaciones manuales consecutivas en la Puerta B.',
+                  style: TextStyle(color: Colors.orange.shade800, fontSize: 13),
+                ),
               ],
             ),
           ),
@@ -63,37 +78,73 @@ class _AdminAnalyticsDashboardWidgetState extends State<AdminAnalyticsDashboardW
     );
   }
 
-  Widget _buildMetricCard(String label, String value, String delta, bool trendUp) {
+  Widget _buildMetricCard(
+    String label,
+    String value,
+    String delta,
+    bool trendUp,
+  ) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4)),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: TextStyle(color: Colors.grey.shade600, fontSize: 14, fontWeight: FontWeight.w600)),
+          Text(
+            label,
+            style: TextStyle(
+              color: Colors.grey.shade600,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
           const SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(value, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.deepPurple)),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.deepPurple,
+                ),
+              ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: trendUp ? Colors.green.shade50 : Colors.red.shade50,
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
                   children: [
-                    Icon(trendUp ? Icons.arrow_upward : Icons.arrow_downward, 
-                        color: trendUp ? Colors.green : Colors.red, size: 14),
+                    Icon(
+                      trendUp ? Icons.arrow_upward : Icons.arrow_downward,
+                      color: trendUp ? Colors.green : Colors.red,
+                      size: 14,
+                    ),
                     const SizedBox(width: 4),
-                    Text(delta, style: TextStyle(color: trendUp ? Colors.green : Colors.red, fontSize: 12, fontWeight: FontWeight.bold)),
+                    Text(
+                      delta,
+                      style: TextStyle(
+                        color: trendUp ? Colors.green : Colors.red,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -118,7 +169,9 @@ class _AdminAnalyticsDashboardWidgetState extends State<AdminAnalyticsDashboardW
               duration: const Duration(milliseconds: 300),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: isSelected ? Colors.deepPurple : Colors.deepPurple.shade50,
+                color: isSelected
+                    ? Colors.deepPurple
+                    : Colors.deepPurple.shade50,
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
@@ -137,8 +190,10 @@ class _AdminAnalyticsDashboardWidgetState extends State<AdminAnalyticsDashboardW
   }
 
   Widget _buildBarChartSimulation() {
-    List<double> currentData = _chartData[_selectedTimeFilter] ?? _chartData['Hoy']!;
-    double maxFlex = _chartMaxFlex[_selectedTimeFilter] ?? _chartMaxFlex['Hoy']!;
+    List<double> currentData =
+        _chartData[_selectedTimeFilter] ?? _chartData['Hoy']!;
+    double maxFlex =
+        _chartMaxFlex[_selectedTimeFilter] ?? _chartMaxFlex['Hoy']!;
 
     return Container(
       padding: const EdgeInsets.all(24),
@@ -146,7 +201,11 @@ class _AdminAnalyticsDashboardWidgetState extends State<AdminAnalyticsDashboardW
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4)),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
         ],
       ),
       child: Column(
@@ -155,8 +214,11 @@ class _AdminAnalyticsDashboardWidgetState extends State<AdminAnalyticsDashboardW
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Recojos por Hora', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-              _buildTimeFilters(),
+              const Text(
+                'Pickups per Hour',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+              Icon(Icons.bar_chart_rounded, color: Colors.deepPurple.shade300),
             ],
           ),
           const SizedBox(height: 24),
@@ -177,9 +239,13 @@ class _AdminAnalyticsDashboardWidgetState extends State<AdminAnalyticsDashboardW
           ),
           const SizedBox(height: 16),
           Text(
-            'Actividad máxima detectada alrededor de las 2:00 PM',
+            'Peak activity detected at 2:00 PM dismissal',
             textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.grey.shade500, fontSize: 13, fontStyle: FontStyle.italic),
+            style: TextStyle(
+              color: Colors.grey.shade500,
+              fontSize: 13,
+              fontStyle: FontStyle.italic,
+            ),
           ),
         ],
       ),
@@ -212,15 +278,22 @@ class _AdminAnalyticsDashboardWidgetState extends State<AdminAnalyticsDashboardW
                         color: Colors.deepPurple.withOpacity(0.3),
                         blurRadius: 4,
                         offset: const Offset(0, 2),
-                      )
-                    ]
+                      ),
+                    ],
                   ),
                 ),
               ),
             ),
           ),
           const SizedBox(height: 8),
-          Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.w600)),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 12,
+              color: Colors.grey,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ],
       ),
     );
@@ -233,14 +306,21 @@ class _AdminAnalyticsDashboardWidgetState extends State<AdminAnalyticsDashboardW
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4)),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Estado de Verificaciones', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-          const SizedBox(height: 24),
+          const Text(
+            'Verification Health',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          ),
+          const SizedBox(height: 16),
           Row(
             children: [
               Stack(
@@ -260,8 +340,18 @@ class _AdminAnalyticsDashboardWidgetState extends State<AdminAnalyticsDashboardW
                   const Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text('94%', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24, color: Colors.deepPurple)),
-                      Text('Precisión', style: TextStyle(fontSize: 10, color: Colors.grey)),
+                      Text(
+                        '94%',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 24,
+                          color: Colors.deepPurple,
+                        ),
+                      ),
+                      Text(
+                        'Precisión',
+                        style: TextStyle(fontSize: 10, color: Colors.grey),
+                      ),
                     ],
                   ),
                 ],
@@ -272,9 +362,41 @@ class _AdminAnalyticsDashboardWidgetState extends State<AdminAnalyticsDashboardW
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildLegendItem(Colors.deepPurple, '94% Coincidencia Biométrica'),
-                    const SizedBox(height: 16),
-                    _buildLegendItem(Colors.deepPurple.shade200, '6% Autorización Manual'),
+                    Row(
+                      children: [
+                        Container(
+                          width: 10,
+                          height: 10,
+                          decoration: const BoxDecoration(
+                            color: Colors.deepPurple,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        const Text(
+                          '94% Biometric Match',
+                          style: TextStyle(fontSize: 12),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Container(
+                          width: 10,
+                          height: 10,
+                          decoration: BoxDecoration(
+                            color: Colors.deepPurple.shade100,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        const Text(
+                          '6% Manual Override',
+                          style: TextStyle(fontSize: 12),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),
@@ -294,14 +416,27 @@ class _AdminAnalyticsDashboardWidgetState extends State<AdminAnalyticsDashboardW
         height: MediaQuery.of(context).size.height * 0.7,
         decoration: const BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.only(topLeft: Radius.circular(32), topRight: Radius.circular(32)),
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(32),
+            topRight: Radius.circular(32),
+          ),
         ),
         child: Column(
           children: [
             const SizedBox(height: 12),
-            Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2))),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
             const SizedBox(height: 24),
-            const Text('Audit Log Detail', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const Text(
+              'Audit Log Detail',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 24),
             Expanded(
               child: SingleChildScrollView(
@@ -314,15 +449,43 @@ class _AdminAnalyticsDashboardWidgetState extends State<AdminAnalyticsDashboardW
                       child: Icon(Icons.person, size: 40, color: Colors.white),
                     ),
                     const SizedBox(height: 16),
-                    Text(name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                    Text(status, style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
+                    Text(
+                      name,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      status,
+                      style: const TextStyle(
+                        color: Colors.green,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     const SizedBox(height: 32),
-                    
-                    _buildModalRow(Icons.access_time_filled_rounded, 'Time Ago', time),
-                    _buildModalRow(Icons.calendar_today_rounded, 'Date', 'May 01, 2026'),
-                    _buildModalRow(Icons.security_rounded, 'Verified by Staff', 'Guard Rodriguez'),
-                    _buildModalRow(Icons.location_on_rounded, 'Gate', 'Main Entrance (North)'),
-                    
+
+                    _buildModalRow(
+                      Icons.access_time_filled_rounded,
+                      'Time Ago',
+                      time,
+                    ),
+                    _buildModalRow(
+                      Icons.calendar_today_rounded,
+                      'Date',
+                      'May 01, 2026',
+                    ),
+                    _buildModalRow(
+                      Icons.security_rounded,
+                      'Verified by Staff',
+                      'Guard Rodriguez',
+                    ),
+                    _buildModalRow(
+                      Icons.location_on_rounded,
+                      'Gate',
+                      'Main Entrance (North)',
+                    ),
+
                     const SizedBox(height: 32),
                     Container(
                       padding: const EdgeInsets.all(16),
@@ -337,7 +500,10 @@ class _AdminAnalyticsDashboardWidgetState extends State<AdminAnalyticsDashboardW
                           Expanded(
                             child: Text(
                               'This record has been digitally signed and stored in the secure audit trail.',
-                              style: TextStyle(fontSize: 12, color: Colors.deepPurple),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.deepPurple,
+                              ),
                             ),
                           ),
                         ],
@@ -363,8 +529,17 @@ class _AdminAnalyticsDashboardWidgetState extends State<AdminAnalyticsDashboardW
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label, style: TextStyle(color: Colors.grey.shade500, fontSize: 11)),
-              Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+              Text(
+                label,
+                style: TextStyle(color: Colors.grey.shade500, fontSize: 11),
+              ),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
             ],
           ),
         ],
@@ -380,15 +555,21 @@ class _AdminAnalyticsDashboardWidgetState extends State<AdminAnalyticsDashboardW
         backgroundColor: Colors.deepPurple,
         child: Icon(Icons.person, color: Colors.white),
       ),
-      title: Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-      subtitle: Text('Status: $status', style: const TextStyle(color: Colors.green, fontSize: 12, fontWeight: FontWeight.w600)),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(time, style: const TextStyle(color: Colors.grey, fontSize: 12)),
-          const SizedBox(width: 4),
-          const Icon(Icons.chevron_right, size: 16, color: Colors.grey),
-        ],
+      title: Text(
+        name,
+        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+      ),
+      subtitle: Text(
+        'Status: $status',
+        style: const TextStyle(
+          color: Colors.green,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      trailing: Text(
+        time,
+        style: const TextStyle(color: Colors.grey, fontSize: 12),
       ),
     );
   }
@@ -405,12 +586,24 @@ class _AdminAnalyticsDashboardWidgetState extends State<AdminAnalyticsDashboardW
             children: [
               // Header
               Container(
-                padding: const EdgeInsets.only(top: 24, left: 24, right: 24, bottom: 32),
+                padding: const EdgeInsets.only(
+                  top: 24,
+                  left: 24,
+                  right: 24,
+                  bottom: 32,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(32), bottomRight: Radius.circular(32)),
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(32),
+                    bottomRight: Radius.circular(32),
+                  ),
                   boxShadow: [
-                    BoxShadow(color: Colors.deepPurple.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
+                    BoxShadow(
+                      color: Colors.deepPurple.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
                   ],
                 ),
                 child: Row(
@@ -419,9 +612,20 @@ class _AdminAnalyticsDashboardWidgetState extends State<AdminAnalyticsDashboardW
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Analíticas del Sistema', style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, letterSpacing: -0.5)),
-                        const SizedBox(height: 4),
-                        Text('Administrador de EduSafe', style: TextStyle(fontSize: 15, color: Colors.grey.shade500)),
+                        const Text(
+                          'System Analytics',
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          'Safe School Administrator',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
                       ],
                     ),
                     Container(
@@ -430,9 +634,14 @@ class _AdminAnalyticsDashboardWidgetState extends State<AdminAnalyticsDashboardW
                         shape: BoxShape.circle,
                       ),
                       child: IconButton(
-                        icon: const Icon(Icons.settings_rounded, color: Colors.deepPurple),
+                        icon: const Icon(
+                          Icons.settings_rounded,
+                          color: Colors.deepPurple,
+                        ),
                         onPressed: () {
-                          Navigator.of(context).popUntil((route) => route.isFirst);
+                          Navigator.of(
+                            context,
+                          ).popUntil((route) => route.isFirst);
                         },
                         tooltip: "Cerrar sesión",
                       ),
@@ -440,7 +649,7 @@ class _AdminAnalyticsDashboardWidgetState extends State<AdminAnalyticsDashboardW
                   ],
                 ),
               ),
-              
+
               _buildCriticalAlert(),
 
               Padding(
@@ -450,9 +659,23 @@ class _AdminAnalyticsDashboardWidgetState extends State<AdminAnalyticsDashboardW
                     // Métricas
                     Row(
                       children: [
-                        Expanded(child: _buildMetricCard('Total Recojos', '1,284', '+12%', true)),
+                        Expanded(
+                          child: _buildMetricCard(
+                            'Total Pickups',
+                            '1,284',
+                            '+12%',
+                            true,
+                          ),
+                        ),
                         const SizedBox(width: 16),
-                        Expanded(child: _buildMetricCard('Tutores Activos', '856', '+3%', true)),
+                        Expanded(
+                          child: _buildMetricCard(
+                            'Tutores Activos',
+                            '856',
+                            '+3%',
+                            true,
+                          ),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 24),
@@ -465,71 +688,97 @@ class _AdminAnalyticsDashboardWidgetState extends State<AdminAnalyticsDashboardW
                     _buildVerificationHealth(),
                     const SizedBox(height: 24),
 
-                    // Rendimiento de Guardias
-                    _buildGuardPerformance(),
-                    const SizedBox(height: 24),
-
-                    // Gestión de Estudiantes y Guardias (botones)
-                    Row(
-                      children: [
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (context) => const AdminGuardManagementWidget()),
-                              );
-                            },
-                            icon: const Icon(Icons.security, color: Colors.white, size: 18),
-                            label: const Text('Personal', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.deepPurple,
-                              elevation: 0,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    // Gestión de Guardias
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  const AdminGuardManagementWidget(),
                             ),
+                          );
+                        },
+                        icon: const Icon(Icons.security, color: Colors.white),
+                        label: const Text(
+                          'Manage Security Staff',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (context) => const AdminStudentManagementWidget()),
-                              );
-                            },
-                            icon: const Icon(Icons.school, color: Colors.white, size: 18),
-                            label: const Text('Estudiantes', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.indigo,
-                              elevation: 0,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                            ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.deepPurple,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
                           ),
                         ),
-                      ],
+                      ),
                     ),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 16),
+
+                    // Gestión de Estudiantes y Padres
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  const AdminStudentManagementWidget(),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.school, color: Colors.white),
+                        label: const Text(
+                          'Manage Students & Tutors',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.indigo,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
 
                     // Audit Logs Expandibles
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Registros Recientes', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                        const Text(
+                          'Recent Audit Logs',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                          ),
+                        ),
                         TextButton(
                           onPressed: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => const PickupHistoryWidget()),
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const PickupHistoryWidget(),
+                              ),
                             );
                           },
-                          style: TextButton.styleFrom(
-                            foregroundColor: Colors.deepPurple,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          child: const Text(
+                            'View All',
+                            style: TextStyle(color: Colors.red),
                           ),
-                          child: const Text('Ver Todo', style: TextStyle(fontWeight: FontWeight.bold)),
                         ),
                       ],
                     ),
@@ -539,16 +788,20 @@ class _AdminAnalyticsDashboardWidgetState extends State<AdminAnalyticsDashboardW
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: [
-                          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4)),
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.04),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
                         ],
                       ),
                       child: Column(
                         children: [
-                          _buildExpandableAuditItem('Mateo Smith', 'Verificado', '2m ago', 'Carlos M.', 'Puerta Principal'),
-                          Divider(height: 1, color: Colors.grey.shade100, indent: 16, endIndent: 16),
-                          _buildExpandableAuditItem('Alana Velez', 'Verificado', '15m ago', 'Maria G.', 'Puerta Principal'),
-                          Divider(height: 1, color: Colors.grey.shade100, indent: 16, endIndent: 16),
-                          _buildExpandableAuditItem('Julian Ross', 'Excepción Manual', '42m ago', 'Carlos M.', 'Puerta B'),
+                          _buildAuditItem('Mateo Smith', 'Verified', '2m ago'),
+                          const Divider(height: 1),
+                          _buildAuditItem('Alana Velez', 'Verified', '15m ago'),
+                          const Divider(height: 1),
+                          _buildAuditItem('Julian Ross', 'Verified', '42m ago'),
                         ],
                       ),
                     ),
