@@ -226,6 +226,89 @@ class _AdminAnalyticsDashboardWidgetState extends State<AdminAnalyticsDashboardW
     );
   }
 
+  Widget _buildLegendItem(Color color, String text) {
+    return Row(
+      children: [
+        Container(width: 12, height: 12, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+        const SizedBox(width: 8),
+        Text(text, style: const TextStyle(fontSize: 12, color: Colors.black87, fontWeight: FontWeight.w500)),
+      ],
+    );
+  }
+
+  Widget _buildGuardPerformance() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4)),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Rendimiento de Guardias', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          const SizedBox(height: 20),
+          _buildGuardStat('Carlos Rodriguez', 0.98, '98% Match'),
+          const Divider(height: 32),
+          _buildGuardStat('Maria Gonzalez', 0.92, '92% Match'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGuardStat(String name, double value, String percentage) {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(name, style: const TextStyle(fontWeight: FontWeight.w600)),
+            Text(percentage, style: const TextStyle(color: Colors.deepPurple, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        const SizedBox(height: 8),
+        LinearProgressIndicator(
+          value: value,
+          backgroundColor: Colors.deepPurple.shade50,
+          color: Colors.deepPurple,
+          minHeight: 6,
+          borderRadius: BorderRadius.circular(3),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildExpandableAuditItem(String name, String status, String time, String guard, String gate) {
+    return Theme(
+      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+      child: ExpansionTile(
+        leading: const CircleAvatar(backgroundColor: Colors.deepPurple, child: Icon(Icons.person, color: Colors.white, size: 20)),
+        title: Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+        subtitle: Text('Status: $status', style: const TextStyle(color: Colors.green, fontSize: 12)),
+        trailing: Text(time, style: const TextStyle(color: Colors.grey, fontSize: 11)),
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(72, 0, 24, 16),
+            child: Column(
+              children: [
+                _buildModalRow(Icons.security, 'Guardia', guard),
+                _buildModalRow(Icons.door_front_door_rounded, 'Puerta', gate),
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: () => _showAuditDetail(name, status, time),
+                  child: const Text('Ver Evidencia Completa', style: TextStyle(color: Colors.deepPurple, fontWeight: FontWeight.bold)),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildVerificationHealth() {
     return Container(
       padding: const EdgeInsets.all(24),
