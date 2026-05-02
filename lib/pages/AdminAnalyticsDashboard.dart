@@ -112,14 +112,18 @@ class _AdminAnalyticsDashboardWidgetState
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.deepPurple,
+              Flexible(
+                child: Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.deepPurple,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
+              const SizedBox(width: 8),
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 10,
@@ -130,6 +134,7 @@ class _AdminAnalyticsDashboardWidgetState
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
                       trendUp ? Icons.arrow_upward : Icons.arrow_downward,
@@ -722,24 +727,6 @@ class _AdminAnalyticsDashboardWidgetState
                           ),
                         ),
                       ],
-                    ),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.deepPurple.shade50,
-                        shape: BoxShape.circle,
-                      ),
-                      child: IconButton(
-                        icon: const Icon(
-                          Icons.settings_rounded,
-                          color: Colors.deepPurple,
-                        ),
-                        onPressed: () {
-                          Navigator.of(
-                            context,
-                          ).popUntil((route) => route.isFirst);
-                        },
-                        tooltip: "Cerrar sesión",
-                      ),
                     ),
                   ],
                 ),
