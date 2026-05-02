@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../utils/csv_exporter.dart';
 
 class PickupHistoryWidget extends StatefulWidget {
   const PickupHistoryWidget({super.key});
@@ -11,6 +12,148 @@ class PickupHistoryWidget extends StatefulWidget {
 
 class _PickupHistoryWidgetState extends State<PickupHistoryWidget> {
   final scaffoldKey = GlobalKey<ScaffoldState>();
+
+  String _searchQuery = '';
+  DateTime? _selectedDate;
+
+  // Simulated data base with DateTimes
+  late List<Map<String, dynamic>> _allHistoryItems;
+
+  @override
+  void initState() {
+    super.initState();
+    DateTime today = DateTime.now();
+    DateTime yesterday = today.subtract(const Duration(days: 1));
+    
+    _allHistoryItems = [
+      {
+        'studentName': 'Mateo Garcia',
+        'grade': '2do Grado - A',
+        'time': '02:45 PM',
+        'authorizedBy': 'Lucia Garcia (Madre)',
+        'guardName': 'Rodriguez',
+        'isFlagged': false,
+        'date': today,
+      },
+      {
+        'studentName': 'Sofia Chen',
+        'grade': '1er Grado - B',
+        'time': '02:40 PM',
+        'authorizedBy': 'David Chen (Padre)',
+        'guardName': 'Rodriguez',
+        'isFlagged': false,
+        'date': today,
+      },
+      {
+        'studentName': 'Lucas Miller',
+        'grade': 'K-5',
+        'time': '02:32 PM',
+        'authorizedBy': 'Desconocido / Sin ID',
+        'guardName': 'Rodriguez',
+        'isFlagged': true, // Flagged for attention
+        'date': today,
+      },
+      {
+        'studentName': 'Elena Rossi',
+        'grade': '4to Grado - C',
+        'time': '02:15 PM',
+        'authorizedBy': 'Marco Rossi (Tío)',
+        'guardName': 'Martinez',
+        'isFlagged': false,
+        'date': yesterday,
+      },
+      {
+        'studentName': 'Carlos Diaz',
+        'grade': '3er Grado - B',
+        'time': '03:00 PM',
+        'authorizedBy': 'Maria Diaz (Madre)',
+        'guardName': 'Martinez',
+        'isFlagged': false,
+        'date': yesterday,
+      },
+    ];
+  }
+
+  List<Map<String, dynamic>> get _filteredItems {
+    return _allHistoryItems.where((item) {
+      final matchesSearch = item['studentName'].toLowerCase().contains(_searchQuery.toLowerCase()) || 
+                            item['authorizedBy'].toLowerCase().contains(_searchQuery.toLowerCase());
+      
+      bool matchesDate = true;
+      if (_selectedDate != null) {
+        DateTime itemDate = item['date'];
+        matchesDate = itemDate.year == _selectedDate!.year &&
+                      itemDate.month == _selectedDate!.month &&
+                      itemDate.day == _selectedDate!.day;
+      }
+      
+      return matchesSearch && matchesDate;
+    }).toList();
+  }
+
+  Future<void> _pickDate() async {
+    DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate ?? DateTime.now(),
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2100),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: Colors.deepPurple, // header background color
+              onPrimary: Colors.white, // header text color
+              onSurface: Colors.deepPurple.shade900, // body text color
+            ),
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.deepPurple, // button text color
+              ),
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null) {
+      setState(() => _selectedDate = picked);
+    }
+  }
+
+  Future<void> _exportReport() async {
+    final filteredList = _filteredItems;
+    if (filteredList.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No hay datos para exportar.')),
+      );
+      return;
+    }
+
+    String csvContent = "Estudiante,Grado,Hora,Autorizado Por,Guardia,Estado,Fecha\n";
+    for (var item in filteredList) {
+      String student = '"${item['studentName']}"';
+      String grade = '"${item['grade']}"';
+      String time = '"${item['time']}"';
+      String auth = '"${item['authorizedBy']}"';
+      String guard = '"${item['guardName']}"';
+      String status = item['isFlagged'] ? '"Alerta"' : '"Completado"';
+      DateTime d = item['date'];
+      String date = '"${d.day}/${d.month}/${d.year}"';
+
+      csvContent += "$student,$grade,$time,$auth,$guard,$status,$date\n";
+    }
+
+    try {
+      downloadCSV('reporte_diario.csv', csvContent);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Reporte descargado exitosamente.'), backgroundColor: Colors.green),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No se pudo exportar el archivo.')),
+      );
+    }
+  }
 
   Widget _buildSummaryCard(String value, String label, Color bgColor, Color textColor) {
     return Container(
@@ -241,6 +384,8 @@ class _PickupHistoryWidgetState extends State<PickupHistoryWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final filteredList = _filteredItems;
+
     return Scaffold(
       key: scaffoldKey,
       backgroundColor: Colors.grey.shade50,
@@ -257,7 +402,7 @@ class _PickupHistoryWidgetState extends State<PickupHistoryWidget> {
                     icon: const Icon(Icons.arrow_back_rounded),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
-                  const Text('Pickup History', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  const Text('Historial de Recojos', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                   IconButton(
                     icon: const Icon(Icons.tune_rounded, color: Colors.deepPurple),
                     onPressed: () {},
@@ -275,9 +420,9 @@ class _PickupHistoryWidgetState extends State<PickupHistoryWidget> {
                     // Summary Cards
                     Row(
                       children: [
-                        Expanded(child: _buildSummaryCard("128", "Total Today", Colors.deepPurple, Colors.white)),
+                        Expanded(child: _buildSummaryCard("128", "Total Hoy", Colors.deepPurple, Colors.white)),
                         const SizedBox(width: 16),
-                        Expanded(child: _buildSummaryCard("12", "Pending", Colors.orange.shade100, Colors.deepOrange.shade900)),
+                        Expanded(child: _buildSummaryCard("12", "Pendientes", Colors.orange.shade100, Colors.deepOrange.shade900)),
                       ],
                     ),
                     const SizedBox(height: 24),
@@ -287,8 +432,9 @@ class _PickupHistoryWidgetState extends State<PickupHistoryWidget> {
                       children: [
                         Expanded(
                           child: TextField(
+                            onChanged: (value) => setState(() => _searchQuery = value),
                             decoration: InputDecoration(
-                              hintText: "Search student...",
+                              hintText: "Buscar estudiante o tutor...",
                               prefixIcon: const Icon(Icons.search_rounded, size: 20),
                               filled: true,
                               fillColor: Colors.white,
@@ -305,63 +451,66 @@ class _PickupHistoryWidgetState extends State<PickupHistoryWidget> {
                           ),
                         ),
                         const SizedBox(width: 16),
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: Colors.grey.shade200),
+                        GestureDetector(
+                          onTap: _pickDate,
+                          child: Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: _selectedDate != null ? Colors.deepPurple : Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: _selectedDate != null ? Colors.deepPurple : Colors.grey.shade200),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.calendar_month_rounded, 
+                                  color: _selectedDate != null ? Colors.white : Colors.deepPurple,
+                                ),
+                                if (_selectedDate != null) ...[
+                                  const SizedBox(width: 8),
+                                  GestureDetector(
+                                    onTap: () {
+                                      setState(() => _selectedDate = null);
+                                    },
+                                    child: const Icon(Icons.close, color: Colors.white, size: 16),
+                                  )
+                                ]
+                              ],
+                            ),
                           ),
-                          child: const Icon(Icons.calendar_month_rounded, color: Colors.deepPurple),
                         ),
                       ],
                     ),
                     const SizedBox(height: 24),
 
                     // History List
-                    const Text('Recent Activity', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    Text(
+                      _selectedDate != null 
+                        ? 'Actividad del ${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}' 
+                        : 'Actividad Reciente', 
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)
+                    ),
                     const SizedBox(height: 16),
-                    _buildHistoryItem(
-                      studentName: 'Mateo Garcia',
-                      grade: '2nd Grade - A',
-                      time: '02:45 PM',
-                      authorizedBy: 'Lucia Garcia (Mother)',
-                      guardName: 'Rodriguez',
-                      isFlagged: false,
-                    ),
-                    _buildHistoryItem(
-                      studentName: 'Sofia Chen',
-                      grade: '1st Grade - B',
-                      time: '02:40 PM',
-                      authorizedBy: 'David Chen (Father)',
-                      guardName: 'Rodriguez',
-                      isFlagged: false,
-                    ),
-                    _buildHistoryItem(
-                      studentName: 'Lucas Miller',
-                      grade: 'K-5',
-                      time: '02:32 PM',
-                      authorizedBy: 'Unknown / No ID',
-                      guardName: 'Rodriguez',
-                      isFlagged: true, // Flagged for attention
-                    ),
-                    _buildHistoryItem(
-                      studentName: 'Elena Rossi',
-                      grade: '4th Grade - C',
-                      time: '02:15 PM',
-                      authorizedBy: 'Marco Rossi (Uncle)',
-                      guardName: 'Martinez',
-                      isFlagged: false,
-                    ),
+                    
+                    if (filteredList.isEmpty)
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 32.0),
+                        child: Center(
+                          child: Text("No se encontraron registros.", style: TextStyle(color: Colors.grey)),
+                        ),
+                      )
+                    else
+                      ...filteredList.map((item) => _buildHistoryItem(item)),
+
                     const SizedBox(height: 16),
 
                     // Export Button
                     SizedBox(
                       width: double.infinity,
                       child: OutlinedButton.icon(
-                        onPressed: () {},
+                        onPressed: _exportReport,
                         icon: const Icon(Icons.download_rounded, color: Colors.deepPurple),
-                        label: const Text('Export Daily Report', style: TextStyle(color: Colors.deepPurple, fontWeight: FontWeight.bold)),
+                        label: const Text('Exportar Reporte Diario', style: TextStyle(color: Colors.deepPurple, fontWeight: FontWeight.bold)),
                         style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           side: const BorderSide(color: Colors.deepPurple),

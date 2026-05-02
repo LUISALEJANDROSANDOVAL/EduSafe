@@ -89,20 +89,19 @@ class _IdentityValidationWidgetState extends State<IdentityValidationWidget> {
                           ),
                           Text(
                             'Identity Validation',
-                            style: FlutterFlowTheme.of(context)
-                                .titleMedium
+                            style: FlutterFlowTheme.of(context).titleMedium
                                 .override(
                                   font: GoogleFonts.plusJakartaSans(
                                     fontWeight: FontWeight.bold,
-                                    fontStyle: FlutterFlowTheme.of(context)
-                                        .titleMedium
-                                        .fontStyle,
+                                    fontStyle: FlutterFlowTheme.of(
+                                      context,
+                                    ).titleMedium.fontStyle,
                                   ),
                                   letterSpacing: 0.0,
                                   fontWeight: FontWeight.bold,
-                                  fontStyle: FlutterFlowTheme.of(context)
-                                      .titleMedium
-                                      .fontStyle,
+                                  fontStyle: FlutterFlowTheme.of(
+                                    context,
+                                  ).titleMedium.fontStyle,
                                   lineHeight: 1.35,
                                 ),
                           ),
@@ -173,8 +172,9 @@ class _IdentityValidationWidgetState extends State<IdentityValidationWidget> {
                                       children: [
                                         Icon(
                                           Icons.help,
-                                          color: FlutterFlowTheme.of(context)
-                                              .primary,
+                                          color: FlutterFlowTheme.of(
+                                            context,
+                                          ).primary,
                                           size: 24,
                                         ),
                                         Expanded(
@@ -188,20 +188,18 @@ class _IdentityValidationWidgetState extends State<IdentityValidationWidget> {
                                                     fontWeight: FontWeight.w500,
                                                     fontStyle:
                                                         FlutterFlowTheme.of(
-                                                                context)
-                                                            .bodySmall
-                                                            .fontStyle,
+                                                          context,
+                                                        ).bodySmall.fontStyle,
                                                   ),
                                                   color: FlutterFlowTheme.of(
-                                                          context)
-                                                      .primary,
+                                                    context,
+                                                  ).primary,
                                                   letterSpacing: 0.0,
                                                   fontWeight: FontWeight.w500,
                                                   fontStyle:
                                                       FlutterFlowTheme.of(
-                                                              context)
-                                                          .bodySmall
-                                                          .fontStyle,
+                                                        context,
+                                                      ).bodySmall.fontStyle,
                                                   lineHeight: 1.4,
                                                 ),
                                           ),
@@ -223,19 +221,18 @@ class _IdentityValidationWidgetState extends State<IdentityValidationWidget> {
                                         .override(
                                           font: GoogleFonts.plusJakartaSans(
                                             fontWeight: FontWeight.bold,
-                                            fontStyle:
-                                                FlutterFlowTheme.of(context)
-                                                    .labelLarge
-                                                    .fontStyle,
+                                            fontStyle: FlutterFlowTheme.of(
+                                              context,
+                                            ).labelLarge.fontStyle,
                                           ),
-                                          color: FlutterFlowTheme.of(context)
-                                              .secondaryText,
+                                          color: FlutterFlowTheme.of(
+                                            context,
+                                          ).secondaryText,
                                           letterSpacing: 0.0,
                                           fontWeight: FontWeight.bold,
-                                          fontStyle:
-                                              FlutterFlowTheme.of(context)
-                                                  .labelLarge
-                                                  .fontStyle,
+                                          fontStyle: FlutterFlowTheme.of(
+                                            context,
+                                          ).labelLarge.fontStyle,
                                           lineHeight: 1.3,
                                         ),
                                   ),
@@ -269,19 +266,18 @@ class _IdentityValidationWidgetState extends State<IdentityValidationWidget> {
                                         .override(
                                           font: GoogleFonts.plusJakartaSans(
                                             fontWeight: FontWeight.bold,
-                                            fontStyle:
-                                                FlutterFlowTheme.of(context)
-                                                    .labelLarge
-                                                    .fontStyle,
+                                            fontStyle: FlutterFlowTheme.of(
+                                              context,
+                                            ).labelLarge.fontStyle,
                                           ),
-                                          color: FlutterFlowTheme.of(context)
-                                              .secondaryText,
+                                          color: FlutterFlowTheme.of(
+                                            context,
+                                          ).secondaryText,
                                           letterSpacing: 0.0,
                                           fontWeight: FontWeight.bold,
-                                          fontStyle:
-                                              FlutterFlowTheme.of(context)
-                                                  .labelLarge
-                                                  .fontStyle,
+                                          fontStyle: FlutterFlowTheme.of(
+                                            context,
+                                          ).labelLarge.fontStyle,
                                           lineHeight: 1.3,
                                         ),
                                   ),
@@ -309,8 +305,9 @@ class _IdentityValidationWidgetState extends State<IdentityValidationWidget> {
                                   borderRadius: BorderRadius.circular(24),
                                   shape: BoxShape.rectangle,
                                   border: Border.all(
-                                    color:
-                                        FlutterFlowTheme.of(context).success30,
+                                    color: FlutterFlowTheme.of(
+                                      context,
+                                    ).success30,
                                     width: 1,
                                   ),
                                 ),
@@ -333,58 +330,57 @@ class _IdentityValidationWidgetState extends State<IdentityValidationWidget> {
                                           children: [
                                             Text(
                                               'Face Match Confidence',
-                                              style: FlutterFlowTheme.of(
-                                                      context)
-                                                  .bodyMedium
-                                                  .override(
+                                              style:
+                                                  FlutterFlowTheme.of(
+                                                    context,
+                                                  ).bodyMedium.override(
                                                     font: GoogleFonts.outfit(
                                                       fontWeight:
                                                           FontWeight.w600,
                                                       fontStyle:
                                                           FlutterFlowTheme.of(
-                                                                  context)
+                                                                context,
+                                                              )
                                                               .bodyMedium
                                                               .fontStyle,
                                                     ),
                                                     color: FlutterFlowTheme.of(
-                                                            context)
-                                                        .onPrimary,
+                                                      context,
+                                                    ).onPrimary,
                                                     letterSpacing: 0.0,
                                                     fontWeight: FontWeight.w600,
                                                     fontStyle:
                                                         FlutterFlowTheme.of(
-                                                                context)
-                                                            .bodyMedium
-                                                            .fontStyle,
+                                                          context,
+                                                        ).bodyMedium.fontStyle,
                                                     lineHeight: 1.45,
                                                   ),
                                             ),
                                             Text(
                                               '98.4%',
-                                              style: FlutterFlowTheme.of(
-                                                      context)
-                                                  .titleMedium
-                                                  .override(
-                                                    font: GoogleFonts
-                                                        .plusJakartaSans(
+                                              style:
+                                                  FlutterFlowTheme.of(
+                                                    context,
+                                                  ).titleMedium.override(
+                                                    font: GoogleFonts.plusJakartaSans(
                                                       fontWeight:
                                                           FontWeight.bold,
                                                       fontStyle:
                                                           FlutterFlowTheme.of(
-                                                                  context)
+                                                                context,
+                                                              )
                                                               .titleMedium
                                                               .fontStyle,
                                                     ),
                                                     color: FlutterFlowTheme.of(
-                                                            context)
-                                                        .onPrimary,
+                                                      context,
+                                                    ).onPrimary,
                                                     letterSpacing: 0.0,
                                                     fontWeight: FontWeight.bold,
                                                     fontStyle:
                                                         FlutterFlowTheme.of(
-                                                                context)
-                                                            .titleMedium
-                                                            .fontStyle,
+                                                          context,
+                                                        ).titleMedium.fontStyle,
                                                     lineHeight: 1.35,
                                                   ),
                                             ),
@@ -395,12 +391,12 @@ class _IdentityValidationWidgetState extends State<IdentityValidationWidget> {
                                           lineHeight: 8,
                                           animation: true,
                                           animateFromLastPercent: true,
-                                          progressColor:
-                                              FlutterFlowTheme.of(context)
-                                                  .success,
-                                          backgroundColor:
-                                              FlutterFlowTheme.of(context)
-                                                  .success20,
+                                          progressColor: FlutterFlowTheme.of(
+                                            context,
+                                          ).success,
+                                          backgroundColor: FlutterFlowTheme.of(
+                                            context,
+                                          ).success20,
                                           barRadius: Radius.circular(4),
                                           padding: EdgeInsets.zero,
                                         ),
@@ -409,9 +405,7 @@ class _IdentityValidationWidgetState extends State<IdentityValidationWidget> {
                                   ),
                                 ),
                               ),
-                              Container(
-                                height: 80,
-                              ),
+                              Container(height: 80),
                             ].divide(SizedBox(height: 24)),
                           ),
                         ),
@@ -460,8 +454,9 @@ class _IdentityValidationWidgetState extends State<IdentityValidationWidget> {
                                     content: 'Deny Entry',
                                     icon: Icon(
                                       Icons.close_rounded,
-                                      color:
-                                          FlutterFlowTheme.of(context).onError,
+                                      color: FlutterFlowTheme.of(
+                                        context,
+                                      ).onError,
                                       size: 16,
                                     ),
                                     icon_present: true,
@@ -486,8 +481,9 @@ class _IdentityValidationWidgetState extends State<IdentityValidationWidget> {
                                     content: 'Confirm Pickup',
                                     icon: Icon(
                                       Icons.check_circle_rounded,
-                                      color: FlutterFlowTheme.of(context)
-                                          .onPrimary,
+                                      color: FlutterFlowTheme.of(
+                                        context,
+                                      ).onPrimary,
                                       size: 16,
                                     ),
                                     icon_present: true,
