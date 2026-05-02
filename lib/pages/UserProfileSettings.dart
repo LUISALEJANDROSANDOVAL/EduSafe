@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'PersonalInfoPage.dart';
 import 'SecurityCenterPage.dart';
 import 'HelpSupportPage.dart';
+import 'Login.dart';
 import '../services/supabase_service.dart';
 
 class UserProfileSettingsWidget extends StatefulWidget {
@@ -201,7 +202,6 @@ class _UserProfileSettingsWidgetState extends State<UserProfileSettingsWidget> {
                     onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const PersonalInfoPage())),
                   ),
                   _buildSettingTile(title: "Biometría", subtitle: "Configurar huella o rostro", icon: Icons.fingerprint_rounded),
-                  _buildSettingTile(title: "Mi Código QR", subtitle: "QR permanente de identificación", icon: Icons.qr_code_2_rounded),
                   const SizedBox(height: 24),
 
                   // Preferencias
@@ -257,9 +257,18 @@ class _UserProfileSettingsWidgetState extends State<UserProfileSettingsWidget> {
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton.icon(
-                      onPressed: () {
-                        // Limpiar historial de navegación y volver al Login (opcional)
-                        Navigator.of(context).popUntil((route) => route.isFirst);
+                      onPressed: () async {
+                        // Llamar a Supabase para cerrar sesión
+                        await _supabaseService.signOut();
+                        
+                        // Limpiar historial de navegación y volver al Login
+                        if (context.mounted) {
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(builder: (context) => const LoginScreenWidget()),
+                            (route) => false,
+                          );
+                        }
                       },
                       icon: const Icon(Icons.logout_rounded, color: Colors.redAccent),
                       label: const Text("Cerrar Sesión", style: TextStyle(color: Colors.redAccent, fontSize: 16, fontWeight: FontWeight.bold)),

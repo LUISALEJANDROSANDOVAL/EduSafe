@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/supabase_service.dart';
 
 class PersonalInfoPage extends StatefulWidget {
   const PersonalInfoPage({super.key});
@@ -8,10 +9,34 @@ class PersonalInfoPage extends StatefulWidget {
 }
 
 class _PersonalInfoPageState extends State<PersonalInfoPage> {
-  final _nameController = TextEditingController(text: 'Ricardo Morales');
-  final _dniController = TextEditingController(text: '12345678-X');
-  final _phoneController = TextEditingController(text: '+591 77223344');
-  final _addressController = TextEditingController(text: 'Av. Las Lomas #123, Santa Cruz');
+  final _nameController = TextEditingController();
+  final _dniController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _emailController = TextEditingController();
+
+  bool _isLoading = true;
+  bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfile();
+  }
+
+  Future<void> _loadProfile() async {
+    final profile = await SupabaseService().getCurrentUserProfile();
+    if (profile != null) {
+      setState(() {
+        _nameController.text = profile['nombre_completo'] ?? '';
+        _dniController.text = profile['cedula_identidad'] ?? '';
+        _phoneController.text = profile['telefono'] ?? '';
+        _emailController.text = profile['correo'] ?? '';
+      });
+    }
+    if (mounted) {
+      setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +50,9 @@ class _PersonalInfoPageState extends State<PersonalInfoPage> {
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
-        child: Column(
+        child: _isLoading 
+            ? const Center(child: CircularProgressIndicator(color: Colors.deepPurple))
+            : Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Center(
@@ -51,26 +78,59 @@ class _PersonalInfoPageState extends State<PersonalInfoPage> {
             const SizedBox(height: 32),
             _buildField('Nombre Completo', _nameController, Icons.person_outline),
             const SizedBox(height: 16),
-            _buildField('DNI / Identificación', _dniController, Icons.badge_outlined),
+            _buildField('DNI / Identificación (Inmutable)', _dniController, Icons.badge_outlined, readOnly: true),
             const SizedBox(height: 16),
             _buildField('Número de Teléfono', _phoneController, Icons.phone_android_rounded),
             const SizedBox(height: 16),
-            _buildField('Dirección de Domicilio', _addressController, Icons.location_on_outlined, maxLines: 2),
+            _buildField('Correo Electrónico', _emailController, Icons.email_outlined),
             const SizedBox(height: 40),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Cambios guardados exitosamente')),
-                  );
+                onPressed: _isSaving ? null : () async {
+                  setState(() => _isSaving = true);
+                  try {
+                    final profile = await SupabaseService().getCurrentUserProfile();
+                    if (profile != null) {
+                      await SupabaseService().updateUserProfile(
+                        id: profile['id'],
+                        nombreCompleto: _nameController.text.trim(),
+                        // La cédula de identidad es inmutable, no la actualizamos
+                        telefono: _phoneController.text.trim(),
+                        correo: _emailController.text.trim(),
+                      );
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Cambios guardados exitosamente en la base de datos'),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                      }
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Error al guardar: ${e.toString().replaceAll('Exception: ', '')}'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  } finally {
+                    if (context.mounted) {
+                      setState(() => _isSaving = false);
+                    }
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.deepPurple,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                child: const Text('Guardar Cambios', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                child: _isSaving 
+                    ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                    : const Text('Guardar Cambios', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
               ),
             ),
           ],
@@ -79,7 +139,7 @@ class _PersonalInfoPageState extends State<PersonalInfoPage> {
     );
   }
 
-  Widget _buildField(String label, TextEditingController controller, IconData icon, {int maxLines = 1}) {
+  Widget _buildField(String label, TextEditingController controller, IconData icon, {int maxLines = 1, bool readOnly = false}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -88,10 +148,17 @@ class _PersonalInfoPageState extends State<PersonalInfoPage> {
         TextField(
           controller: controller,
           maxLines: maxLines,
+          readOnly: readOnly,
+          style: TextStyle(color: readOnly ? Colors.grey.shade600 : Colors.black),
           decoration: InputDecoration(
-            prefixIcon: Icon(icon, color: Colors.deepPurple),
+            filled: readOnly,
+            fillColor: readOnly ? Colors.grey.shade100 : Colors.transparent,
+            prefixIcon: Icon(icon, color: readOnly ? Colors.grey : Colors.deepPurple),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Colors.deepPurple, width: 2)),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12), 
+              borderSide: BorderSide(color: readOnly ? Colors.grey : Colors.deepPurple, width: 2),
+            ),
           ),
         ),
       ],
