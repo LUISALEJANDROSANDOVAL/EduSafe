@@ -362,41 +362,9 @@ class _AdminAnalyticsDashboardWidgetState
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        Container(
-                          width: 10,
-                          height: 10,
-                          decoration: const BoxDecoration(
-                            color: Colors.deepPurple,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        const Text(
-                          '94% Biometric Match',
-                          style: TextStyle(fontSize: 12),
-                        ),
-                      ],
-                    ),
+                  _buildLegendItem(Colors.deepPurple, '94% Coincidencia Biométrica'),
                     const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Container(
-                          width: 10,
-                          height: 10,
-                          decoration: BoxDecoration(
-                            color: Colors.deepPurple.shade100,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        const Text(
-                          '6% Manual Override',
-                          style: TextStyle(fontSize: 12),
-                        ),
-                      ],
-                    ),
+                    _buildLegendItem(Colors.deepPurple.withOpacity(0.2), '6% Validación Manual'),
                   ],
                 ),
               ),
@@ -547,6 +515,160 @@ class _AdminAnalyticsDashboardWidgetState
     );
   }
 
+  Widget _buildLegendItem(Color color, String label) {
+    return Row(
+      children: [
+        Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 12),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildExpandableAuditItem(String name, String status, String time) {
+    return Theme(
+      data: ThemeData(dividerColor: Colors.transparent),
+      child: ExpansionTile(
+        leading: CircleAvatar(
+          backgroundColor: Colors.deepPurple.shade50,
+          child: const Icon(Icons.person, color: Colors.deepPurple, size: 20),
+        ),
+        title: Text(
+          name,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+        ),
+        subtitle: Text(
+          'Recogida validada - $time',
+          style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+        ),
+        trailing: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.green.shade50,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            status,
+            style: const TextStyle(
+              color: Colors.green,
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            child: Column(
+              children: [
+                const Divider(height: 1),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _buildGuardStat(Icons.verified_user_rounded, 'Confianza', '98.2%'),
+                    _buildGuardStat(Icons.timer_outlined, 'Duración', '45s'),
+                    _buildGuardStat(Icons.location_on_outlined, 'Puerta', 'A-Principal'),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => _showAuditDetail(name, status, time),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.deepPurple,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: const Text('Ver Evidencia Completa'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGuardPerformance() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Rendimiento de Guardias', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              Icon(Icons.military_tech_rounded, color: Colors.orange),
+            ],
+          ),
+          const SizedBox(height: 20),
+          _buildGuardStatRow('Oficial Rodríguez', 0.98, '124 escaneos'),
+          const SizedBox(height: 16),
+          _buildGuardStatRow('Oficial Martínez', 0.92, '98 escaneos'),
+          const SizedBox(height: 16),
+          _buildGuardStatRow('Oficial López', 0.85, '115 escaneos'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGuardStatRow(String name, double performance, String detail) {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(name, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+            Text(detail, style: TextStyle(color: Colors.grey.shade500, fontSize: 11)),
+          ],
+        ),
+        const SizedBox(height: 8),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: LinearProgressIndicator(
+            value: performance,
+            backgroundColor: Colors.grey.shade100,
+            color: performance > 0.9 ? Colors.green : (performance > 0.8 ? Colors.orange : Colors.red),
+            minHeight: 6,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildGuardStat(IconData icon, String label, String value) {
+    return Column(
+      children: [
+        Icon(icon, size: 18, color: Colors.deepPurple.shade300),
+        const SizedBox(height: 4),
+        Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+        Text(label, style: TextStyle(color: Colors.grey.shade500, fontSize: 10)),
+      ],
+    );
+  }
+
   Widget _buildAuditItem(String name, String status, String time) {
     return ListTile(
       onTap: () => _showAuditDetail(name, status, time),
@@ -688,6 +810,10 @@ class _AdminAnalyticsDashboardWidgetState
                     _buildVerificationHealth(),
                     const SizedBox(height: 24),
 
+                    // Rendimiento de Guardias
+                    _buildGuardPerformance(),
+                    const SizedBox(height: 24),
+
                     // Gestión de Guardias
                     SizedBox(
                       width: double.infinity,
@@ -797,11 +923,11 @@ class _AdminAnalyticsDashboardWidgetState
                       ),
                       child: Column(
                         children: [
-                          _buildAuditItem('Mateo Smith', 'Verified', '2m ago'),
-                          const Divider(height: 1),
-                          _buildAuditItem('Alana Velez', 'Verified', '15m ago'),
-                          const Divider(height: 1),
-                          _buildAuditItem('Julian Ross', 'Verified', '42m ago'),
+                          _buildExpandableAuditItem('Mateo Smith', 'Verificado', 'hace 2m'),
+                          const Divider(height: 1, indent: 16, endIndent: 16),
+                          _buildExpandableAuditItem('Alana Velez', 'Verificado', 'hace 15m'),
+                          const Divider(height: 1, indent: 16, endIndent: 16),
+                          _buildExpandableAuditItem('Julian Ross', 'Verificado', 'hace 42m'),
                         ],
                       ),
                     ),

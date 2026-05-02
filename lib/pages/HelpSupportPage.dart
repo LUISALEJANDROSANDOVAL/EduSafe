@@ -18,7 +18,6 @@ class HelpSupportPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-<<<<<<< HEAD
       backgroundColor: Colors.grey.shade50,
       body: CustomScrollView(
         slivers: [
@@ -49,53 +48,6 @@ class HelpSupportPage extends StatelessWidget {
               padding: const EdgeInsets.all(24.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-=======
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text('Ayuda y Soporte', style: TextStyle(color: Colors.black)),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('¿Cómo podemos ayudarte?', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 24),
-            
-            // Search Bar
-            TextField(
-              decoration: InputDecoration(
-                hintText: 'Buscar temas de ayuda...',
-                prefixIcon: const Icon(Icons.search),
-                filled: true,
-                fillColor: Colors.grey.shade100,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
-              ),
-            ),
-            
-            const SizedBox(height: 32),
-            const Text('Preguntas Frecuentes', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 16),
-            
-            _buildFaqItem('¿Cómo autorizo a un tercero?', 'Ve al inicio, haz clic en "Autorizar", ingresa su correo y recibirán un enlace de registro.'),
-            _buildFaqItem('¿Qué pasa si mi código QR expira?', 'Los códigos QR son dinámicos y se actualizan cada 45 segundos por seguridad. Solo espera el siguiente.'),
-            _buildFaqItem('¿Cómo se usan los datos biométricos?', 'Las fotos faciales solo se usan para verificar la identidad en la entrada del colegio y se almacenan de forma segura.'),
-            
-            const SizedBox(height: 40),
-            const Text('¿Aún necesitas ayuda?', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 16),
-            
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.deepPurple.shade50,
-                borderRadius: BorderRadius.circular(24),
-              ),
-              child: Row(
->>>>>>> 6471b013fda23564e8df47e77326576b4c5aa486
                 children: [
                   const Text('¿En qué podemos ayudarte?', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 20),
@@ -141,16 +93,11 @@ class HelpSupportPage extends StatelessWidget {
                     ),
                     child: Column(
                       children: [
-<<<<<<< HEAD
                         _buildFaqItem('¿Cómo autorizo a un tercero?', 'Ve al panel principal, haz clic en "Autorizar", ingresa su correo y recibirá un enlace de registro.'),
                         const Divider(height: 1, indent: 16, endIndent: 16),
                         _buildFaqItem('¿Qué hago si mi código QR expira?', 'Los códigos QR son dinámicos y se actualizan cada 45 segundos por seguridad. Solo espera al siguiente o actualiza la pantalla.'),
                         const Divider(height: 1, indent: 16, endIndent: 16),
                         _buildFaqItem('¿Cómo se usan mis datos biométricos?', 'Las fotos faciales solo se usan para verificar identidad en la puerta del colegio y se almacenan de manera encriptada y local cuando es posible.'),
-=======
-                        const Text('Contactar a Soporte', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                        Text('Disponible Lun-Vie, 8am - 6pm', style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
->>>>>>> 6471b013fda23564e8df47e77326576b4c5aa486
                       ],
                     ),
                   ),
