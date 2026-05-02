@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'GuardProfile.dart';
 import 'IdentityValidation.dart';
+
 class GuardScannerWidget extends StatefulWidget {
   const GuardScannerWidget({super.key});
 
@@ -29,15 +30,31 @@ class _GuardScannerWidgetState extends State<GuardScannerWidget> {
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
-                  color: _isScannerActive ? Colors.deepPurple : Colors.transparent,
+                  color: _isScannerActive
+                      ? Colors.deepPurple
+                      : Colors.transparent,
                   borderRadius: BorderRadius.circular(30),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.qr_code_scanner_rounded, color: _isScannerActive ? Colors.white : Colors.grey.shade600, size: 20),
+                    Icon(
+                      Icons.qr_code_scanner_rounded,
+                      color: _isScannerActive
+                          ? Colors.white
+                          : Colors.grey.shade600,
+                      size: 20,
+                    ),
                     const SizedBox(width: 8),
-                    Text('Escáner', style: TextStyle(color: _isScannerActive ? Colors.white : Colors.grey.shade600, fontWeight: FontWeight.bold)),
+                    Text(
+                      'Escáner',
+                      style: TextStyle(
+                        color: _isScannerActive
+                            ? Colors.white
+                            : Colors.grey.shade600,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -49,15 +66,31 @@ class _GuardScannerWidgetState extends State<GuardScannerWidget> {
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
-                  color: !_isScannerActive ? Colors.deepPurple : Colors.transparent,
+                  color: !_isScannerActive
+                      ? Colors.deepPurple
+                      : Colors.transparent,
                   borderRadius: BorderRadius.circular(30),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.history_rounded, color: !_isScannerActive ? Colors.white : Colors.grey.shade600, size: 20),
+                    Icon(
+                      Icons.history_rounded,
+                      color: !_isScannerActive
+                          ? Colors.white
+                          : Colors.grey.shade600,
+                      size: 20,
+                    ),
                     const SizedBox(width: 8),
-                    Text('Historial', style: TextStyle(color: !_isScannerActive ? Colors.white : Colors.grey.shade600, fontWeight: FontWeight.bold)),
+                    Text(
+                      'Historial',
+                      style: TextStyle(
+                        color: !_isScannerActive
+                            ? Colors.white
+                            : Colors.grey.shade600,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -90,11 +123,7 @@ class _GuardScannerWidgetState extends State<GuardScannerWidget> {
           // Scanning line animation simulation
           Positioned(
             top: 150,
-            child: Container(
-              width: 250,
-              height: 2,
-              color: Colors.greenAccent,
-            ),
+            child: Container(width: 250, height: 2, color: Colors.greenAccent),
           ),
           // Bottom instruction
           Positioned(
@@ -105,7 +134,10 @@ class _GuardScannerWidgetState extends State<GuardScannerWidget> {
                 color: Colors.black.withOpacity(0.6),
                 borderRadius: BorderRadius.circular(30),
               ),
-              child: const Text('Alinea el código QR en el marco', style: TextStyle(color: Colors.white)),
+              child: const Text(
+                'Alinea el código QR en el marco',
+                style: TextStyle(color: Colors.white),
+              ),
             ),
           ),
         ],
@@ -119,22 +151,38 @@ class _GuardScannerWidgetState extends State<GuardScannerWidget> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: const Text('Ingreso Manual', style: TextStyle(fontWeight: FontWeight.bold)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: const Text(
+            'Ingreso Manual',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text('Ingresa el código de autorización o número de documento:', style: TextStyle(fontSize: 14)),
+              const Text(
+                'Ingresa el código de autorización o número de documento:',
+                style: TextStyle(fontSize: 14),
+              ),
               const SizedBox(height: 16),
               TextField(
                 controller: idController,
                 decoration: InputDecoration(
                   hintText: 'Ej. DNI, Código...',
-                  prefixIcon: const Icon(Icons.badge_outlined, color: Colors.deepPurple),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  prefixIcon: const Icon(
+                    Icons.badge_outlined,
+                    color: Colors.deepPurple,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Colors.deepPurple, width: 2),
+                    borderSide: const BorderSide(
+                      color: Colors.deepPurple,
+                      width: 2,
+                    ),
                   ),
                 ),
               ),
@@ -143,7 +191,10 @@ class _GuardScannerWidgetState extends State<GuardScannerWidget> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancelar', style: TextStyle(color: Colors.grey)),
+              child: const Text(
+                'Cancelar',
+                style: TextStyle(color: Colors.grey),
+              ),
             ),
             ElevatedButton(
               onPressed: () {
@@ -151,15 +202,25 @@ class _GuardScannerWidgetState extends State<GuardScannerWidget> {
                   Navigator.pop(context);
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const IdentityValidationWidget()),
+                    MaterialPageRoute(
+                      builder: (context) => const IdentityValidationWidget(),
+                    ),
                   );
                 }
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.deepPurple,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
-              child: const Text('Validar', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              child: const Text(
+                'Validar',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ],
         );
@@ -167,7 +228,12 @@ class _GuardScannerWidgetState extends State<GuardScannerWidget> {
     );
   }
 
-  Widget _buildMetricsCard(String title, String value, String subtitle, Color valueColor) {
+  Widget _buildMetricsCard(
+    String title,
+    String value,
+    String subtitle,
+    Color valueColor,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -178,17 +244,34 @@ class _GuardScannerWidgetState extends State<GuardScannerWidget> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+          Text(
+            title,
+            style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+          ),
           const SizedBox(height: 4),
-          Text(value, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: valueColor)),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: valueColor,
+            ),
+          ),
           const SizedBox(height: 4),
-          Text(subtitle, style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+          Text(
+            subtitle,
+            style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildValidationCard(String studentName, String guardian, String time) {
+  Widget _buildValidationCard(
+    String studentName,
+    String guardian,
+    String time,
+  ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
@@ -201,20 +284,42 @@ class _GuardScannerWidgetState extends State<GuardScannerWidget> {
         children: [
           Container(
             padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(color: Colors.green.shade50, shape: BoxShape.circle),
-            child: const Icon(Icons.check_circle_rounded, color: Colors.green, size: 24),
+            decoration: BoxDecoration(
+              color: Colors.green.shade50,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.check_circle_rounded,
+              color: Colors.green,
+              size: 24,
+            ),
           ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(studentName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                Text(guardian, style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+                Text(
+                  studentName,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+                Text(
+                  guardian,
+                  style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                ),
               ],
             ),
           ),
-          Text(time, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.deepPurple)),
+          Text(
+            time,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.deepPurple,
+            ),
+          ),
         ],
       ),
     );
@@ -233,7 +338,10 @@ class _GuardScannerWidgetState extends State<GuardScannerWidget> {
               padding: const EdgeInsets.all(24),
               decoration: const BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.only(bottomLeft: Radius.circular(24), bottomRight: Radius.circular(24)),
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(24),
+                  bottomRight: Radius.circular(24),
+                ),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -241,16 +349,34 @@ class _GuardScannerWidgetState extends State<GuardScannerWidget> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Escáner de Guardia', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-                      Text('SafeGuard School', style: TextStyle(color: Colors.deepPurple.shade300, fontWeight: FontWeight.w600)),
+                      const Text(
+                        'Escáner de Guardia',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        'SafeGuard School',
+                        style: TextStyle(
+                          color: Colors.deepPurple.shade300,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ],
                   ),
                   IconButton(
-                    icon: const Icon(Icons.account_circle, color: Colors.deepPurple, size: 32),
+                    icon: const Icon(
+                      Icons.account_circle,
+                      color: Colors.deepPurple,
+                      size: 32,
+                    ),
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const GuardProfileWidget()),
+                        MaterialPageRoute(
+                          builder: (context) => const GuardProfileWidget(),
+                        ),
                       );
                     },
                     tooltip: 'Perfil del Guardia',
@@ -258,7 +384,7 @@ class _GuardScannerWidgetState extends State<GuardScannerWidget> {
                 ],
               ),
             ),
-            
+
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(24),
@@ -266,7 +392,7 @@ class _GuardScannerWidgetState extends State<GuardScannerWidget> {
                   children: [
                     _buildToggle(),
                     const SizedBox(height: 24),
-                    
+
                     if (_isScannerActive) ...[
                       _buildScannerFrame(),
                       const SizedBox(height: 24),
@@ -274,12 +400,23 @@ class _GuardScannerWidgetState extends State<GuardScannerWidget> {
                         width: double.infinity,
                         child: OutlinedButton.icon(
                           onPressed: () => _showManualEntryDialog(context),
-                          icon: const Icon(Icons.keyboard, color: Colors.deepPurple),
-                          label: const Text('Ingreso Manual', style: TextStyle(color: Colors.deepPurple, fontWeight: FontWeight.bold)),
+                          icon: const Icon(
+                            Icons.keyboard,
+                            color: Colors.deepPurple,
+                          ),
+                          label: const Text(
+                            'Ingreso Manual',
+                            style: TextStyle(
+                              color: Colors.deepPurple,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             side: const BorderSide(color: Colors.deepPurple),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
                           ),
                         ),
                       ),
@@ -287,23 +424,61 @@ class _GuardScannerWidgetState extends State<GuardScannerWidget> {
                       // History View (Metrics & Validations)
                       Row(
                         children: [
-                          Expanded(child: _buildMetricsCard('Hoy', '142', 'Salida de Estudiantes', Colors.deepPurple)),
+                          Expanded(
+                            child: _buildMetricsCard(
+                              'Hoy',
+                              '142',
+                              'Salida de Estudiantes',
+                              Colors.deepPurple,
+                            ),
+                          ),
                           const SizedBox(width: 16),
-                          Expanded(child: _buildMetricsCard('Pendientes', '28', 'Restantes', Colors.black87)),
+                          Expanded(
+                            child: _buildMetricsCard(
+                              'Pendientes',
+                              '28',
+                              'Restantes',
+                              Colors.black87,
+                            ),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 24),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text('Validaciones Recientes', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                          Text('Ver Todos', style: TextStyle(color: Colors.deepPurple.shade400, fontWeight: FontWeight.bold)),
+                          const Text(
+                            'Validaciones Recientes',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            'Ver Todos',
+                            style: TextStyle(
+                              color: Colors.deepPurple.shade400,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 16),
-                      _buildValidationCard('Mateo Garcia', 'Sofia Garcia (Madre)', '14:22'),
-                      _buildValidationCard('Lucia Torres', 'Carlos Mendez (Tío)', '14:15'),
-                      _buildValidationCard('Emma Wilson', 'David Wilson (Padre)', '14:05'),
+                      _buildValidationCard(
+                        'Mateo Garcia',
+                        'Sofia Garcia (Madre)',
+                        '14:22',
+                      ),
+                      _buildValidationCard(
+                        'Lucia Torres',
+                        'Carlos Mendez (Tío)',
+                        '14:15',
+                      ),
+                      _buildValidationCard(
+                        'Emma Wilson',
+                        'David Wilson (Padre)',
+                        '14:05',
+                      ),
                     ],
                   ],
                 ),
