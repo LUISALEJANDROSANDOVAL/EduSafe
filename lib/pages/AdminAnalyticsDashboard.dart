@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'PickupHistory.dart';
 import 'AdminGuardManagement.dart';
 import 'AdminStudentManagement.dart';
@@ -17,20 +18,146 @@ class _AdminAnalyticsDashboardWidgetState
     extends State<AdminAnalyticsDashboardWidget> {
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
-  bool _showAlert = true;
+  bool _showAlert = false;
   String _selectedTimeFilter = 'Hoy';
-
-  final Map<String, List<double>> _chartData = {
-    'Hoy': [30, 60, 90, 140, 100, 50],
+  
+  bool _isLoading = true;
+  int _retirosTotales = 0;
+  int _tutoresActivos = 0;
+  List<Map<String, dynamic>> _auditoriaReciente = [];
+  List<Map<String, dynamic>> _rendimientoGuardias = [];
+  
+  double _precisionBiometria = 0.94;
+  String _alertMessage = '';
+  
+  Map<String, List<double>> _chartData = {
+    'Hoy': [0, 0, 0, 0, 0, 0],
     'Semana': [200, 400, 350, 600, 500, 250],
     'Mes': [800, 1500, 1200, 2400, 2000, 900],
   };
 
-  final Map<String, double> _chartMaxFlex = {
-    'Hoy': 140,
+  Map<String, double> _chartMaxFlex = {
+    'Hoy': 10,
     'Semana': 600,
     'Mes': 2400,
   };
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchDashboardData();
+  }
+
+  Future<void> _fetchDashboardData() async {
+    try {
+      final supabase = Supabase.instance.client;
+      
+      // 1. Retiros Totales (Exitosos)
+      final retirosResponse = await supabase
+          .from('registro_salidas')
+          .select('id')
+          .eq('estado', 'Exitoso');
+      
+      // 2. Tutores Activos
+      final tutoresResponse = await supabase
+          .from('perfiles')
+          .select('id')
+          .eq('rol', 'Tutor');
+          
+      // 3. Auditoría reciente
+      final auditoriaResponse = await supabase
+          .from('registro_salidas')
+          .select('id, estado, fecha_hora, estudiantes(nombre)')
+          .order('fecha_hora', ascending: false)
+          .limit(3);
+          
+      // 4. Rendimiento de Guardias
+      final guardias = await supabase.from('perfiles').select('id, nombre_completo').eq('rol', 'Encargado');
+      Map<String, String> guardiasMap = {};
+      for (var g in guardias) {
+        guardiasMap[g['id'].toString()] = g['nombre_completo'].toString();
+      }
+
+      final guardiasLogs = await supabase.from('registro_salidas').select('encargado_id');
+      Map<String, int> guardiasCount = {};
+      for (var log in guardiasLogs) {
+        if (log['encargado_id'] != null) {
+          String id = log['encargado_id'].toString();
+          String nombre = guardiasMap[id] ?? 'Guardia Desconocido';
+          guardiasCount[nombre] = (guardiasCount[nombre] ?? 0) + 1;
+        }
+      }
+      
+      List<Map<String, dynamic>> guardiasRendimiento = guardiasCount.entries
+          .map((e) => {'nombre': e.key, 'escaneos': e.value})
+          .toList();
+      guardiasRendimiento.sort((a, b) => b['escaneos'].compareTo(a['escaneos']));
+
+      // 5. Chart Data y Precisión
+      final hoyInicio = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day).toUtc().toIso8601String();
+      final allHoy = await supabase
+          .from('registro_salidas')
+          .select('id, estado, fecha_hora')
+          .gte('fecha_hora', hoyInicio);
+          
+      int totalHoy = allHoy.length;
+      int exitososHoy = allHoy.where((e) => e['estado'] == 'Exitoso').length;
+      double precision = totalHoy == 0 ? 0.94 : (exitososHoy / totalHoy);
+      
+      List<double> hoyCounts = [0, 0, 0, 0, 0, 0];
+      for (var row in allHoy) {
+        if (row['fecha_hora'] != null) {
+          int hour = DateTime.parse(row['fecha_hora']).toLocal().hour;
+          if (hour >= 8 && hour < 10) hoyCounts[0]++;
+          else if (hour >= 10 && hour < 12) hoyCounts[1]++;
+          else if (hour >= 12 && hour < 14) hoyCounts[2]++;
+          else if (hour >= 14 && hour < 16) hoyCounts[3]++;
+          else if (hour >= 16 && hour < 18) hoyCounts[4]++;
+          else if (hour >= 18) hoyCounts[5]++;
+        }
+      }
+      double maxCount = hoyCounts.isEmpty ? 10 : hoyCounts.reduce((a, b) => a > b ? a : b);
+      if (maxCount < 10) maxCount = 10;
+      
+      // 6. Alerta Crítica
+      final lastAlert = await supabase
+          .from('registro_salidas')
+          .select('estado, fecha_hora')
+          .or('estado.eq.Alerta,estado.eq.Rechazado')
+          .order('fecha_hora', ascending: false)
+          .limit(1);
+          
+      String alertMsg = '';
+      bool showAlert = false;
+      if (lastAlert.isNotEmpty) {
+        alertMsg = 'Se registró un intento con estado: ${lastAlert[0]['estado']} recientemente.';
+        showAlert = true;
+      }
+
+      if (mounted) {
+        setState(() {
+          _retirosTotales = retirosResponse.length;
+          _tutoresActivos = tutoresResponse.length;
+          _auditoriaReciente = List<Map<String, dynamic>>.from(auditoriaResponse);
+          _rendimientoGuardias = guardiasRendimiento.take(3).toList();
+          
+          _precisionBiometria = precision;
+          _chartData['Hoy'] = hoyCounts;
+          _chartMaxFlex['Hoy'] = maxCount;
+          
+          _alertMessage = alertMsg;
+          _showAlert = showAlert;
+          
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error fetching dashboard data: $e');
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
 
   Widget _buildCriticalAlert() {
     if (!_showAlert) return const SizedBox.shrink();
@@ -56,14 +183,14 @@ class _AdminAnalyticsDashboardWidgetState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Anomalía Crítica Detectada',
+                  'Anomalía Detectada',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     color: Colors.orange.shade900,
                   ),
                 ),
                 Text(
-                  '3 validaciones manuales consecutivas en la Puerta B.',
+                  _alertMessage,
                   style: TextStyle(color: Colors.orange.shade800, fontSize: 13),
                 ),
               ],
@@ -339,25 +466,25 @@ class _AdminAnalyticsDashboardWidgetState
                     width: 100,
                     height: 100,
                     child: CircularProgressIndicator(
-                      value: 0.94,
+                      value: _precisionBiometria,
                       strokeWidth: 10,
                       backgroundColor: Colors.deepPurple.shade50,
                       color: Colors.deepPurple,
                       strokeCap: StrokeCap.round,
                     ),
                   ),
-                  const Column(
+                  Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        '94%',
-                        style: TextStyle(
+                        '${(_precisionBiometria * 100).toInt()}%',
+                        style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 24,
                           color: Colors.deepPurple,
                         ),
                       ),
-                      Text(
+                      const Text(
                         'Precisión',
                         style: TextStyle(fontSize: 10, color: Colors.grey),
                       ),
@@ -371,9 +498,9 @@ class _AdminAnalyticsDashboardWidgetState
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                  _buildLegendItem(Colors.deepPurple, '94% Biometría'),
+                  _buildLegendItem(Colors.deepPurple, '${(_precisionBiometria * 100).toInt()}% Exitoso'),
                     const SizedBox(height: 12),
-                    _buildLegendItem(Colors.deepPurple.withOpacity(0.2), '6% Manual'),
+                    _buildLegendItem(Colors.deepPurple.withOpacity(0.2), '${((1 - _precisionBiometria) * 100).toInt()}% Anómalo'),
                   ],
                 ),
               ),
@@ -633,11 +760,17 @@ class _AdminAnalyticsDashboardWidgetState
             ],
           ),
           const SizedBox(height: 20),
-          _buildGuardStatRow('Oficial Rodríguez', 0.98, '124 escaneos'),
-          const SizedBox(height: 16),
-          _buildGuardStatRow('Oficial Martínez', 0.92, '98 escaneos'),
-          const SizedBox(height: 16),
-          _buildGuardStatRow('Oficial López', 0.85, '115 escaneos'),
+          if (_isLoading)
+            const Center(child: CircularProgressIndicator())
+          else if (_rendimientoGuardias.isEmpty)
+            const Text('No hay datos de guardias')
+          else
+            ..._rendimientoGuardias.map((g) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 16.0),
+                child: _buildGuardStatRow(g['nombre'], 0.98, '${g['escaneos']} escaneos'),
+              );
+            }).toList(),
         ],
       ),
     );
@@ -748,7 +881,7 @@ class _AdminAnalyticsDashboardWidgetState
                         Expanded(
                           child: _buildMetricCard(
                             'Retiros Totales',
-                            '1,284',
+                            _isLoading ? '...' : '$_retirosTotales',
                             '+12%',
                             true,
                           ),
@@ -757,7 +890,7 @@ class _AdminAnalyticsDashboardWidgetState
                         Expanded(
                           child: _buildMetricCard(
                             'Tutores Activos',
-                            '856',
+                            _isLoading ? '...' : '$_tutoresActivos',
                             '+3%',
                             true,
                           ),
@@ -835,9 +968,33 @@ class _AdminAnalyticsDashboardWidgetState
                             ],
                           ),
                           const SizedBox(height: 16),
-                          _buildExpandableAuditItem('Mateo García', 'Validado', 'hace 2m'),
-                          _buildExpandableAuditItem('Sofía Rodríguez', 'Validado', 'hace 15m'),
-                          _buildExpandableAuditItem('Lucas Miller', 'Validado', 'hace 45m'),
+                          if (_isLoading)
+                            const Center(child: CircularProgressIndicator())
+                          else if (_auditoriaReciente.isEmpty)
+                            const Text('No hay registros recientes')
+                          else
+                            ..._auditoriaReciente.map((log) {
+                              String name = 'Estudiante';
+                              if (log['estudiantes'] != null && log['estudiantes'] is Map) {
+                                name = log['estudiantes']['nombre'] ?? 'Estudiante';
+                              } else if (log['estudiantes'] != null && log['estudiantes'] is List && log['estudiantes'].isNotEmpty) {
+                                name = log['estudiantes'][0]['nombre'] ?? 'Estudiante';
+                              }
+                              String status = log['estado'] ?? 'Desconocido';
+                              String timeStr = 'Reciente';
+                              if (log['fecha_hora'] != null) {
+                                DateTime date = DateTime.parse(log['fecha_hora']).toLocal();
+                                Duration diff = DateTime.now().difference(date);
+                                if (diff.inMinutes < 60) {
+                                  timeStr = 'hace ${diff.inMinutes}m';
+                                } else if (diff.inHours < 24) {
+                                  timeStr = 'hace ${diff.inHours}h';
+                                } else {
+                                  timeStr = 'hace ${diff.inDays}d';
+                                }
+                              }
+                              return _buildExpandableAuditItem(name, status, timeStr);
+                            }).toList(),
                           const SizedBox(height: 16),
                           TextButton(
                             onPressed: () {

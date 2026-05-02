@@ -1,4 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'dart:convert';
+import 'package:crypto/crypto.dart';
 import '../config/env_config.dart';
 
 class SupabaseService {
@@ -17,17 +19,71 @@ class SupabaseService {
     _client = Supabase.instance.client;
   }
 
-  // --- PERFILES ---
-  Future<Map<String, dynamic>?> getCurrentUserProfile() async {
-    final user = _client.auth.currentUser;
-    if (user == null) return null;
-    
+  Map<String, dynamic>? _currentUserProfile;
+
+  // --- AUTENTICACIÓN PERSONALIZADA ---
+  Future<Map<String, dynamic>> signIn({required String email, required String password}) async {
+    // Buscar usuario por correo en la tabla perfiles
     final response = await _client
         .from('perfiles')
         .select()
-        .eq('id', user.id)
-        .single();
+        .eq('correo', email)
+        .maybeSingle();
+
+    if (response == null) {
+      throw Exception('El correo ingresado no se encuentra registrado.');
+    }
+    
+    // Hashear la contraseña ingresada con SHA-256
+    final bytes = utf8.encode(password);
+    final digest = sha256.convert(bytes);
+    final hashedPassword = digest.toString();
+
+    // Comparar contraseña (soporta texto plano como fallback temporal por si creaste registros manuales sin hash)
+    if (response['password_hash'] != hashedPassword && response['password_hash'] != password) {
+      throw Exception('La contraseña es incorrecta.');
+    }
+
+    // Guardar sesión en memoria
+    _currentUserProfile = response;
     return response;
+  }
+
+  Future<void> signOut() async {
+    // Limpiar la sesión en memoria y también intentar cerrar Supabase Auth por seguridad
+    _currentUserProfile = null;
+    try { await _client.auth.signOut(); } catch (_) {}
+  }
+
+  // --- PERFILES ---
+  Future<Map<String, dynamic>?> getCurrentUserProfile() async {
+    return _currentUserProfile;
+  }
+
+  Future<void> updateUserProfile({
+    required String id,
+    String? nombreCompleto,
+    String? cedulaIdentidad,
+    String? telefono,
+    String? correo,
+  }) async {
+    final Map<String, dynamic> updates = {};
+    if (nombreCompleto != null) updates['nombre_completo'] = nombreCompleto;
+    if (cedulaIdentidad != null) updates['cedula_identidad'] = cedulaIdentidad;
+    if (telefono != null) updates['telefono'] = telefono;
+    if (correo != null) updates['correo'] = correo;
+
+    if (updates.isEmpty) return;
+
+    await _client.from('perfiles').update(updates).eq('id', id);
+
+    // Actualizar cache local
+    if (_currentUserProfile != null && _currentUserProfile!['id'] == id) {
+      _currentUserProfile = {
+        ..._currentUserProfile!,
+        ...updates,
+      };
+    }
   }
 
   // --- ESTUDIANTES ---
