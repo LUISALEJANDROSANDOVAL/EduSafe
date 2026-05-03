@@ -33,21 +33,32 @@ class _ParentDashboardWidgetState extends State<ParentDashboardWidget> {
     try {
       final profile = await _supabaseService.getCurrentUserProfile();
       if (profile != null) {
-        final students = await _supabaseService.getStudentsByTutor(profile['id']);
+        final tutorId = profile['id'];
+        print("🔍 Dashboard: Cargando para Tutor ID: $tutorId");
+        
+        final students = await _supabaseService.getStudentsByTutor(tutorId);
+        print("✅ Dashboard: ${students.length} estudiantes encontrados.");
+
+        // Log visual para el usuario
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Tutor: ${profile['correo']} | Estudiantes: ${students.length}'),
+              backgroundColor: students.isEmpty ? Colors.orange : Colors.green,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+
         setState(() {
           _userProfile = profile;
           _students = students;
         });
-      } else {
-        print("Aviso: No se encontró perfil para el usuario actual.");
-        // Opcional: Redirigir a Login si el perfil es nulo
       }
     } catch (e) {
-      print("Error crítico cargando datos del dashboard: $e");
+      print("🚨 Error Dashboard: $e");
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 

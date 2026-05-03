@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/supabase_service.dart';
 import 'ParentDashboard.dart';
 import 'AdminAnalyticsDashboard.dart';
 import 'GuardScanner.dart';
@@ -20,6 +21,7 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
 
   // Estado para la tarjeta de rol seleccionada
   String _selectedRole = 'Parent';
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -211,25 +213,39 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
 
                 // --- BOTONES DE ACCIÓN ---
                 ElevatedButton(
-                  onPressed: () {
-                    // Lógica de inicio de sesión y enrutamiento
-                    if (_selectedRole == 'Parent') {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (context) => const ParentDashboardWidget()),
+                  onPressed: () async {
+                    setState(() => _isLoading = true);
+                    try {
+                      final supabase = SupabaseService();
+                      await supabase.signIn(
+                        email: _emailController.text.trim(),
+                        password: _passwordController.text.trim(),
                       );
-                    } else if (_selectedRole == 'Admin') {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (context) => const AdminAnalyticsDashboardWidget()),
+
+                      if (!mounted) return;
+
+                      if (_selectedRole == 'Parent') {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (context) => const ParentDashboardWidget()),
+                        );
+                      } else if (_selectedRole == 'Admin') {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (context) => const AdminAnalyticsDashboardWidget()),
+                        );
+                      } else if (_selectedRole == 'Guard') {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (context) => const GuardScannerWidget()),
+                        );
+                      }
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
                       );
-                    } else if (_selectedRole == 'Guard') {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (context) => const GuardScannerWidget()),
-                      );
-                    } else {
-                      print("Iniciando sesión como \$_selectedRole (Falta implementar destino)");
+                    } finally {
+                      setState(() => _isLoading = false);
                     }
                   },
                   style: ElevatedButton.styleFrom(
@@ -239,14 +255,16 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                       borderRadius: BorderRadius.circular(24),
                     ),
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text('Iniciar Sesión', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
-                      const SizedBox(width: 8),
-                      const Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 20),
-                    ],
-                  ),
+                  child: _isLoading 
+                    ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                    : Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text('Iniciar Sesión', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                          const SizedBox(width: 8),
+                          const Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 20),
+                        ],
+                      ),
                 ),
                 const SizedBox(height: 16),
                 
