@@ -21,6 +21,7 @@ class _PickupHistoryWidgetState extends State<PickupHistoryWidget> {
   List<Map<String, dynamic>> _allHistoryItems = [];
   bool _isLoading = true;
   int _todayCount = 0;
+  String _selectedStatus = 'Todos'; // 'Todos', 'Exitoso', 'Alerta'
 
   @override
   void initState() {
@@ -90,7 +91,12 @@ class _PickupHistoryWidgetState extends State<PickupHistoryWidget> {
             itemDate.day == _selectedDate!.day;
       }
 
-      return matchesSearch && matchesDate;
+      bool matchesStatus = true;
+      if (_selectedStatus != 'Todos') {
+        matchesStatus = (item['isFlagged'] ? 'Alerta' : 'Exitoso') == _selectedStatus;
+      }
+
+      return matchesSearch && matchesDate && matchesStatus;
     }).toList();
   }
 
@@ -116,6 +122,91 @@ class _PickupHistoryWidgetState extends State<PickupHistoryWidget> {
     if (picked != null) {
       setState(() => _selectedDate = picked);
     }
+  }
+
+  void _showFilterDialog() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(topLeft: Radius.circular(32), topRight: Radius.circular(32)),
+          ),
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Filtros', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                  TextButton(
+                    onPressed: () {
+                      setState(() {
+                        _selectedDate = null;
+                        _selectedStatus = 'Todos';
+                      });
+                      Navigator.pop(context);
+                    },
+                    child: const Text('Limpiar Todo', style: TextStyle(color: Colors.red)),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              const Text('Estado del Retiro', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
+              const SizedBox(height: 12),
+              Row(
+                children: ['Todos', 'Exitoso', 'Alerta'].map((status) {
+                  bool isSel = _selectedStatus == status;
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8.0),
+                    child: ChoiceChip(
+                      label: Text(status),
+                      selected: isSel,
+                      onSelected: (val) {
+                        setModalState(() => _selectedStatus = status);
+                        setState(() => _selectedStatus = status);
+                      },
+                      selectedColor: Colors.deepPurple,
+                      labelStyle: TextStyle(color: isSel ? Colors.white : Colors.black),
+                    ),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 24),
+              const Text('Fecha', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
+              const SizedBox(height: 12),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.calendar_today, color: Colors.deepPurple),
+                title: Text(_selectedDate == null ? 'Cualquier fecha' : DateFormat('dd/MM/yyyy').format(_selectedDate!)),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () async {
+                  await _pickDate();
+                  setModalState(() {});
+                },
+              ),
+              const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.deepPurple,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
+                  child: const Text('Aplicar Filtros', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Future<void> _exportReport() async {
@@ -525,12 +616,37 @@ class _PickupHistoryWidgetState extends State<PickupHistoryWidget> {
                     'Historial de Retiros',
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
-                  IconButton(
-                    icon: const Icon(
-                      Icons.tune_rounded,
-                      color: Colors.deepPurple,
+                  // --- BOTÓN DE FILTRO SUPERIOR MEJORADO ---
+                  Container(
+                    decoration: BoxDecoration(
+                      color: _selectedDate != null ? Colors.deepPurple.withOpacity(0.1) : Colors.transparent,
+                      shape: BoxShape.circle,
                     ),
-                    onPressed: _pickDate, // Activamos el botón de filtro
+                    child: Stack(
+                      alignment: Alignment.topRight,
+                      children: [
+                        IconButton(
+                          icon: Icon(
+                            Icons.tune_rounded,
+                            color: _selectedDate != null ? Colors.deepPurple : Colors.grey.shade700,
+                          ),
+                          onPressed: _showFilterDialog,
+                        ),
+                        if (_selectedDate != null || _selectedStatus != 'Todos')
+                          Positioned(
+                            top: 8,
+                            right: 8,
+                            child: Container(
+                              width: 8,
+                              height: 8,
+                              decoration: const BoxDecoration(
+                                color: Colors.deepPurple,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -590,28 +706,48 @@ class _PickupHistoryWidgetState extends State<PickupHistoryWidget> {
                           ),
                         ),
                         const SizedBox(width: 16),
+                        // --- SELECTOR DE FECHA (PILL) MEJORADO ---
                         GestureDetector(
                           onTap: _pickDate,
-                          child: Container(
-                            padding: const EdgeInsets.all(12),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 300),
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                             decoration: BoxDecoration(
                               color: _selectedDate != null ? Colors.deepPurple : Colors.white,
                               borderRadius: BorderRadius.circular(16),
-                              border: Border.all(color: _selectedDate != null ? Colors.deepPurple : Colors.grey.shade200),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: _selectedDate != null 
+                                    ? Colors.deepPurple.withOpacity(0.3) 
+                                    : Colors.black.withOpacity(0.05),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                )
+                              ],
+                              border: Border.all(
+                                color: _selectedDate != null ? Colors.deepPurple : Colors.grey.shade200,
+                                width: 1.5,
+                              ),
                             ),
                             child: Row(
                               children: [
                                 Icon(
-                                  Icons.calendar_month_rounded,
+                                  _selectedDate != null ? Icons.event_available_rounded : Icons.calendar_month_rounded,
                                   color: _selectedDate != null ? Colors.white : Colors.deepPurple,
+                                  size: 22,
                                 ),
                                 if (_selectedDate != null) ...[
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    DateFormat('dd/MM').format(_selectedDate!),
+                                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                                  ),
                                   const SizedBox(width: 8),
                                   GestureDetector(
                                     onTap: () {
                                       setState(() => _selectedDate = null);
                                     },
-                                    child: const Icon(Icons.close, color: Colors.white, size: 16),
+                                    child: const Icon(Icons.close_rounded, color: Colors.white70, size: 16),
                                   ),
                                 ],
                               ],
