@@ -33,7 +33,9 @@ class _ParentDashboardWidgetState extends State<ParentDashboardWidget> {
     try {
       final profile = await _supabaseService.getCurrentUserProfile();
       if (profile != null) {
-        final students = await _supabaseService.getStudentsByTutor(profile['id']);
+        final students = await _supabaseService.getStudentsByTutor(
+          profile['id'],
+        );
         setState(() {
           _userProfile = profile;
           _students = students;
@@ -73,20 +75,34 @@ class _ParentDashboardWidgetState extends State<ParentDashboardWidget> {
           const SizedBox(height: 8),
           Text(
             label,
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black87),
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildStudentCard({required String name, required String grade, required String imageUrl}) {
+  Widget _buildStudentCard({
+    required String name,
+    required String grade,
+    required String imageUrl,
+  }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Material(
         color: Colors.transparent,
@@ -107,13 +123,30 @@ class _ParentDashboardWidgetState extends State<ParentDashboardWidget> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87)),
+                      Text(
+                        name,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
                       const SizedBox(height: 4),
-                      Text(grade, style: TextStyle(fontSize: 13, color: Colors.grey.shade600)),
+                      Text(
+                        grade,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
                     ],
                   ),
                 ),
-                Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Colors.grey.shade400),
+                Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 14,
+                  color: Colors.grey.shade400,
+                ),
               ],
             ),
           ),
@@ -131,29 +164,57 @@ class _ParentDashboardWidgetState extends State<ParentDashboardWidget> {
         height: MediaQuery.of(context).size.height * 0.8,
         decoration: const BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.only(topLeft: Radius.circular(32), topRight: Radius.circular(32)),
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(32),
+            topRight: Radius.circular(32),
+          ),
         ),
         child: Column(
           children: [
             const SizedBox(height: 12),
-            Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2))),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
             const SizedBox(height: 24),
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Column(
                   children: [
-                    CircleAvatar(radius: 50, backgroundImage: NetworkImage(imageUrl)),
+                    CircleAvatar(
+                      radius: 50,
+                      backgroundImage: NetworkImage(imageUrl),
+                    ),
                     const SizedBox(height: 16),
-                    Text(name, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-                    Text(grade, style: TextStyle(color: Colors.grey.shade600, fontSize: 16)),
+                    Text(
+                      name,
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      grade,
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 16,
+                      ),
+                    ),
                     const SizedBox(height: 24),
-                    
+
                     _buildDetailInfoCard(
                       icon: Icons.school_rounded,
                       title: 'Información Académica',
                       items: [
-                        {'label': 'Profesor Guía', 'value': 'Lic. Marina Soliz'},
+                        {
+                          'label': 'Profesor Guía',
+                          'value': 'Lic. Marina Soliz',
+                        },
                         {'label': 'Aula', 'value': 'Pabellón B - 204'},
                         {'label': 'Turno', 'value': 'Mañana (07:30 - 13:00)'},
                       ],
@@ -163,7 +224,10 @@ class _ParentDashboardWidgetState extends State<ParentDashboardWidget> {
                       icon: Icons.security_update_good_rounded,
                       title: 'Estado de Seguridad',
                       items: [
-                        {'label': 'Ingreso Hoy', 'value': '07:42 AM - Verificado'},
+                        {
+                          'label': 'Ingreso Hoy',
+                          'value': '07:42 AM - Verificado',
+                        },
                         {'label': 'Salida Estimada', 'value': '01:15 PM'},
                         {'label': 'Tercero Designado', 'value': 'Ninguno'},
                       ],
@@ -176,9 +240,17 @@ class _ParentDashboardWidgetState extends State<ParentDashboardWidget> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.deepPurple,
                           padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
                         ),
-                        child: const Text('Cerrar', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                        child: const Text(
+                          'Cerrar',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 40),
@@ -192,7 +264,11 @@ class _ParentDashboardWidgetState extends State<ParentDashboardWidget> {
     );
   }
 
-  Widget _buildDetailInfoCard({required IconData icon, required String title, required List<Map<String, String>> items}) {
+  Widget _buildDetailInfoCard({
+    required IconData icon,
+    required String title,
+    required List<Map<String, String>> items,
+  }) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -207,20 +283,39 @@ class _ParentDashboardWidgetState extends State<ParentDashboardWidget> {
             children: [
               Icon(icon, color: Colors.deepPurple, size: 20),
               const SizedBox(width: 12),
-              Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.deepPurple)),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                  color: Colors.deepPurple,
+                ),
+              ),
             ],
           ),
           const Divider(height: 32),
-          ...items.map((item) => Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(item['label']!, style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
-                Text(item['value']!, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Colors.black87)),
-              ],
+          ...items.map(
+            (item) => Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    item['label']!,
+                    style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                  ),
+                  Text(
+                    item['value']!,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          )).toList(),
+          ),
         ],
       ),
     );
@@ -236,7 +331,14 @@ class _ParentDashboardWidgetState extends State<ParentDashboardWidget> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.black87)),
+        Text(
+          name,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 15,
+            color: Colors.black87,
+          ),
+        ),
         const SizedBox(height: 12),
         Row(
           children: [
@@ -277,7 +379,9 @@ class _ParentDashboardWidgetState extends State<ParentDashboardWidget> {
       decoration: BoxDecoration(
         color: isVerified ? color.withOpacity(0.05) : Colors.grey.shade50,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: isVerified ? color.withOpacity(0.1) : Colors.grey.shade100),
+        border: Border.all(
+          color: isVerified ? color.withOpacity(0.1) : Colors.grey.shade100,
+        ),
       ),
       child: Row(
         children: [
@@ -286,8 +390,22 @@ class _ParentDashboardWidgetState extends State<ParentDashboardWidget> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label, style: TextStyle(fontSize: 10, color: Colors.grey.shade500, fontWeight: FontWeight.bold)),
-              Text(time, style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: isVerified ? Colors.black87 : Colors.grey)),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 10,
+                  color: Colors.grey.shade500,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                time,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: isVerified ? Colors.black87 : Colors.grey,
+                ),
+              ),
             ],
           ),
         ],
@@ -299,7 +417,9 @@ class _ParentDashboardWidgetState extends State<ParentDashboardWidget> {
   Widget build(BuildContext context) {
     if (_isLoading) {
       return const Scaffold(
-        body: Center(child: CircularProgressIndicator(color: Colors.deepPurple)),
+        body: Center(
+          child: CircularProgressIndicator(color: Colors.deepPurple),
+        ),
       );
     }
 
@@ -314,23 +434,39 @@ class _ParentDashboardWidgetState extends State<ParentDashboardWidget> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Hola, $tutorName", style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 18)),
-            const Text("Bienvenido a EduSafe", style: TextStyle(color: Colors.grey, fontSize: 12)),
+            Text(
+              "Hola, $tutorName",
+              style: const TextStyle(
+                color: Colors.black,
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
+            const Text(
+              "Bienvenido a EduSafe",
+              style: TextStyle(color: Colors.grey, fontSize: 12),
+            ),
           ],
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.account_circle, color: Colors.deepPurple, size: 32),
+            icon: const Icon(
+              Icons.account_circle,
+              color: Colors.deepPurple,
+              size: 32,
+            ),
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const UserProfileSettingsWidget()),
+                MaterialPageRoute(
+                  builder: (context) => const UserProfileSettingsWidget(),
+                ),
               );
             },
           ),
           const SizedBox(width: 8),
         ],
-        automaticallyImplyLeading: false, 
+        automaticallyImplyLeading: false,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -356,9 +492,19 @@ class _ParentDashboardWidgetState extends State<ParentDashboardWidget> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text("Escuela Segura", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                        Text(
+                          "Escuela Segura",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
                         SizedBox(height: 4),
-                        Text("Monitoreo en tiempo real activado para tu familia.", style: TextStyle(color: Colors.white70, fontSize: 12)),
+                        Text(
+                          "Monitoreo en tiempo real activado para tu familia.",
+                          style: TextStyle(color: Colors.white70, fontSize: 12),
+                        ),
                       ],
                     ),
                   ),
@@ -368,7 +514,10 @@ class _ParentDashboardWidgetState extends State<ParentDashboardWidget> {
             const SizedBox(height: 24),
 
             // Acciones Rápidas
-            const Text("Acciones Rápidas", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text(
+              "Acciones Rápidas",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -381,7 +530,9 @@ class _ParentDashboardWidgetState extends State<ParentDashboardWidget> {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const AuthorizeThirdPartyWidget()),
+                      MaterialPageRoute(
+                        builder: (context) => const AuthorizeThirdPartyWidget(),
+                      ),
                     );
                   },
                 ),
@@ -393,7 +544,9 @@ class _ParentDashboardWidgetState extends State<ParentDashboardWidget> {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const PickupHistoryWidget()),
+                      MaterialPageRoute(
+                        builder: (context) => const PickupHistoryWidget(),
+                      ),
                     );
                   },
                 ),
@@ -405,7 +558,9 @@ class _ParentDashboardWidgetState extends State<ParentDashboardWidget> {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const NotificationsPage()),
+                      MaterialPageRoute(
+                        builder: (context) => const NotificationsPage(),
+                      ),
                     );
                   },
                 ),
@@ -417,24 +572,38 @@ class _ParentDashboardWidgetState extends State<ParentDashboardWidget> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text("Mis Hijos", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                Text("Total: ${_students.length}", style: TextStyle(color: Colors.deepPurple.shade400, fontWeight: FontWeight.bold)),
+                const Text(
+                  "Mis Hijos",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  "Total: ${_students.length}",
+                  style: TextStyle(
+                    color: Colors.deepPurple.shade400,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 16),
             if (_students.isEmpty)
               const Center(child: Text("No tienes hijos registrados."))
             else
-              ..._students.map((student) => _buildStudentCard(
-                name: student['nombre'], 
-                grade: student['curso'], 
-                imageUrl: "https://i.pravatar.cc/150?u=${student['nombre']}"
-              )).toList(),
-            
+              ..._students.map(
+                (student) => _buildStudentCard(
+                  name: student['nombre'],
+                  grade: student['curso'],
+                  imageUrl: "https://i.pravatar.cc/150?u=${student['nombre']}",
+                ),
+              ),
+
             const SizedBox(height: 32),
 
             // Control de Horarios
-            const Text("Horarios de Hoy", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text(
+              "Horarios de Hoy",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(16),
@@ -442,23 +611,32 @@ class _ParentDashboardWidgetState extends State<ParentDashboardWidget> {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(color: Colors.grey.shade200),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))],
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.02),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
               child: Column(
                 children: [
                   if (_students.isEmpty)
                     const Text("Sin datos de asistencia")
                   else
-                    ..._students.map((student) => Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      child: _buildTimeTrackingRow(
-                        name: student['nombre'],
-                        entryTime: "07:45 AM", // Esto se puede hacer dinámico con logs
-                        exitTime: "Pendiente",
-                        isEntryVerified: true,
-                        isExitVerified: false,
+                    ..._students.map(
+                      (student) => Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: _buildTimeTrackingRow(
+                          name: student['nombre'],
+                          entryTime:
+                              "07:45 AM", // Esto se puede hacer dinámico con logs
+                          exitTime: "Pendiente",
+                          isEntryVerified: true,
+                          isExitVerified: false,
+                        ),
                       ),
-                    )).toList(),
+                    ),
                 ],
               ),
             ),
