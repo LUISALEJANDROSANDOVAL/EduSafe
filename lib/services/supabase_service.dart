@@ -96,8 +96,24 @@ class SupabaseService {
   }
 
   Future<List<Map<String, dynamic>>> getAllStudents() async {
-    final response = await _client.from('estudiantes').select('*, perfiles(nombre_completo)');
-    return List<Map<String, dynamic>>.from(response);
+    final response = await _client.from('estudiantes').select();
+    final tutors = await _client.from('perfiles').select('id, nombre_completo').eq('rol', 'Tutor');
+    
+    List<Map<String, dynamic>> students = List<Map<String, dynamic>>.from(response);
+    List<Map<String, dynamic>> loadedTutors = List<Map<String, dynamic>>.from(tutors);
+
+    for (var student in students) {
+      if (student['tutor_id'] != null) {
+        final tutor = loadedTutors.firstWhere(
+          (t) => t['id'] == student['tutor_id'],
+          orElse: () => <String, dynamic>{},
+        );
+        if (tutor.isNotEmpty) {
+          student['perfiles'] = {'nombre_completo': tutor['nombre_completo']};
+        }
+      }
+    }
+    return students;
   }
 
   // --- TERCEROS ---
