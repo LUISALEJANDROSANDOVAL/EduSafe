@@ -1,8 +1,9 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'dart:convert';
+import 'package:crypto/crypto.dart';
 import '../config/env_config.dart';
 
 class SupabaseService {
-  // Patrón Singleton para el servicio
   static final SupabaseService _instance = SupabaseService._internal();
   factory SupabaseService() => _instance;
   SupabaseService._internal();
@@ -10,7 +11,6 @@ class SupabaseService {
   late SupabaseClient _client;
   SupabaseClient get client => _client;
 
-  /// Inicializa la conexión con Supabase (debe llamarse en main.dart)
   Future<void> init() async {
     await Supabase.initialize(
       url: EnvConfig.supabaseUrl,
@@ -19,81 +19,191 @@ class SupabaseService {
     _client = Supabase.instance.client;
   }
 
-  /// RF-01: Registro de Tutor
-  /// Guarda metadatos y el hash (IPFS CID) de los documentos subidos previamente a Pinata
-  Future<void> registerTutor({
-    required String name,
-    required String email,
-    required String ipfsProfileHash,
-    required String ipfsDocumentHash,
-  }) async {
-    await _client.from('tutors').insert({
-      'name': name,
-      'email': email,
-      'profile_cid': ipfsProfileHash,
-      'document_cid': ipfsDocumentHash,
-      'created_at': DateTime.now().toIso8601String(),
-    });
+  Map<String, dynamic>? _currentUserProfile;
+
+  // --- AUTENTICACIÓN PERSONALIZADA ---
+  Future<Map<String, dynamic>> signIn({required String email, required String password}) async {
+    // Buscar usuario por correo en la tabla perfiles
+    final response = await _client
+        .from('perfiles')
+        .select()
+        .eq('correo', email)
+        .maybeSingle();
+
+    if (response == null) {
+      throw Exception('El correo ingresado no se encuentra registrado.');
+    }
+    
+    // Hashear la contraseña ingresada con SHA-256
+    final bytes = utf8.encode(password);
+    final digest = sha256.convert(bytes);
+    final hashedPassword = digest.toString();
+
+    // Comparar contraseña (soporta texto plano como fallback temporal por si creaste registros manuales sin hash)
+    if (response['password_hash'] != hashedPassword && response['password_hash'] != password) {
+      throw Exception('La contraseña es incorrecta.');
+    }
+
+    // Guardar sesión en memoria
+    _currentUserProfile = response;
+    return response;
   }
 
-  /// RF-01: Registro de Estudiante
-  Future<void> registerStudent({
-    required String tutorId,
-    required String name,
-    required String grade,
-    required String ipfsProfileHash,
-  }) async {
-    await _client.from('students').insert({
-      'tutor_id': tutorId,
-      'name': name,
-      'grade': grade,
-      'profile_cid': ipfsProfileHash,
-      'created_at': DateTime.now().toIso8601String(),
-    });
+  Future<void> signOut() async {
+    // Limpiar la sesión en memoria y también intentar cerrar Supabase Auth por seguridad
+    _currentUserProfile = null;
+    try { await _client.auth.signOut(); } catch (_) {}
   }
 
-  /// RF-02: Guardar el Hash Biométrico para un Tutor / Tercero Autorizado
-  Future<void> saveBiometricHash({
-    required String personId,
-    required String biometricHash,
-  }) async {
-    await _client.from('biometrics').insert({
-      'person_id': personId,
-      'biometric_hash': biometricHash,
-      'created_at': DateTime.now().toIso8601String(),
-    });
+  // --- PERFILES ---
+  Future<Map<String, dynamic>?> getCurrentUserProfile() async {
+    return _currentUserProfile;
   }
 
-  /// RF-03 & RF-04: Verificación de Código QR y Token
-  /// Invoca una función RPC (Remote Procedure Call) en la base de datos de Supabase.
-  Future<bool> verifyQrToken(String token, String studentId) async {
-    try {
-      final response = await _client.rpc('verify_qr_token', params: {
-        'p_token': token,
-        'p_student_id': studentId,
-      });
+  Future<void> updateUserProfile({
+    required String id,
+    String? nombreCompleto,
+    String? cedulaIdentidad,
+    String? telefono,
+    String? correo,
+  }) async {
+    final Map<String, dynamic> updates = {};
+    if (nombreCompleto != null) updates['nombre_completo'] = nombreCompleto;
+    if (cedulaIdentidad != null) updates['cedula_identidad'] = cedulaIdentidad;
+    if (telefono != null) updates['telefono'] = telefono;
+    if (correo != null) updates['correo'] = correo;
 
-      // Se asume que la función RPC retorna un booleano `true` si es válido
-      return response == true;
-    } catch (e) {
-      print('Error verificando QR Token en RPC: \$e');
-      return false;
+    if (updates.isEmpty) return;
+
+    await _client.from('perfiles').update(updates).eq('id', id);
+
+    // Actualizar cache local
+    if (_currentUserProfile != null && _currentUserProfile!['id'] == id) {
+      _currentUserProfile = {
+        ..._currentUserProfile!,
+        ...updates,
+      };
     }
   }
 
-  /// RF-04: Registrar el evento de recogida en el historial
-  Future<void> logPickupEvent({
-    required String studentId,
-    required String personId,
-    required bool isVerified,
-    required double confidenceScore,
+  // --- ESTUDIANTES ---
+  Future<List<Map<String, dynamic>>> getStudentsByTutor(String tutorId) async {
+    final response = await _client
+        .from('estudiantes')
+        .select()
+        .eq('tutor_id', tutorId);
+    return List<Map<String, dynamic>>.from(response);
+  }
+
+  Future<List<Map<String, dynamic>>> getAllStudents() async {
+    final response = await _client.from('estudiantes').select('*, perfiles(nombre_completo)');
+    return List<Map<String, dynamic>>.from(response);
+  }
+
+  // --- TERCEROS ---
+  Future<List<Map<String, dynamic>>> getAuthorizedThirdParties(String tutorId) async {
+    final response = await _client
+        .from('terceros')
+        .select()
+        .eq('tutor_id', tutorId)
+        .eq('activo', true);
+    return List<Map<String, dynamic>>.from(response);
+  }
+
+  Future<void> registerThirdParty({
+    required String tutorId,
+    required String name,
+    required String ci,
+    required String relation,
+    required String biometricHash,
+    String? photoCid,
+    String? invitationId,
   }) async {
-    await _client.from('pickup_logs').insert({
-      'student_id': studentId,
-      'person_id': personId,
-      'is_verified': isVerified,
-      'confidence_score': confidenceScore,
-      'timestamp': DateTime.now().toIso8601String(),
+    await _client.from('terceros').insert({
+      'tutor_id': tutorId,
+      'nombre': name,
+      'cedula_identidad': ci,
+      'relacion': relation,
+      'biometria_hash': biometricHash,
+      'pinata_foto_cid': photoCid,
+      'invitacion_id': invitationId,
     });
+    
+    if (invitationId != null) {
+      await updateInvitationStatus(invitationId, 'Completado');
+    }
+  }
+
+  // --- INVITACIONES ---
+  Future<void> createInvitation({
+    required String tutorId,
+    required String estudianteId,
+    required String email,
+    required String token,
+  }) async {
+    await _client.from('invitaciones_terceros').insert({
+      'tutor_id': tutorId,
+      'estudiante_id': estudianteId,
+      'correo_tercero': email,
+      'token_seguridad': token,
+      'estado': 'Pendiente',
+    });
+  }
+
+  Future<List<Map<String, dynamic>>> getPendingInvitations(String tutorId) async {
+    final response = await _client
+        .from('invitaciones_terceros')
+        .select()
+        .eq('tutor_id', tutorId)
+        .eq('estado', 'Pendiente');
+    return List<Map<String, dynamic>>.from(response);
+  }
+
+  Future<void> updateInvitationStatus(String id, String status) async {
+    await _client.from('invitaciones_terceros').update({'estado': status}).eq('id', id);
+  }
+
+  // --- REGISTRO DE SALIDAS (LOGS) ---
+  Future<List<Map<String, dynamic>>> getRecentPickupLogs(String tutorId) async {
+    final response = await _client
+        .from('registro_salidas')
+        .select('*, estudiantes(nombre), terceros(nombre)')
+        .eq('tutor_autorizador_id', tutorId)
+        .order('fecha_hora', ascending: false)
+        .limit(10);
+    return List<Map<String, dynamic>>.from(response);
+  }
+
+  Future<void> logPickup({
+    required String studentId,
+    required String tutorId,
+    required String encargadoId,
+    String? terceroId,
+    required String qrToken,
+    required String estado,
+    String? evidenciaCid,
+  }) async {
+    await _client.from('registro_salidas').insert({
+      'estudiante_id': studentId,
+      'tutor_autorizador_id': tutorId,
+      'tercero_id': terceroId,
+      'encargado_id': encargadoId,
+      'qr_token': qrToken,
+      'estado': estado,
+      'evidencia_salida_cid': evidenciaCid,
+    });
+  }
+
+  // --- ESTADÍSTICAS ---
+  Future<Map<String, int>> getTutorStats(String tutorId) async {
+    final students = await _client.from('estudiantes').select('id').eq('tutor_id', tutorId);
+    final thirdParties = await _client.from('terceros').select('id').eq('tutor_id', tutorId).eq('activo', true);
+    final deliveries = await _client.from('registro_salidas').select('id').eq('tutor_autorizador_id', tutorId).eq('estado', 'Exitoso');
+
+    return {
+      'students': students.length,
+      'thirdParties': thirdParties.length,
+      'deliveries': deliveries.length,
+    };
   }
 }

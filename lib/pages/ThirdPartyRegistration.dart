@@ -37,14 +37,14 @@ class _ThirdPartyRegistrationWidgetState extends State<ThirdPartyRegistrationWid
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Personal Information', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+        const Text('Información Personal', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
-        Text('Please provide your legal details as they appear on your ID.', style: TextStyle(color: Colors.grey.shade600, fontSize: 14)),
+        Text('Por favor, proporciona tus datos legales tal como aparecen en tu identificación.', style: TextStyle(color: Colors.grey.shade600, fontSize: 14)),
         const SizedBox(height: 24),
         TextField(
           controller: _nameController,
           decoration: InputDecoration(
-            labelText: 'Full Name',
+            labelText: 'Nombre Completo',
             prefixIcon: const Icon(Icons.person_outline),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           ),
@@ -53,7 +53,7 @@ class _ThirdPartyRegistrationWidgetState extends State<ThirdPartyRegistrationWid
         TextField(
           controller: _idController,
           decoration: InputDecoration(
-            labelText: 'Identification Number (CI)',
+            labelText: 'Número de Identificación (CI)',
             prefixIcon: const Icon(Icons.badge_outlined),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           ),
@@ -63,7 +63,7 @@ class _ThirdPartyRegistrationWidgetState extends State<ThirdPartyRegistrationWid
           controller: _phoneController,
           keyboardType: TextInputType.phone,
           decoration: InputDecoration(
-            labelText: 'Phone Number',
+            labelText: 'Número de Teléfono',
             prefixIcon: const Icon(Icons.phone_android_rounded),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           ),
@@ -76,9 +76,9 @@ class _ThirdPartyRegistrationWidgetState extends State<ThirdPartyRegistrationWid
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Security Verification', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+        const Text('Verificación de Seguridad', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
-        Text('We need a clear photo of your face for the security gate check.', style: TextStyle(color: Colors.grey.shade600, fontSize: 14)),
+        Text('Necesitamos una foto clara de tu rostro para el control de la puerta de seguridad.', style: TextStyle(color: Colors.grey.shade600, fontSize: 14)),
         const SizedBox(height: 32),
         Center(
           child: Container(
@@ -98,7 +98,7 @@ class _ThirdPartyRegistrationWidgetState extends State<ThirdPartyRegistrationWid
           child: ElevatedButton.icon(
             onPressed: () {},
             icon: const Icon(Icons.camera_alt_rounded, color: Colors.white),
-            label: const Text('Take Face Photo', style: TextStyle(color: Colors.white)),
+            label: const Text('Tomar Foto de Rostro', style: TextStyle(color: Colors.white)),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.deepPurple,
               padding: const EdgeInsets.symmetric(vertical: 16),
@@ -114,9 +114,9 @@ class _ThirdPartyRegistrationWidgetState extends State<ThirdPartyRegistrationWid
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Document Upload', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+        const Text('Carga de Documentos', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
-        Text('Upload a clear photo of your Identification Document.', style: TextStyle(color: Colors.grey.shade600, fontSize: 14)),
+        Text('Sube una foto clara de tu Documento de Identificación.', style: TextStyle(color: Colors.grey.shade600, fontSize: 14)),
         const SizedBox(height: 32),
         Container(
           width: double.infinity,
@@ -131,8 +131,8 @@ class _ThirdPartyRegistrationWidgetState extends State<ThirdPartyRegistrationWid
             children: [
               Icon(Icons.contact_page_rounded, size: 48, color: Colors.grey),
               SizedBox(height: 12),
-              Text('Front of your ID', style: TextStyle(fontWeight: FontWeight.bold)),
-              Text('Click to upload', style: TextStyle(color: Colors.grey, fontSize: 12)),
+              Text('Frente de tu ID', style: TextStyle(fontWeight: FontWeight.bold)),
+              Text('Clic para subir', style: TextStyle(color: Colors.grey, fontSize: 12)),
             ],
           ),
         ),
@@ -145,7 +145,7 @@ class _ThirdPartyRegistrationWidgetState extends State<ThirdPartyRegistrationWid
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('EduSafe Registration', style: TextStyle(color: Colors.black)),
+        title: const Text('Registro EduSafe', style: TextStyle(color: Colors.black)),
         backgroundColor: Colors.white,
         elevation: 0,
         automaticallyImplyLeading: false,
@@ -175,7 +175,7 @@ class _ThirdPartyRegistrationWidgetState extends State<ThirdPartyRegistrationWid
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
-                        child: const Text('Previous'),
+                        child: const Text('Anterior'),
                       ),
                     ),
                   if (_currentStep > 0) const SizedBox(width: 16),
@@ -189,10 +189,10 @@ class _ThirdPartyRegistrationWidgetState extends State<ThirdPartyRegistrationWid
                           showDialog(
                             context: context,
                             builder: (context) => AlertDialog(
-                              title: const Text('Registration Complete'),
-                              content: const Text('Your identity has been verified. You are now authorized for the pickup.'),
+                              title: const Text('Registro Completo'),
+                              content: const Text('Tu identidad ha sido verificada. Ahora estás autorizado para la recogida.'),
                               actions: [
-                                TextButton(onPressed: () => Navigator.pop(context), child: const Text('Finish')),
+                                TextButton(onPressed: () => Navigator.pop(context), child: const Text('Finalizar')),
                               ],
                             ),
                           );
@@ -204,7 +204,7 @@ class _ThirdPartyRegistrationWidgetState extends State<ThirdPartyRegistrationWid
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
                       child: Text(
-                        _currentStep < 2 ? 'Next' : 'Complete Registration',
+                        _currentStep < 2 ? 'Siguiente' : 'Completar Registro',
                         style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                       ),
                     ),

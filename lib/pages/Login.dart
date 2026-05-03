@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'ParentDashboard.dart';
 import 'AdminAnalyticsDashboard.dart';
 import 'GuardScanner.dart';
+import '../services/supabase_service.dart';
 
 class LoginScreenWidget extends StatefulWidget {
   const LoginScreenWidget({super.key});
@@ -17,6 +18,7 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _passwordVisible = false;
+  bool _isLoading = false;
 
   // Estado para la tarjeta de rol seleccionada
   String _selectedRole = 'Parent';
@@ -117,7 +119,7 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                     ),
                     const SizedBox(height: 4),
                     const Text(
-                      'Nurturing Safety, Ensuring Care',
+                      'Fomentando la Seguridad, Garantizando el Cuidado',
                       style: TextStyle(fontSize: 14, color: Colors.grey),
                     ),
                   ],
@@ -126,39 +128,39 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
 
                 // --- MENSAJE DE BIENVENIDA ---
                 const Text(
-                  'Welcome Back',
+                  'Bienvenido de nuevo',
                   style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black87),
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  'Please select your role and sign in',
+                  'Por favor selecciona tu rol e inicia sesión',
                   style: TextStyle(fontSize: 14, color: Colors.grey),
                 ),
                 const SizedBox(height: 24),
 
                 // --- SELECCIÓN DE ROL ---
                 const Text(
-                  'I am a...',
+                  'Soy un...',
                   style: TextStyle(fontWeight: FontWeight.w600, color: Colors.grey),
                 ),
                 const SizedBox(height: 8),
                 _buildRoleCard(
-                  title: 'Parent / Tutor',
-                  description: 'Manage children & authorizations',
+                  title: 'Padre / Tutor',
+                  description: 'Gestionar hijos y autorizaciones',
                   icon: Icons.family_restroom_rounded,
                   isSelected: _selectedRole == 'Parent',
                   onTap: () => setState(() => _selectedRole = 'Parent'),
                 ),
                 _buildRoleCard(
-                  title: 'Security Guard',
-                  description: 'Scan QR & validate identity',
+                  title: 'Guardia de Seguridad',
+                  description: 'Escanear QR y validar identidad',
                   icon: Icons.shield_rounded,
                   isSelected: _selectedRole == 'Guard',
                   onTap: () => setState(() => _selectedRole = 'Guard'),
                 ),
                 _buildRoleCard(
-                  title: 'Administrator',
-                  description: 'Reports & school management',
+                  title: 'Administrador',
+                  description: 'Reportes y gestión escolar',
                   icon: Icons.admin_panel_settings_rounded,
                   isSelected: _selectedRole == 'Admin',
                   onTap: () => setState(() => _selectedRole = 'Admin'),
@@ -169,7 +171,7 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                 TextFormField(
                   controller: _emailController,
                   decoration: InputDecoration(
-                    labelText: 'parent@school.com',
+                    labelText: 'padre@colegio.com',
                     prefixIcon: const Icon(Icons.email_outlined),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -181,7 +183,7 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                   controller: _passwordController,
                   obscureText: !_passwordVisible,
                   decoration: InputDecoration(
-                    labelText: 'Password',
+                    labelText: 'Contraseña',
                     prefixIcon: const Icon(Icons.lock_outlined),
                     suffixIcon: IconButton(
                       icon: Icon(
@@ -204,34 +206,84 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                   alignment: Alignment.centerRight,
                   child: TextButton(
                     onPressed: () {},
-                    child: const Text('Forgot Password?', style: TextStyle(color: Colors.deepPurple)),
+                    child: const Text('¿Olvidaste tu contraseña?', style: TextStyle(color: Colors.deepPurple)),
                   ),
                 ),
                 const SizedBox(height: 10),
 
                 // --- BOTONES DE ACCIÓN ---
                 ElevatedButton(
-                  onPressed: () {
-                    // Lógica de inicio de sesión y enrutamiento
-                    if (_selectedRole == 'Parent') {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (context) => const ParentDashboardWidget()),
-                      );
-                    } else if (_selectedRole == 'Admin') {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (context) => const AdminAnalyticsDashboardWidget()),
-                      );
-                    } else if (_selectedRole == 'Guard') {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (context) => const GuardScannerWidget()),
-                      );
-                    } else {
-                      print("Iniciando sesión como \$_selectedRole (Falta implementar destino)");
-                    }
-                  },
+                  onPressed: _isLoading
+                      ? null
+                      : () async {
+                          if (_emailController.text.trim().isEmpty || _passwordController.text.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Por favor, ingresa correo y contraseña.')),
+                            );
+                            return;
+                          }
+
+                          setState(() => _isLoading = true);
+
+                          try {
+                            final profile = await SupabaseService().signIn(
+                              email: _emailController.text.trim(),
+                              password: _passwordController.text,
+                            );
+
+                            final String realRole = profile['rol'];
+                            
+                            // Map the selected UI role to the DB role
+                            String expectedRole = '';
+                            if (_selectedRole == 'Parent') expectedRole = 'Tutor';
+                            if (_selectedRole == 'Guard') expectedRole = 'Encargado';
+                            if (_selectedRole == 'Admin') expectedRole = 'Administrador';
+
+                            if (realRole != expectedRole) {
+                              // Sign out immediately if role is wrong
+                              await SupabaseService().signOut();
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Acceso denegado. Tu cuenta es de $realRole, pero seleccionaste $_selectedRole.'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                              setState(() => _isLoading = false);
+                              return;
+                            }
+
+                            // Enrutamiento si es exitoso
+                            if (!mounted) return;
+                            
+                            if (realRole == 'Tutor') {
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(builder: (context) => const ParentDashboardWidget()),
+                              );
+                            } else if (realRole == 'Administrador') {
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(builder: (context) => const AdminAnalyticsDashboardWidget()),
+                              );
+                            } else if (realRole == 'Encargado') {
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(builder: (context) => const GuardScannerWidget()),
+                              );
+                            }
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Error al iniciar sesión: ${e.toString().replaceAll('Exception: ', '')}'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          } finally {
+                            if (mounted) {
+                              setState(() => _isLoading = false);
+                            }
+                          }
+                        },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.deepPurple,
                     padding: const EdgeInsets.symmetric(vertical: 16),
@@ -239,12 +291,20 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                       borderRadius: BorderRadius.circular(24),
                     ),
                   ),
-                  child: const Row(
+                  child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text('Sign In', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
-                      SizedBox(width: 8),
-                      Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 20),
+                      if (_isLoading)
+                        const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                        )
+                      else ...[
+                        const Text('Iniciar Sesión', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                        const SizedBox(width: 8),
+                        const Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 20),
+                      ],
                     ],
                   ),
                 ),
@@ -256,7 +316,7 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                     Expanded(child: Divider()),
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 16),
-                      child: Text('OR', style: TextStyle(color: Colors.grey)),
+                      child: Text('O', style: TextStyle(color: Colors.grey)),
                     ),
                     Expanded(child: Divider()),
                   ],
@@ -269,7 +329,7 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                     print("Biometría presionada");
                   },
                   icon: const Icon(Icons.fingerprint_rounded, color: Colors.deepPurple),
-                  label: const Text('Sign in with Biometrics', style: TextStyle(color: Colors.deepPurple)),
+                  label: const Text('Iniciar sesión con Biometría', style: TextStyle(color: Colors.deepPurple)),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     side: const BorderSide(color: Colors.deepPurple),
@@ -284,12 +344,12 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text('New to SafeGuard?', style: TextStyle(color: Colors.grey)),
+                    const Text('¿Nuevo en SafeGuard?', style: TextStyle(color: Colors.grey)),
                     const SizedBox(width: 4),
                     GestureDetector(
                       onTap: () {},
                       child: const Text(
-                        'Contact Admin',
+                        'Contactar Administrador',
                         style: TextStyle(fontWeight: FontWeight.bold, color: Colors.deepPurple, decoration: TextDecoration.underline),
                       ),
                     ),
@@ -304,3 +364,4 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
     );
   }
 }
+// Actualización de seguridad y diseño

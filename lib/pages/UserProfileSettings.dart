@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'PersonalInfoPage.dart';
 import 'SecurityCenterPage.dart';
 import 'HelpSupportPage.dart';
+import 'Login.dart';
+import '../services/supabase_service.dart';
 
 class UserProfileSettingsWidget extends StatefulWidget {
   const UserProfileSettingsWidget({super.key});
@@ -14,9 +16,37 @@ class UserProfileSettingsWidget extends StatefulWidget {
 
 class _UserProfileSettingsWidgetState extends State<UserProfileSettingsWidget> {
   final scaffoldKey = GlobalKey<ScaffoldState>();
+  final _supabaseService = SupabaseService();
   
+  Map<String, dynamic>? _profile;
+  Map<String, int> _stats = {'students': 0, 'thirdParties': 0, 'deliveries': 0};
+  bool _isLoading = true;
+
   bool _notificationsEnabled = true;
   bool _emailAlertsEnabled = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfileData();
+  }
+
+  Future<void> _loadProfileData() async {
+    try {
+      final profile = await _supabaseService.getCurrentUserProfile();
+      if (profile != null) {
+        final stats = await _supabaseService.getTutorStats(profile['id']);
+        setState(() {
+          _profile = profile;
+          _stats = stats;
+        });
+      }
+    } catch (e) {
+      print("Error cargando perfil: $e");
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   Widget _buildStatCard(String label, String value) {
     return Column(
@@ -45,6 +75,13 @@ class _UserProfileSettingsWidgetState extends State<UserProfileSettingsWidget> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator(color: Colors.deepPurple)));
+    }
+
+    final String name = _profile?['nombre_completo'] ?? "Usuario";
+    final String role = _profile?['rol'] ?? "Tutor";
+
     return Scaffold(
       key: scaffoldKey,
       backgroundColor: Colors.grey.shade50,
@@ -107,20 +144,38 @@ class _UserProfileSettingsWidgetState extends State<UserProfileSettingsWidget> {
                           const CircleAvatar(
                             radius: 40,
                             backgroundColor: Colors.deepPurple,
-                            child: Icon(Icons.person, size: 40, color: Colors.white), // Reemplazo de CachedNetworkImage
+                            child: Icon(Icons.person, size: 40, color: Colors.white),
                           ),
                           const SizedBox(height: 12),
-                          const Text("Ricardo Morales", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                          const Text("Padre / Tutor Principal", style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w600)),
+                          Text(
+                            name, 
+                            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black87)
+                          ),
+                          const SizedBox(height: 4),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.indigo.shade50,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              "Padre / $role", 
+                              style: const TextStyle(
+                                color: Colors.indigo, 
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
                           const SizedBox(height: 16),
                           const Divider(),
                           const SizedBox(height: 8),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceAround,
                             children: [
-                              _buildStatCard("Hijos", "2"),
-                              _buildStatCard("Autorizados", "4"),
-                              _buildStatCard("Entregas", "12"),
+                              _buildStatCard("Hijos", _stats['students'].toString()),
+                              _buildStatCard("Autorizados", _stats['thirdParties'].toString()),
+                              _buildStatCard("Entregas", _stats['deliveries'].toString()),
                             ],
                           ),
                         ],
@@ -147,7 +202,6 @@ class _UserProfileSettingsWidgetState extends State<UserProfileSettingsWidget> {
                     onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const PersonalInfoPage())),
                   ),
                   _buildSettingTile(title: "Biometría", subtitle: "Configurar huella o rostro", icon: Icons.fingerprint_rounded),
-                  _buildSettingTile(title: "Mi Código QR", subtitle: "QR permanente de identificación", icon: Icons.qr_code_2_rounded),
                   const SizedBox(height: 24),
 
                   // Preferencias
@@ -203,9 +257,18 @@ class _UserProfileSettingsWidgetState extends State<UserProfileSettingsWidget> {
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton.icon(
-                      onPressed: () {
-                        // Limpiar historial de navegación y volver al Login (opcional)
-                        Navigator.of(context).popUntil((route) => route.isFirst);
+                      onPressed: () async {
+                        // Llamar a Supabase para cerrar sesión
+                        await _supabaseService.signOut();
+                        
+                        // Limpiar historial de navegación y volver al Login
+                        if (context.mounted) {
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(builder: (context) => const LoginScreenWidget()),
+                            (route) => false,
+                          );
+                        }
                       },
                       icon: const Icon(Icons.logout_rounded, color: Colors.redAccent),
                       label: const Text("Cerrar Sesión", style: TextStyle(color: Colors.redAccent, fontSize: 16, fontWeight: FontWeight.bold)),
