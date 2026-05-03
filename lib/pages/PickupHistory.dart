@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../utils/csv_exporter.dart';
+import '../services/supabase_service.dart';
+import 'package:intl/intl.dart';
 
 class PickupHistoryWidget extends StatefulWidget {
   const PickupHistoryWidget({super.key});
@@ -12,66 +14,62 @@ class PickupHistoryWidget extends StatefulWidget {
 
 class _PickupHistoryWidgetState extends State<PickupHistoryWidget> {
   final scaffoldKey = GlobalKey<ScaffoldState>();
+  final SupabaseService _supabaseService = SupabaseService();
 
   String _searchQuery = '';
   DateTime? _selectedDate;
-
-  // Simulated data base with DateTimes
-  late List<Map<String, dynamic>> _allHistoryItems;
+  List<Map<String, dynamic>> _allHistoryItems = [];
+  bool _isLoading = true;
+  int _todayCount = 0;
+  String _selectedStatus = 'Todos'; // 'Todos', 'Exitoso', 'Alerta'
 
   @override
   void initState() {
     super.initState();
-    DateTime today = DateTime.now();
-    DateTime yesterday = today.subtract(const Duration(days: 1));
+    _loadHistoryData();
+  }
 
-    _allHistoryItems = [
-      {
-        'studentName': 'Mateo Garcia',
-        'grade': '2do Grado - A',
-        'time': '02:45 PM',
-        'authorizedBy': 'Lucia Garcia (Madre)',
-        'guardName': 'Rodriguez',
-        'isFlagged': false,
-        'date': today,
-      },
-      {
-        'studentName': 'Sofia Chen',
-        'grade': '1er Grado - B',
-        'time': '02:40 PM',
-        'authorizedBy': 'David Chen (Padre)',
-        'guardName': 'Rodriguez',
-        'isFlagged': false,
-        'date': today,
-      },
-      {
-        'studentName': 'Lucas Miller',
-        'grade': 'K-5',
-        'time': '02:32 PM',
-        'authorizedBy': 'Desconocido / Sin ID',
-        'guardName': 'Rodriguez',
-        'isFlagged': true, // Flagged for attention
-        'date': today,
-      },
-      {
-        'studentName': 'Elena Rossi',
-        'grade': '4to Grado - C',
-        'time': '02:15 PM',
-        'authorizedBy': 'Marco Rossi (Tío)',
-        'guardName': 'Martinez',
-        'isFlagged': false,
-        'date': yesterday,
-      },
-      {
-        'studentName': 'Carlos Diaz',
-        'grade': '3er Grado - B',
-        'time': '03:00 PM',
-        'authorizedBy': 'Maria Diaz (Madre)',
-        'guardName': 'Martinez',
-        'isFlagged': false,
-        'date': yesterday,
-      },
-    ];
+  Future<void> _loadHistoryData() async {
+    setState(() => _isLoading = true);
+    try {
+      final profile = await _supabaseService.getCurrentUserProfile();
+      if (profile != null) {
+        print("📜 Cargando historial para el tutor: ${profile['id']}");
+        final logs = await _supabaseService.getRecentPickupLogs(profile['id']);
+        final todayCount = await _supabaseService.getTodayPickupsCount(profile['id']);
+        
+        print("📊 Registros encontrados: ${logs.length}");
+        
+        setState(() {
+          _allHistoryItems = logs.map((log) {
+            final student = log['estudiantes'];
+            final thirdParty = log['terceros'];
+            final guard = log['perfiles'];
+            final DateTime date = DateTime.parse(log['fecha_hora']).toLocal();
+            
+            return {
+              'studentName': student != null ? student['nombre'] : 'Desconocido',
+              'grade': student != null ? student['curso'] : 'N/A', 
+              'time': DateFormat('hh:mm a').format(date),
+              'authorizedBy': thirdParty != null 
+                  ? "${thirdParty['nombre']} (${thirdParty['relacion'] ?? 'Tercero'})" 
+                  : 'Tutor Principal',
+              'guardName': guard != null ? guard['nombre_completo'] : 'Sistema', 
+              'isFlagged': log['estado'] == 'Alerta',
+              'date': date,
+            };
+          }).toList();
+          _todayCount = todayCount;
+          _isLoading = false;
+        });
+      } else {
+        print("❌ No se encontró el perfil para el historial.");
+        setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      print("🚨 Error loading history: $e");
+      setState(() => _isLoading = false);
+    }
   }
 
   List<Map<String, dynamic>> get _filteredItems {
@@ -93,7 +91,12 @@ class _PickupHistoryWidgetState extends State<PickupHistoryWidget> {
             itemDate.day == _selectedDate!.day;
       }
 
-      return matchesSearch && matchesDate;
+      bool matchesStatus = true;
+      if (_selectedStatus != 'Todos') {
+        matchesStatus = (item['isFlagged'] ? 'Alerta' : 'Exitoso') == _selectedStatus;
+      }
+
+      return matchesSearch && matchesDate && matchesStatus;
     }).toList();
   }
 
@@ -107,14 +110,9 @@ class _PickupHistoryWidgetState extends State<PickupHistoryWidget> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: ColorScheme.light(
-              primary: Colors.deepPurple, // header background color
-              onPrimary: Colors.white, // header text color
-              onSurface: Colors.deepPurple.shade900, // body text color
-            ),
-            textButtonTheme: TextButtonThemeData(
-              style: TextButton.styleFrom(
-                foregroundColor: Colors.deepPurple, // button text color
-              ),
+              primary: Colors.deepPurple,
+              onPrimary: Colors.white,
+              onSurface: Colors.deepPurple.shade900,
             ),
           ),
           child: child!,
@@ -124,6 +122,91 @@ class _PickupHistoryWidgetState extends State<PickupHistoryWidget> {
     if (picked != null) {
       setState(() => _selectedDate = picked);
     }
+  }
+
+  void _showFilterDialog() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(topLeft: Radius.circular(32), topRight: Radius.circular(32)),
+          ),
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Filtros', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                  TextButton(
+                    onPressed: () {
+                      setState(() {
+                        _selectedDate = null;
+                        _selectedStatus = 'Todos';
+                      });
+                      Navigator.pop(context);
+                    },
+                    child: const Text('Limpiar Todo', style: TextStyle(color: Colors.red)),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              const Text('Estado del Retiro', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
+              const SizedBox(height: 12),
+              Row(
+                children: ['Todos', 'Exitoso', 'Alerta'].map((status) {
+                  bool isSel = _selectedStatus == status;
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8.0),
+                    child: ChoiceChip(
+                      label: Text(status),
+                      selected: isSel,
+                      onSelected: (val) {
+                        setModalState(() => _selectedStatus = status);
+                        setState(() => _selectedStatus = status);
+                      },
+                      selectedColor: Colors.deepPurple,
+                      labelStyle: TextStyle(color: isSel ? Colors.white : Colors.black),
+                    ),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 24),
+              const Text('Fecha', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
+              const SizedBox(height: 12),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.calendar_today, color: Colors.deepPurple),
+                title: Text(_selectedDate == null ? 'Cualquier fecha' : DateFormat('dd/MM/yyyy').format(_selectedDate!)),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () async {
+                  await _pickDate();
+                  setModalState(() {});
+                },
+              ),
+              const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.deepPurple,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
+                  child: const Text('Aplicar Filtros', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Future<void> _exportReport() async {
@@ -231,7 +314,7 @@ class _PickupHistoryWidgetState extends State<PickupHistoryWidget> {
             ),
             const SizedBox(height: 24),
             const Text(
-              'Pickup Details',
+              'Detalles del Retiro',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 24),
@@ -305,23 +388,23 @@ class _PickupHistoryWidgetState extends State<PickupHistoryWidget> {
                     // Info Grid
                     _buildModalRow(
                       Icons.person_rounded,
-                      'Student',
+                      'Estudiante',
                       studentName,
                     ),
-                    _buildModalRow(Icons.school_rounded, 'Grade', grade),
+                    _buildModalRow(Icons.school_rounded, 'Curso', grade),
                     _buildModalRow(
                       Icons.access_time_filled_rounded,
-                      'Time',
+                      'Hora',
                       time,
                     ),
                     _buildModalRow(
                       Icons.verified_user_rounded,
-                      'Authorized by',
+                      'Autorizado por',
                       authorizedBy,
                     ),
                     _buildModalRow(
                       Icons.security_rounded,
-                      'Security Staff',
+                      'Personal de Seguridad',
                       guardName,
                     ),
 
@@ -356,8 +439,8 @@ class _PickupHistoryWidgetState extends State<PickupHistoryWidget> {
                               children: [
                                 Text(
                                   isFlagged
-                                      ? 'Attention Required'
-                                      : 'Secure Verification',
+                                      ? 'Atención Requerida'
+                                      : 'Verificación Segura',
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     color: isFlagged
@@ -367,8 +450,8 @@ class _PickupHistoryWidgetState extends State<PickupHistoryWidget> {
                                 ),
                                 Text(
                                   isFlagged
-                                      ? 'Manual override by guard'
-                                      : 'Face Match Confidence: 98.4%',
+                                      ? 'Intervención manual del guardia'
+                                      : 'Confianza de coincidencia: 98.4%',
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: isFlagged
@@ -459,7 +542,7 @@ class _PickupHistoryWidgetState extends State<PickupHistoryWidget> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  isFlagged ? "Flagged" : "Completed",
+                  isFlagged ? "Alerta" : "Exitoso",
                   style: TextStyle(
                     color: isFlagged ? Colors.red : Colors.green,
                     fontSize: 10,
@@ -493,7 +576,7 @@ class _PickupHistoryWidgetState extends State<PickupHistoryWidget> {
               const Spacer(),
               const Icon(Icons.person_outline, size: 14, color: Colors.grey),
               const SizedBox(width: 4),
-              Text("Auth: $authorizedBy", style: const TextStyle(fontSize: 12)),
+              Text("Autoriza: $authorizedBy", style: const TextStyle(fontSize: 12)),
             ],
           ),
           const SizedBox(height: 4),
@@ -501,7 +584,7 @@ class _PickupHistoryWidgetState extends State<PickupHistoryWidget> {
             children: [
               const Icon(Icons.security, size: 14, color: Colors.grey),
               const SizedBox(width: 4),
-              Text("Guard: $guardName", style: const TextStyle(fontSize: 12)),
+              Text("Guardia: $guardName", style: const TextStyle(fontSize: 12)),
             ],
           ),
         ],
@@ -530,15 +613,40 @@ class _PickupHistoryWidgetState extends State<PickupHistoryWidget> {
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                   const Text(
-                    'Pickup History',
+                    'Historial de Retiros',
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
-                  IconButton(
-                    icon: const Icon(
-                      Icons.tune_rounded,
-                      color: Colors.deepPurple,
+                  // --- BOTÓN DE FILTRO SUPERIOR MEJORADO ---
+                  Container(
+                    decoration: BoxDecoration(
+                      color: _selectedDate != null ? Colors.deepPurple.withOpacity(0.1) : Colors.transparent,
+                      shape: BoxShape.circle,
                     ),
-                    onPressed: () {},
+                    child: Stack(
+                      alignment: Alignment.topRight,
+                      children: [
+                        IconButton(
+                          icon: Icon(
+                            Icons.tune_rounded,
+                            color: _selectedDate != null ? Colors.deepPurple : Colors.grey.shade700,
+                          ),
+                          onPressed: _showFilterDialog,
+                        ),
+                        if (_selectedDate != null || _selectedStatus != 'Todos')
+                          Positioned(
+                            top: 8,
+                            right: 8,
+                            child: Container(
+                              width: 8,
+                              height: 8,
+                              decoration: const BoxDecoration(
+                                color: Colors.deepPurple,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -555,7 +663,7 @@ class _PickupHistoryWidgetState extends State<PickupHistoryWidget> {
                       children: [
                         Expanded(
                           child: _buildSummaryCard(
-                            "128",
+                            _todayCount.toString(),
                             "Total Hoy",
                             Colors.deepPurple,
                             Colors.white,
@@ -564,7 +672,7 @@ class _PickupHistoryWidgetState extends State<PickupHistoryWidget> {
                         const SizedBox(width: 16),
                         Expanded(
                           child: _buildSummaryCard(
-                            "12",
+                            "0", // Puedes conectar esto a otra lógica si hay pendientes
                             "Pendientes",
                             Colors.orange.shade100,
                             Colors.deepOrange.shade900,
@@ -573,73 +681,73 @@ class _PickupHistoryWidgetState extends State<PickupHistoryWidget> {
                       ],
                     ),
                     const SizedBox(height: 24),
-
+                    
                     // Search & Date
                     Row(
                       children: [
                         Expanded(
                           child: TextField(
-                            onChanged: (value) =>
-                                setState(() => _searchQuery = value),
+                            onChanged: (value) => setState(() => _searchQuery = value),
                             decoration: InputDecoration(
-                              hintText: "Search student...",
-                              prefixIcon: const Icon(
-                                Icons.search_rounded,
-                                size: 20,
-                              ),
+                              hintText: "Buscar estudiante...",
+                              prefixIcon: const Icon(Icons.search_rounded, size: 20),
                               filled: true,
                               fillColor: Colors.white,
                               contentPadding: EdgeInsets.zero,
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(16),
-                                borderSide: BorderSide(
-                                  color: Colors.grey.shade200,
-                                ),
+                                borderSide: BorderSide(color: Colors.grey.shade200),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(16),
-                                borderSide: BorderSide(
-                                  color: Colors.grey.shade200,
-                                ),
+                                borderSide: BorderSide(color: Colors.grey.shade200),
                               ),
                             ),
                           ),
                         ),
                         const SizedBox(width: 16),
+                        // --- SELECTOR DE FECHA (PILL) MEJORADO ---
                         GestureDetector(
                           onTap: _pickDate,
-                          child: Container(
-                            padding: const EdgeInsets.all(12),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 300),
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                             decoration: BoxDecoration(
-                              color: _selectedDate != null
-                                  ? Colors.deepPurple
-                                  : Colors.white,
+                              color: _selectedDate != null ? Colors.deepPurple : Colors.white,
                               borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: _selectedDate != null 
+                                    ? Colors.deepPurple.withOpacity(0.3) 
+                                    : Colors.black.withOpacity(0.05),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                )
+                              ],
                               border: Border.all(
-                                color: _selectedDate != null
-                                    ? Colors.deepPurple
-                                    : Colors.grey.shade200,
+                                color: _selectedDate != null ? Colors.deepPurple : Colors.grey.shade200,
+                                width: 1.5,
                               ),
                             ),
                             child: Row(
                               children: [
                                 Icon(
-                                  Icons.calendar_month_rounded,
-                                  color: _selectedDate != null
-                                      ? Colors.white
-                                      : Colors.deepPurple,
+                                  _selectedDate != null ? Icons.event_available_rounded : Icons.calendar_month_rounded,
+                                  color: _selectedDate != null ? Colors.white : Colors.deepPurple,
+                                  size: 22,
                                 ),
                                 if (_selectedDate != null) ...[
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    DateFormat('dd/MM').format(_selectedDate!),
+                                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                                  ),
                                   const SizedBox(width: 8),
                                   GestureDetector(
                                     onTap: () {
                                       setState(() => _selectedDate = null);
                                     },
-                                    child: const Icon(
-                                      Icons.close,
-                                      color: Colors.white,
-                                      size: 16,
-                                    ),
+                                    child: const Icon(Icons.close_rounded, color: Colors.white70, size: 16),
                                   ),
                                 ],
                               ],
@@ -650,67 +758,43 @@ class _PickupHistoryWidgetState extends State<PickupHistoryWidget> {
                     ),
                     const SizedBox(height: 24),
 
-                    // History List
+                    // Lista de Historial
                     const Text(
-                      'Recent Activity',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      'Actividad Reciente',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 16),
-                    _buildHistoryItem(
-                      studentName: 'Mateo Garcia',
-                      grade: '2nd Grade - A',
-                      time: '02:45 PM',
-                      authorizedBy: 'Lucia Garcia (Mother)',
-                      guardName: 'Rodriguez',
-                      isFlagged: false,
-                    ),
-                    _buildHistoryItem(
-                      studentName: 'Sofia Chen',
-                      grade: '1st Grade - B',
-                      time: '02:40 PM',
-                      authorizedBy: 'David Chen (Father)',
-                      guardName: 'Rodriguez',
-                      isFlagged: false,
-                    ),
-                    _buildHistoryItem(
-                      studentName: 'Lucas Miller',
-                      grade: 'K-5',
-                      time: '02:32 PM',
-                      authorizedBy: 'Unknown / No ID',
-                      guardName: 'Rodriguez',
-                      isFlagged: true, // Flagged for attention
-                    ),
-                    _buildHistoryItem(
-                      studentName: 'Elena Rossi',
-                      grade: '4th Grade - C',
-                      time: '02:15 PM',
-                      authorizedBy: 'Marco Rossi (Uncle)',
-                      guardName: 'Martinez',
-                      isFlagged: false,
-                    ),
-                    const SizedBox(height: 16),
-
-                    if (filteredList.isEmpty)
+                    
+                    if (_isLoading)
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 32.0),
+                        child: Center(child: CircularProgressIndicator(color: Colors.deepPurple)),
+                      )
+                    else if (filteredList.isEmpty)
                       const Padding(
                         padding: EdgeInsets.symmetric(vertical: 32.0),
                         child: Center(
-                          child: Text(
-                            "No se encontraron registros.",
-                            style: TextStyle(color: Colors.grey),
-                          ),
+                          child: Text("No se encontraron registros.", style: TextStyle(color: Colors.grey)),
                         ),
                       )
                     else
-                      ...filteredList.map((item) => _buildHistoryItem(
-                        studentName: item['studentName'],
-                        grade: item['grade'],
-                        time: item['time'],
-                        authorizedBy: item['authorizedBy'],
-                        guardName: item['guardName'],
-                        isFlagged: item['isFlagged'],
+                      ...filteredList.map((item) => GestureDetector(
+                        onTap: () => _showDetailModal(
+                          studentName: item['studentName'],
+                          grade: item['grade'],
+                          time: item['time'],
+                          authorizedBy: item['authorizedBy'],
+                          guardName: item['guardName'],
+                          isFlagged: item['isFlagged'],
+                        ),
+                        child: _buildHistoryItem(
+                          studentName: item['studentName'],
+                          grade: item['grade'],
+                          time: item['time'],
+                          authorizedBy: item['authorizedBy'],
+                          guardName: item['guardName'],
+                          isFlagged: item['isFlagged'],
+                        ),
                       )),
 
                     const SizedBox(height: 16),

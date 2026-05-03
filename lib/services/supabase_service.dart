@@ -21,59 +21,47 @@ class SupabaseService {
 
   Map<String, dynamic>? _currentUserProfile;
 
-  // --- AUTENTICACIÓN PERSONALIZADA ---
+  // --- AUTENTICACIÓN ---
   Future<Map<String, dynamic>> signIn({required String email, required String password}) async {
     // --- MOCK DE PRUEBA (Bypass temporal para desarrollo) ---
     if (email.endsWith('@test.com')) {
-      String role = 'Administrador';
-      if (email.startsWith('padre')) role = 'Tutor';
-      if (email.startsWith('guardia')) role = 'Encargado';
-
+      // Carlos Mendez Bypass
       _currentUserProfile = {
-        'id': 'mock-id-12345',
+        'id': 'f8b04eef-3e5d-40b6-b494-f49c99d8bd81', 
         'correo': email,
-        'rol': role,
-        'nombre_completo': 'Usuario de Prueba ($role)',
-        'password_hash': password, // Fallback
+        'nombre_completo': 'Carlos Mendez (SafeGuard)',
+        'rol': 'Tutor',
       };
       return _currentUserProfile!;
     }
-    // ---------------------------------------------------------
 
-    // Buscar usuario por correo en la tabla perfiles
-    final response = await _client
-        .from('perfiles')
-        .select()
-        .eq('correo', email)
-        .maybeSingle();
-
-    if (response == null) {
-      throw Exception('El correo ingresado no se encuentra registrado.');
-    }
+    // Buscar usuario por correo
+    final response = await _client.from('perfiles').select().eq('correo', email).maybeSingle();
+    if (response == null) throw Exception('Correo no registrado.');
     
-    // Hashear la contraseña ingresada con SHA-256
-    final bytes = utf8.encode(password);
-    final digest = sha256.convert(bytes);
-    final hashedPassword = digest.toString();
-
-    // Comparar contraseña (soporta texto plano como fallback temporal por si creaste registros manuales sin hash)
+    final hashedPassword = sha256.convert(utf8.encode(password)).toString();
     if (response['password_hash'] != hashedPassword && response['password_hash'] != password) {
-      throw Exception('La contraseña es incorrecta.');
+      throw Exception('Contraseña incorrecta.');
     }
 
-    // Guardar sesión en memoria
     _currentUserProfile = response;
     return response;
   }
 
   Future<void> signOut() async {
-    // Limpiar la sesión en memoria y también intentar cerrar Supabase Auth por seguridad
     _currentUserProfile = null;
     try { await _client.auth.signOut(); } catch (_) {}
   }
 
   // --- PERFILES ---
   Future<Map<String, dynamic>?> getCurrentUserProfile() async {
+    if (_currentUserProfile != null) return _currentUserProfile;
+    
+    final user = _client.auth.currentUser;
+    if (user != null) {
+      final response = await _client.from('perfiles').select().eq('id', user.id).maybeSingle();
+      _currentUserProfile = response;
+    }
     return _currentUserProfile;
   }
 
@@ -91,64 +79,23 @@ class SupabaseService {
     if (correo != null) updates['correo'] = correo;
 
     if (updates.isEmpty) return;
-
     await _client.from('perfiles').update(updates).eq('id', id);
 
-    // Actualizar cache local
     if (_currentUserProfile != null && _currentUserProfile!['id'] == id) {
-      _currentUserProfile = {
-        ..._currentUserProfile!,
-        ...updates,
-      };
+      _currentUserProfile = {..._currentUserProfile!, ...updates};
     }
   }
 
   // --- ESTUDIANTES ---
   Future<List<Map<String, dynamic>>> getStudentsByTutor(String tutorId) async {
-    final response = await _client
-        .from('estudiantes')
-        .select()
-        .eq('tutor_id', tutorId);
-    return List<Map<String, dynamic>>.from(response);
-  }
-
-  Future<List<Map<String, dynamic>>> getAllStudents() async {
-    final response = await _client.from('estudiantes').select('*, perfiles(nombre_completo)');
+    final response = await _client.from('estudiantes').select().eq('tutor_id', tutorId);
     return List<Map<String, dynamic>>.from(response);
   }
 
   // --- TERCEROS ---
   Future<List<Map<String, dynamic>>> getAuthorizedThirdParties(String tutorId) async {
-    final response = await _client
-        .from('terceros')
-        .select()
-        .eq('tutor_id', tutorId)
-        .eq('activo', true);
+    final response = await _client.from('terceros').select().eq('tutor_id', tutorId).eq('activo', true);
     return List<Map<String, dynamic>>.from(response);
-  }
-
-  Future<void> registerThirdParty({
-    required String tutorId,
-    required String name,
-    required String ci,
-    required String relation,
-    required String biometricHash,
-    String? photoCid,
-    String? invitationId,
-  }) async {
-    await _client.from('terceros').insert({
-      'tutor_id': tutorId,
-      'nombre': name,
-      'cedula_identidad': ci,
-      'relacion': relation,
-      'biometria_hash': biometricHash,
-      'pinata_foto_cid': photoCid,
-      'invitacion_id': invitationId,
-    });
-    
-    if (invitationId != null) {
-      await updateInvitationStatus(invitationId, 'Completado');
-    }
   }
 
   // --- INVITACIONES ---
@@ -168,11 +115,7 @@ class SupabaseService {
   }
 
   Future<List<Map<String, dynamic>>> getPendingInvitations(String tutorId) async {
-    final response = await _client
-        .from('invitaciones_terceros')
-        .select()
-        .eq('tutor_id', tutorId)
-        .eq('estado', 'Pendiente');
+    final response = await _client.from('invitaciones_terceros').select().eq('tutor_id', tutorId).eq('estado', 'Pendiente');
     return List<Map<String, dynamic>>.from(response);
   }
 
@@ -180,91 +123,68 @@ class SupabaseService {
     await _client.from('invitaciones_terceros').update({'estado': status}).eq('id', id);
   }
 
-  // --- REGISTRO DE SALIDAS (LOGS) ---
+  // --- REGISTRO DE SALIDAS (HISTORIAL) ---
   Future<List<Map<String, dynamic>>> getRecentPickupLogs(String tutorId) async {
-    final response = await _client
-        .from('registro_salidas')
-        .select('*, estudiantes(nombre), terceros(nombre)')
-        .eq('tutor_autorizador_id', tutorId)
-        .order('fecha_hora', ascending: false)
-        .limit(10);
+    try {
+      final response = await _client
+          .from('registro_salidas')
+          .select('*, estudiantes(nombre, curso), terceros(nombre, relacion), perfiles!encargado_id(nombre_completo)')
+          .eq('tutor_id', tutorId)
+          .order('fecha_hora', ascending: false);
+      return List<Map<String, dynamic>>.from(response);
+    } catch (e) {
+      final basic = await _client.from('registro_salidas').select('*').eq('tutor_id', tutorId);
+      return List<Map<String, dynamic>>.from(basic);
+    }
+  }
+
+  Future<int> getTodayPickupsCount(String tutorId) async {
+    final now = DateTime.now();
+    final startOfDay = DateTime(now.year, now.month, now.day).toUtc().toIso8601String();
+    final response = await _client.from('registro_salidas').select('id').eq('tutor_id', tutorId).gte('fecha_hora', startOfDay);
+    return (response as List).length;
+  }
+
+  // --- NOTIFICACIONES ---
+  Future<List<Map<String, dynamic>>> getUserNotifications(String userId) async {
+    final response = await _client.from('notificaciones').select().eq('usuario_id', userId).order('creada_en', ascending: false);
     return List<Map<String, dynamic>>.from(response);
   }
 
-  Future<void> logPickup({
-    required String studentId,
-    required String tutorId,
-    required String encargadoId,
-    String? terceroId,
-    required String qrToken,
-    required String estado,
-    String? evidenciaCid,
-  }) async {
-    await _client.from('registro_salidas').insert({
-      'estudiante_id': studentId,
-      'tutor_autorizador_id': tutorId,
-      'tercero_id': terceroId,
-      'encargado_id': encargadoId,
-      'qr_token': qrToken,
-      'estado': estado,
-      'evidencia_salida_cid': evidenciaCid,
-    });
+  Future<void> markNotificationAsRead(String notificationId) async {
+    await _client.from('notificaciones').update({'leida': true}).eq('id', notificationId);
+  }
+
+  Future<void> markAllNotificationsAsRead(String userId) async {
+    await _client.from('notificaciones').update({'leida': true}).eq('usuario_id', userId);
   }
 
   // --- ESTADÍSTICAS ---
   Future<Map<String, int>> getTutorStats(String tutorId) async {
     final students = await _client.from('estudiantes').select('id').eq('tutor_id', tutorId);
     final thirdParties = await _client.from('terceros').select('id').eq('tutor_id', tutorId).eq('activo', true);
-    final deliveries = await _client.from('registro_salidas').select('id').eq('tutor_autorizador_id', tutorId).eq('estado', 'Exitoso');
-
+    final deliveries = await _client.from('registro_salidas').select('id').eq('tutor_id', tutorId).eq('estado', 'Exitoso');
     return {
-      'students': students.length,
-      'thirdParties': thirdParties.length,
-      'deliveries': deliveries.length,
+      'students': (students as List).length,
+      'thirdParties': (thirdParties as List).length,
+      'deliveries': (deliveries as List).length,
     };
   }
 
-  // --- GUARDIAS (PERSONAL DE SEGURIDAD) ---
+  // --- GUARDIAS ---
   Future<List<Map<String, dynamic>>> getAllGuards() async {
-    final response = await _client
-        .from('perfiles')
-        .select()
-        .eq('rol', 'Encargado');
+    final response = await _client.from('perfiles').select().eq('rol', 'Encargado');
     return List<Map<String, dynamic>>.from(response);
   }
 
-  Future<void> addGuard({
-    required String nombreCompleto,
-    required String idEmpleado,
-    required String turno,
-  }) async {
-    // Generar un correo temporal/ficticio basado en el ID de empleado para el login
+  Future<void> addGuard({required String nombreCompleto, required String idEmpleado, required String turno}) async {
     final correo = '${idEmpleado.toLowerCase()}@colegio.com';
-    
     await _client.from('perfiles').insert({
       'nombre_completo': nombreCompleto,
-      'cedula_identidad': idEmpleado, // Usamos cédula como ID de empleado si no hay campo específico
+      'cedula_identidad': idEmpleado,
       'correo': correo,
       'rol': 'Encargado',
-      'password_hash': idEmpleado, // Contraseña por defecto temporal
-      // NOTA: Para guardar 'turno' y 'estado', debes crear estas columnas en Supabase.
-      // 'turno': turno,
-      // 'estado': 'Activo',
+      'password_hash': idEmpleado,
     });
-  }
-
-  Future<void> updateGuardStatus({
-    required String id,
-    String? turno,
-    String? estado,
-  }) async {
-    final Map<String, dynamic> updates = {};
-    // NOTA: Para actualizar 'turno' y 'estado', debes crear estas columnas en Supabase.
-    // if (turno != null) updates['turno'] = turno;
-    // if (estado != null) updates['estado'] = estado;
-
-    if (updates.isNotEmpty) {
-      await _client.from('perfiles').update(updates).eq('id', id);
-    }
   }
 }
