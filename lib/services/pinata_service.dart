@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
-import '../config/env_config.dart';
 
 class PinataService {
   final String _pinataUrl = 'https://api.pinata.cloud/pinning/pinFileToIPFS';
@@ -11,17 +10,14 @@ class PinataService {
   Future<String?> uploadFileToIPFS(File file) async {
     try {
       var request = http.MultipartRequest('POST', Uri.parse(_pinataUrl));
-      
+
       // Añadir Headers de autenticación
       request.headers.addAll({
         'Authorization': 'Bearer \${EnvConfig.pinataJwt}',
       });
 
       // Adjuntar el archivo
-      request.files.add(await http.MultipartFile.fromPath(
-        'file',
-        file.path,
-      ));
+      request.files.add(await http.MultipartFile.fromPath('file', file.path));
 
       // Enviar la petición
       var response = await request.send();
@@ -30,7 +26,7 @@ class PinataService {
         var responseData = await response.stream.toBytes();
         var responseString = String.fromCharCodes(responseData);
         var json = jsonDecode(responseString);
-        
+
         return json['IpfsHash']; // Retorna el CID para guardarlo en Supabase
       } else {
         print('Error subiendo a Pinata: \${response.statusCode}');

@@ -25,7 +25,6 @@ class SupabaseService {
   Future<Map<String, dynamic>> signIn({required String email, required String password}) async {
     // --- MOCK DE PRUEBA (Bypass temporal para desarrollo) ---
     if (email.endsWith('@test.com')) {
-      // Carlos Mendez Bypass
       _currentUserProfile = {
         'id': 'f8b04eef-3e5d-40b6-b494-f49c99d8bd81', 
         'correo': email,
@@ -35,7 +34,6 @@ class SupabaseService {
       return _currentUserProfile!;
     }
 
-    // Buscar usuario por correo
     final response = await _client.from('perfiles').select().eq('correo', email).maybeSingle();
     if (response == null) throw Exception('Correo no registrado.');
     
@@ -89,6 +87,11 @@ class SupabaseService {
   // --- ESTUDIANTES ---
   Future<List<Map<String, dynamic>>> getStudentsByTutor(String tutorId) async {
     final response = await _client.from('estudiantes').select().eq('tutor_id', tutorId);
+    return List<Map<String, dynamic>>.from(response);
+  }
+
+  Future<List<Map<String, dynamic>>> getAllStudents() async {
+    final response = await _client.from('estudiantes').select();
     return List<Map<String, dynamic>>.from(response);
   }
 
@@ -161,14 +164,18 @@ class SupabaseService {
 
   // --- ESTADÍSTICAS ---
   Future<Map<String, int>> getTutorStats(String tutorId) async {
-    final students = await _client.from('estudiantes').select('id').eq('tutor_id', tutorId);
-    final thirdParties = await _client.from('terceros').select('id').eq('tutor_id', tutorId).eq('activo', true);
-    final deliveries = await _client.from('registro_salidas').select('id').eq('tutor_id', tutorId).eq('estado', 'Exitoso');
-    return {
-      'students': (students as List).length,
-      'thirdParties': (thirdParties as List).length,
-      'deliveries': (deliveries as List).length,
-    };
+    try {
+      final students = await _client.from('estudiantes').select('id').eq('tutor_id', tutorId);
+      final thirdParties = await _client.from('terceros').select('id').eq('tutor_id', tutorId).eq('activo', true);
+      final deliveries = await _client.from('registro_salidas').select('id').eq('tutor_id', tutorId).eq('estado', 'Exitoso');
+      return {
+        'students': (students as List).length,
+        'thirdParties': (thirdParties as List).length,
+        'deliveries': (deliveries as List).length,
+      };
+    } catch (_) {
+      return {'students': 0, 'thirdParties': 0, 'deliveries': 0};
+    }
   }
 
   // --- GUARDIAS ---
@@ -186,5 +193,20 @@ class SupabaseService {
       'rol': 'Encargado',
       'password_hash': idEmpleado,
     });
+  }
+
+  Future<void> updateGuardStatus({
+    required String id,
+    String? turno,
+    String? estado,
+  }) async {
+    final Map<String, dynamic> updates = {};
+    if (turno != null) updates['turno'] = turno;
+    // Nota: Asegúrate de tener estas columnas en tu tabla perfiles si vas a usarlas
+    // if (estado != null) updates['estado'] = estado; 
+
+    if (updates.isNotEmpty) {
+      await _client.from('perfiles').update(updates).eq('id', id);
+    }
   }
 }
