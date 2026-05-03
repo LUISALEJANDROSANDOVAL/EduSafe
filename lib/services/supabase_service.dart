@@ -58,6 +58,7 @@ class SupabaseService {
       return _currentUserProfile;
     }
     
+    // Si no hay perfil en cache, intentar recuperarlo de la sesión de Supabase Auth
     final user = _client.auth.currentUser;
     if (user != null) {
       print("🔍 Buscando perfil en base de datos para ID: ${user.id}");
@@ -70,7 +71,10 @@ class SupabaseService {
       if (_currentUserProfile != null) {
         print("✅ Perfil recuperado: ${_currentUserProfile!['correo']}");
       }
+    } else {
+      print("⚠️ No hay ningún usuario autenticado.");
     }
+    
     return _currentUserProfile;
   }
 
@@ -132,10 +136,11 @@ class SupabaseService {
     await _client.from('invitaciones_terceros').update({'estado': status}).eq('id', id);
   }
 
-  // --- REGISTRO DE SALIDAS (HISTORIAL COMPLETO) ---
+  // --- REGISTRO DE SALIDAS (HISTORIAL) ---
   Future<List<Map<String, dynamic>>> getRecentPickupLogs(String tutorId) async {
     try {
       print("🔍 Consultando registro_salidas para tutor_id: $tutorId");
+      
       final response = await _client
           .from('registro_salidas')
           .select('*, estudiantes(nombre, curso), terceros(nombre, relacion), perfiles!encargado_id(nombre_completo)')
@@ -143,13 +148,20 @@ class SupabaseService {
           .order('fecha_hora', ascending: false);
       
       print("✅ Respuesta de Supabase: ${response.length} registros encontrados.");
+      if (response.isNotEmpty) {
+        print("Muestra 1: ${response[0]}");
+      }
+      
       return List<Map<String, dynamic>>.from(response);
     } catch (e) {
-      print("🚨 ERROR CRÍTICO: $e");
+      print("🚨 ERROR CRÍTICO EN LA CONSULTA: $e");
       try {
+        print("🔄 Reintentando consulta básica sin joins...");
         final basic = await _client.from('registro_salidas').select('*').eq('tutor_id', tutorId);
+        print("📊 Consulta básica trajo ${basic.length} registros.");
         return List<Map<String, dynamic>>.from(basic);
-      } catch (_) {
+      } catch (e2) {
+        print("🚨 Falló incluso el reintento básico: $e2");
         return [];
       }
     }
@@ -158,7 +170,13 @@ class SupabaseService {
   Future<int> getTodayPickupsCount(String tutorId) async {
     final now = DateTime.now();
     final startOfDay = DateTime(now.year, now.month, now.day).toUtc().toIso8601String();
-    final response = await _client.from('registro_salidas').select('id').eq('tutor_id', tutorId).gte('fecha_hora', startOfDay);
+    
+    final response = await _client
+        .from('registro_salidas')
+        .select('id')
+        .eq('tutor_id', tutorId)
+        .gte('fecha_hora', startOfDay);
+        
     return (response as List).length;
   }
 
