@@ -23,23 +23,6 @@ class SupabaseService {
 
   // --- AUTENTICACIÓN PERSONALIZADA ---
   Future<Map<String, dynamic>> signIn({required String email, required String password}) async {
-    // --- MOCK DE PRUEBA (Bypass temporal para desarrollo) ---
-    if (email.endsWith('@test.com')) {
-      String role = 'Administrador';
-      if (email.startsWith('padre')) role = 'Tutor';
-      if (email.startsWith('guardia')) role = 'Encargado';
-
-      _currentUserProfile = {
-        'id': 'mock-id-12345',
-        'correo': email,
-        'rol': role,
-        'nombre_completo': 'Usuario de Prueba ($role)',
-        'password_hash': password, // Fallback
-      };
-      return _currentUserProfile!;
-    }
-    // ---------------------------------------------------------
-
     // Buscar usuario por correo en la tabla perfiles
     final response = await _client
         .from('perfiles')
@@ -170,24 +153,8 @@ class SupabaseService {
   }
 
   Future<List<Map<String, dynamic>>> getAllStudents() async {
-    final response = await _client.from('estudiantes').select();
-    final tutors = await _client.from('perfiles').select('id, nombre_completo').eq('rol', 'Tutor');
-    
-    List<Map<String, dynamic>> students = List<Map<String, dynamic>>.from(response);
-    List<Map<String, dynamic>> loadedTutors = List<Map<String, dynamic>>.from(tutors);
-
-    for (var student in students) {
-      if (student['tutor_id'] != null) {
-        final tutor = loadedTutors.firstWhere(
-          (t) => t['id'] == student['tutor_id'],
-          orElse: () => <String, dynamic>{},
-        );
-        if (tutor.isNotEmpty) {
-          student['perfiles'] = {'nombre_completo': tutor['nombre_completo']};
-        }
-      }
-    }
-    return students;
+    final response = await _client.from('estudiantes').select('*, perfiles(nombre_completo)');
+    return List<Map<String, dynamic>>.from(response);
   }
 
   // --- TERCEROS ---
@@ -295,49 +262,5 @@ class SupabaseService {
       'thirdParties': thirdParties.length,
       'deliveries': deliveries.length,
     };
-  }
-
-  // --- GUARDIAS (PERSONAL DE SEGURIDAD) ---
-  Future<List<Map<String, dynamic>>> getAllGuards() async {
-    final response = await _client
-        .from('perfiles')
-        .select()
-        .eq('rol', 'Encargado');
-    return List<Map<String, dynamic>>.from(response);
-  }
-
-  Future<void> addGuard({
-    required String nombreCompleto,
-    required String idEmpleado,
-    required String turno,
-  }) async {
-    // Generar un correo temporal/ficticio basado en el ID de empleado para el login
-    final correo = '${idEmpleado.toLowerCase()}@colegio.com';
-    
-    await _client.from('perfiles').insert({
-      'nombre_completo': nombreCompleto,
-      'cedula_identidad': idEmpleado, // Usamos cédula como ID de empleado si no hay campo específico
-      'correo': correo,
-      'rol': 'Encargado',
-      'password_hash': idEmpleado, // Contraseña por defecto temporal
-      // NOTA: Para guardar 'turno' y 'estado', debes crear estas columnas en Supabase.
-      // 'turno': turno,
-      // 'estado': 'Activo',
-    });
-  }
-
-  Future<void> updateGuardStatus({
-    required String id,
-    String? turno,
-    String? estado,
-  }) async {
-    final Map<String, dynamic> updates = {};
-    // NOTA: Para actualizar 'turno' y 'estado', debes crear estas columnas en Supabase.
-    // if (turno != null) updates['turno'] = turno;
-    // if (estado != null) updates['estado'] = estado;
-
-    if (updates.isNotEmpty) {
-      await _client.from('perfiles').update(updates).eq('id', id);
-    }
   }
 }

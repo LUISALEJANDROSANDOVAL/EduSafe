@@ -15,7 +15,6 @@ class _PickupHistoryWidgetState extends State<PickupHistoryWidget> {
 
   String _searchQuery = '';
   DateTime? _selectedDate;
-  String _selectedStatusFilter = 'Todos';
 
   // Simulated data base with DateTimes
   late List<Map<String, dynamic>> _allHistoryItems;
@@ -94,86 +93,8 @@ class _PickupHistoryWidgetState extends State<PickupHistoryWidget> {
             itemDate.day == _selectedDate!.day;
       }
 
-      bool matchesStatus = true;
-      if (_selectedStatusFilter == 'Completado') {
-        matchesStatus = item['isFlagged'] == false;
-      } else if (_selectedStatusFilter == 'Alerta') {
-        matchesStatus = item['isFlagged'] == true;
-      }
-
-      return matchesSearch && matchesDate && matchesStatus;
+      return matchesSearch && matchesDate;
     }).toList();
-  }
-
-  void _showFilterModal() {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-      ),
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (BuildContext context, StateSetter setModalState) {
-            return Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Filtros Avanzados',
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.close),
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  const Text('Estado del Registro', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                  const SizedBox(height: 12),
-                  Wrap(
-                    spacing: 8,
-                    children: ['Todos', 'Completado', 'Alerta'].map((status) {
-                      final isSelected = _selectedStatusFilter == status;
-                      return ChoiceChip(
-                        label: Text(status),
-                        selected: isSelected,
-                        selectedColor: Colors.deepPurple,
-                        labelStyle: TextStyle(color: isSelected ? Colors.white : Colors.black87),
-                        onSelected: (selected) {
-                          if (selected) {
-                            setModalState(() => _selectedStatusFilter = status);
-                            setState(() => _selectedStatusFilter = status);
-                          }
-                        },
-                      );
-                    }).toList(),
-                  ),
-                  const SizedBox(height: 32),
-                  ElevatedButton(
-                    onPressed: () => Navigator.pop(context),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.deepPurple,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
-                    child: const Text('Aplicar Filtros', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                  ),
-                  const SizedBox(height: 24),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
   }
 
   Future<void> _pickDate() async {
@@ -617,7 +538,7 @@ class _PickupHistoryWidgetState extends State<PickupHistoryWidget> {
                       Icons.tune_rounded,
                       color: Colors.deepPurple,
                     ),
-                    onPressed: _showFilterModal,
+                    onPressed: () {},
                   ),
                 ],
               ),
