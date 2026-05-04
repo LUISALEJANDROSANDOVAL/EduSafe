@@ -28,13 +28,25 @@ class _TerceroWebFormPageState extends State<TerceroWebFormPage> {
   }
 
   void _extractParameters() {
-    // Para Flutter Web, extraemos de la URL
+    // Para Flutter Web, extraemos tanto de la query principal como del fragmento (después del #)
     final uri = Uri.base;
+    Map<String, String> params = Map.from(uri.queryParameters);
+    
+    if (uri.hasFragment) {
+      // Si la URL es .../#/registro-tercero?tutorId=123, los parámetros están en el fragmento
+      final fragment = uri.fragment;
+      if (fragment.contains('?')) {
+        final queryPart = fragment.split('?').last;
+        final fragmentParams = Uri.splitQueryString(queryPart);
+        params.addAll(fragmentParams);
+      }
+    }
+
     setState(() {
-      _tutorId = uri.queryParameters['tutorId'];
-      _tokens = uri.queryParameters['tokens'];
+      _tutorId = params['tutorId'];
+      _tokens = params['tokens'];
     });
-    print("TutorId cargado: $_tutorId, Tokens: $_tokens");
+    print("Parámetros extraídos - TutorId: $_tutorId, Tokens: $_tokens");
   }
 
   // Opciones de relación para la base de datos
