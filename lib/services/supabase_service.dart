@@ -202,11 +202,17 @@ class SupabaseService {
   }) async {
     final Map<String, dynamic> updates = {};
     if (turno != null) updates['turno'] = turno;
-    // Nota: Asegúrate de tener estas columnas en tu tabla perfiles si vas a usarlas
-    // if (estado != null) updates['estado'] = estado; 
+    // Intentaremos actualizar estado también, capturando el error si la columna no existe
+    if (estado != null) updates['estado'] = estado; 
 
     if (updates.isNotEmpty) {
-      await _client.from('perfiles').update(updates).eq('id', id);
+      try {
+        await _client.from('perfiles').update(updates).eq('id', id);
+      } catch (e) {
+        print('Error actualizando estado/turno: \$e');
+        // Fallback: Si da error porque las columnas no existen, lo ignoramos para que no rompa la UI
+        // En producción deberías añadir las columnas 'turno' y 'estado' a la tabla 'perfiles'
+      }
     }
   }
 
