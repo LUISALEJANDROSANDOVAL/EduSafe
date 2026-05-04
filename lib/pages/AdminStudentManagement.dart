@@ -56,24 +56,26 @@ class _AdminStudentManagementWidgetState
     try {
       final supabase = Supabase.instance.client;
       
-      // 1. Fetch students WITHOUT the 'perfiles' join to avoid the schema cache error
-      final response = await supabase.from('estudiantes').select('id, nombre, curso, cedula_identidad, pinata_foto_cid, tutor_id').order('creado_en', ascending: false);
-      
-      // 2. Fetch all tutors
+      // Fetch tutors first
       final tutorRes = await supabase.from('perfiles').select('id, nombre_completo, cedula_identidad').eq('rol', 'Tutor');
       List<Map<String, dynamic>> loadedTutors = List<Map<String, dynamic>>.from(tutorRes);
 
+      // Fetch students without the join
+      final response = await supabase.from('estudiantes').select('id, nombre, curso, cedula_identidad, pinata_foto_cid, tutor_id').order('creado_en', ascending: false);
+      
       List<Map<String, dynamic>> loaded = [];
       for (var row in response) {
         String tutorName = 'Sin Asignar';
         String tutorCi = 'N/A';
         
-        // 3. Map tutor manually in memory
         if (row['tutor_id'] != null) {
-          final match = loadedTutors.where((t) => t['id'] == row['tutor_id']).toList();
-          if (match.isNotEmpty) {
-            tutorName = match.first['nombre_completo'] ?? 'Sin Asignar';
-            tutorCi = match.first['cedula_identidad'] ?? 'N/A';
+          final tutor = loadedTutors.firstWhere(
+            (t) => t['id'] == row['tutor_id'],
+            orElse: () => <String, dynamic>{},
+          );
+          if (tutor.isNotEmpty) {
+            tutorName = tutor['nombre_completo'] ?? 'Sin Asignar';
+            tutorCi = tutor['cedula_identidad'] ?? 'N/A';
           }
         }
         
@@ -91,8 +93,6 @@ class _AdminStudentManagementWidgetState
           'lastPickup': 'Ver detalles',
         });
       }
-      
-
 
       if (mounted) {
         setState(() {
@@ -189,6 +189,7 @@ class _AdminStudentManagementWidgetState
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
+                isExpanded: true,
                 value: localSelectedTutorId,
                 decoration: InputDecoration(
                   labelText: 'Seleccionar Padre/Tutor',
@@ -197,13 +198,18 @@ class _AdminStudentManagementWidgetState
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                items: _tutors.map((t) {
-                  return DropdownMenuItem<String>(
-                    value: t['id'],
-                    child: Text('${t['nombre_completo']} (CI: ${t['cedula_identidad']})'),
-                  );
-                }).toList(),
-                onChanged: (val) {
+                items: _tutors.isEmpty 
+                  ? [const DropdownMenuItem<String>(value: null, child: Text('No hay tutores o recargue la página', overflow: TextOverflow.ellipsis))]
+                  : _tutors.map((t) {
+                      return DropdownMenuItem<String>(
+                        value: t['id'].toString(),
+                        child: Text(
+                          '${t['nombre_completo'] ?? 'Sin Nombre'} (CI: ${t['cedula_identidad'] ?? 'S/C'})',
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      );
+                    }).toList(),
+                onChanged: _tutors.isEmpty ? null : (val) {
                   setModalState(() {
                     localSelectedTutorId = val;
                   });

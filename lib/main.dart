@@ -3,7 +3,7 @@ import 'config/env_config.dart';
 import 'services/supabase_service.dart';
 import 'pages/Login.dart';
 import 'pages/TerceroWebFormPage.dart';
-
+import 'pages/ParentDashboard.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,20 +23,18 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'EduSafe',
+      title: 'SafeGuard School',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const LoginScreenWidget(),
+      initialRoute: '/',
       routes: {
-        'login': (context) => const LoginScreenWidget(),
-        'registro-tercero': (context) => const TerceroWebFormPage(),
+        '/': (context) => const LoginScreenWidget(),
+        '/dashboard': (context) => const ParentDashboardWidget(),
+        '/registro-tercero': (context) => const TerceroWebFormPage(),
       },
     );
   }
 }
-
-
-//Prueba de Boris
