@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'dart:math';
+import '../services/supabase_service.dart';
+import '../services/email_service.dart';
+
 
 class AuthorizeThirdPartyWidget extends StatefulWidget {
   const AuthorizeThirdPartyWidget({super.key});
@@ -10,8 +14,12 @@ class AuthorizeThirdPartyWidget extends StatefulWidget {
 }
 
 class _AuthorizeThirdPartyWidgetState extends State<AuthorizeThirdPartyWidget> {
+  final SupabaseService _supabaseService = SupabaseService();
+  final EmailService _emailService = EmailService();
+
   final _emailController = TextEditingController();
-  String _selectedChild = 'Mateo Garcia';
+  String _selectedChild = '';
+
   
   Set<String> _selectedChildIds = {}; // Cambiado a Set para selección múltiple
   List<Map<String, dynamic>> _children = [];
@@ -35,12 +43,15 @@ class _AuthorizeThirdPartyWidgetState extends State<AuthorizeThirdPartyWidget> {
         setState(() {
           _children = children;
           
-          // Agrupamos las invitaciones por email para no ver duplicados
+          // Agrupamos las invitaciones por email para no ver duplicados en la lista
           final Map<String, Map<String, dynamic>> groupedPersons = {};
 
+          // Primero procesamos los verificados
           for (var p in thirdParties) {
             groupedPersons[p['email'] ?? p['id']] = {...p, 'status': 'Verificado'};
           }
+
+          // Luego los pendientes (si ya existe el email, no lo duplicamos)
 
           for (var i in pendingInvs) {
             final email = i['correo_tercero'];
@@ -265,17 +276,19 @@ class _AuthorizeThirdPartyWidgetState extends State<AuthorizeThirdPartyWidget> {
                   Text('Envía un enlace seguro para que el tercero registre sus datos.', style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
                   const SizedBox(height: 24),
                   
-                  // Selección de Hijo
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        _buildChildChip('Mateo Garcia', '2do Grado', 'https://i.pravatar.cc/150?u=mateo'),
-                        const SizedBox(width: 12),
-                        _buildChildChip('Sofia Garcia', 'Kinder', 'https://i.pravatar.cc/150?u=sofia'),
-                      ],
-                    ),
-                  ),
+                  // Selección de Hijo (Dinámico desde DB)
+                  _children.isEmpty 
+                    ? const Center(child: Padding(padding: EdgeInsets.all(8.0), child: CircularProgressIndicator()))
+                    : SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: _children.map((child) => Padding(
+                            padding: const EdgeInsets.only(right: 12.0),
+                            child: _buildChildChip(child),
+                          )).toList(),
+                        ),
+                      ),
+
                   
                   const SizedBox(height: 24),
                   
@@ -293,19 +306,8 @@ class _AuthorizeThirdPartyWidgetState extends State<AuthorizeThirdPartyWidget> {
                         prefixIcon: const Icon(Icons.mail_outline_rounded, color: Colors.deepPurple),
                         suffixIcon: IconButton(
                           icon: const Icon(Icons.send_rounded, color: Colors.deepPurple),
-                          onPressed: () {
-                            if (_emailController.text.contains('@')) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: const Text('¡Invitación enviada con éxito!'),
-                                  backgroundColor: Colors.green,
-                                  behavior: SnackBarBehavior.floating,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                ),
-                              );
-                              _emailController.clear();
-                            }
-                          },
+                          onPressed: _sendInvitation,
+
                         ),
                         border: InputBorder.none,
                         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -452,10 +454,24 @@ class _AuthorizeThirdPartyWidgetState extends State<AuthorizeThirdPartyWidget> {
     );
   }
 
-  Widget _buildChildChip(String name, String grade, String imageUrl) {
-    bool isSelected = _selectedChild == name;
+  Widget _buildChildChip(Map<String, dynamic> child) {
+    final String id = child['id'].toString();
+    final String name = child['nombre'] ?? 'Sin nombre';
+    final String grade = child['grado_escolar'] ?? '';
+    final String imageUrl = child['foto_url'] ?? 'https://i.pravatar.cc/150?u=$id';
+    
+    bool isSelected = _selectedChildIds.contains(id);
+
     return GestureDetector(
-      onTap: () => setState(() => _selectedChild = name),
+      onTap: () {
+        setState(() {
+          if (isSelected) {
+            _selectedChildIds.remove(id);
+          } else {
+            _selectedChildIds.add(id);
+          }
+        });
+      },
       child: Container(
         width: 140,
         padding: const EdgeInsets.all(12),
@@ -476,4 +492,5 @@ class _AuthorizeThirdPartyWidgetState extends State<AuthorizeThirdPartyWidget> {
       ),
     );
   }
+
 }
