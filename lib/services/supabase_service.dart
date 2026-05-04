@@ -231,11 +231,11 @@ class SupabaseService {
       'activo': true,
     }).select().single();
 
-    // 2. Si hay una invitación, marcarla como 'Completada'
+    // 2. Si hay una invitación, marcarla como 'Completada' usando el token
     if (invitationId != null) {
       await _client.from('invitaciones_terceros').update({
         'estado': 'Completada',
-      }).eq('id', invitationId);
+      }).eq('token_seguridad', invitationId);
     }
   }
 }
