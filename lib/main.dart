@@ -22,6 +22,17 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Detectar si la URL contiene la ruta de registro de tercero
+    // Esto es necesario porque en Flutter Web con hash strategy,
+    // los query params pueden interferir con el route matching
+    final uri = Uri.base;
+    String initialRoute = '/';
+    
+    // Revisar si el fragmento (después del #) contiene registro-tercero
+    if (uri.fragment.contains('registro-tercero')) {
+      initialRoute = '/registro-tercero';
+    }
+
     return MaterialApp(
       title: 'SafeGuard School',
       debugShowCheckedModeBanner: false,
@@ -29,11 +40,30 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      initialRoute: '/',
-      routes: {
-        '/': (context) => const LoginScreenWidget(),
-        '/dashboard': (context) => const ParentDashboardWidget(),
-        '/registro-tercero': (context) => const TerceroWebFormPage(),
+      initialRoute: initialRoute,
+      onGenerateRoute: (settings) {
+        final routeName = settings.name ?? '';
+        
+        // Si la ruta contiene registro-tercero (con o sin parámetros)
+        if (routeName.contains('registro-tercero')) {
+          return MaterialPageRoute(
+            builder: (context) => const TerceroWebFormPage(),
+            settings: settings,
+          );
+        }
+        
+        // Rutas normales
+        switch (routeName) {
+          case '/dashboard':
+            return MaterialPageRoute(
+              builder: (context) => const ParentDashboardWidget(),
+            );
+          case '/':
+          default:
+            return MaterialPageRoute(
+              builder: (context) => const LoginScreenWidget(),
+            );
+        }
       },
     );
   }
