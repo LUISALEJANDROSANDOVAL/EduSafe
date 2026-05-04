@@ -38,18 +38,31 @@ class _AuthorizeThirdPartyWidgetState extends State<AuthorizeThirdPartyWidget> {
 
         setState(() {
           _children = children;
-          // Por defecto no seleccionamos ninguno o podrías seleccionar el primero
-          _authorizedPersons = [
-            ...thirdParties.map((p) => {...p, 'status': 'Verificado'}),
-            ...pendingInvs.map((i) => {
-              'id': i['id'],
-              'name': i['correo_tercero'],
-              'relation': 'Invitación enviada',
-              'status': 'Pendiente',
-              'email': i['correo_tercero'],
-              'photo': null,
-            }),
-          ];
+          
+          // Agrupamos las invitaciones por email para no ver duplicados en la lista
+          final Map<String, Map<String, dynamic>> groupedPersons = {};
+
+          // Primero procesamos los verificados
+          for (var p in thirdParties) {
+            groupedPersons[p['email'] ?? p['id']] = {...p, 'status': 'Verificado'};
+          }
+
+          // Luego los pendientes (si ya existe el email, no lo duplicamos)
+          for (var i in pendingInvs) {
+            final email = i['correo_tercero'];
+            if (!groupedPersons.containsKey(email)) {
+              groupedPersons[email] = {
+                'id': i['id'],
+                'name': email,
+                'relation': 'Invitación enviada',
+                'status': 'Pendiente',
+                'email': email,
+                'photo': null,
+              };
+            }
+          }
+
+          _authorizedPersons = groupedPersons.values.toList();
         });
       }
     } catch (e) {
@@ -111,7 +124,7 @@ class _AuthorizeThirdPartyWidgetState extends State<AuthorizeThirdPartyWidget> {
       }
 
       final allTokens = tokens.join(",");
-      final invitationLink = "https://edusafe-web.vercel.app/#/registro-tercero?tokens=$allTokens&tutorId=${profile!['id']}";
+      final invitationLink = "https://edu-safe-tau.vercel.app/#/registro-tercero?tokens=$allTokens&tutorId=${profile!['id']}";
       
       final String allStudents = studentNames.join(", ");
       
@@ -122,6 +135,7 @@ class _AuthorizeThirdPartyWidgetState extends State<AuthorizeThirdPartyWidget> {
         tutorName: profile['nombre_completo'] ?? 'Tutor de SafeGuard School',
         studentName: allStudents,
         invitationLink: invitationLink,
+        tutorEmail: profile['email'],
       );
 
       if (sent) {
