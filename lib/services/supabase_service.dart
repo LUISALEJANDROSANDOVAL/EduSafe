@@ -129,9 +129,13 @@ class SupabaseService {
   }
 
   Future<void> resetPassword(String email) async {
-    final response = await _client.from('perfiles').select().eq('correo', email).maybeSingle();
+    final response = await _client
+        .from('perfiles')
+        .select()
+        .eq('correo', email)
+        .maybeSingle();
     if (response == null) throw Exception('El correo no está registrado.');
-    
+
     await _client.from('notificaciones').insert({
       'usuario_id': response['id'],
       'titulo': 'Recuperación de Contraseña',
@@ -140,8 +144,14 @@ class SupabaseService {
     });
   }
 
-  Future<Map<String, dynamic>> signInWithBiometrics(String biometricHash) async {
-    final response = await _client.from('perfiles').select().eq('biometria_hash', biometricHash).maybeSingle();
+  Future<Map<String, dynamic>> signInWithBiometrics(
+    String biometricHash,
+  ) async {
+    final response = await _client
+        .from('perfiles')
+        .select()
+        .eq('biometria_hash', biometricHash)
+        .maybeSingle();
     if (response == null) {
       throw Exception('No hay una cuenta vinculada a esta biometría.');
     }
@@ -184,7 +194,10 @@ class SupabaseService {
 
   // --- ESTUDIANTES ---
   Future<List<Map<String, dynamic>>> getStudentsByTutor(String tutorId) async {
-    final response = await _client.from('estudiantes').select().eq('tutor_id', tutorId);
+    final response = await _client
+        .from('estudiantes')
+        .select()
+        .eq('tutor_id', tutorId);
     return List<Map<String, dynamic>>.from(response);
   }
 
@@ -242,26 +255,51 @@ class SupabaseService {
   }
 
   // --- REGISTRO DE SALIDAS (HISTORIAL) ---
-  Future<List<Map<String, dynamic>>> getRecentPickupLogs([String? tutorId]) async {
+  Future<List<Map<String, dynamic>>> getRecentPickupLogs([
+    String? tutorId,
+  ]) async {
     try {
       var logsQuery = _client.from('registro_salidas').select('*');
-      if (tutorId != null) logsQuery = logsQuery.eq('tutor_autorizador_id', tutorId);
-      final logsRes = await logsQuery.order('fecha_hora', ascending: false).limit(50);
-      final List<Map<String, dynamic>> logs = List<Map<String, dynamic>>.from(logsRes);
+      if (tutorId != null)
+        logsQuery = logsQuery.eq('tutor_autorizador_id', tutorId);
+      final logsRes = await logsQuery
+          .order('fecha_hora', ascending: false)
+          .limit(50);
+      final List<Map<String, dynamic>> logs = List<Map<String, dynamic>>.from(
+        logsRes,
+      );
 
       if (logs.isEmpty) return [];
 
-      final studentIds = logs.map((l) => l['estudiante_id']).where((id) => id != null).toList();
-      final guardIds = logs.map((l) => l['encargado_id']).where((id) => id != null).toList();
-      final terceroIds = logs.map((l) => l['tercero_id']).where((id) => id != null).toList();
+      final studentIds = logs
+          .map((l) => l['estudiante_id'])
+          .where((id) => id != null)
+          .toList();
+      final guardIds = logs
+          .map((l) => l['encargado_id'])
+          .where((id) => id != null)
+          .toList();
+      final terceroIds = logs
+          .map((l) => l['tercero_id'])
+          .where((id) => id != null)
+          .toList();
 
-      final studentsRes = await _client.from('estudiantes').select('id, nombre, curso').inFilter('id', studentIds);
+      final studentsRes = await _client
+          .from('estudiantes')
+          .select('id, nombre, curso')
+          .inFilter('id', studentIds);
       final studentsMap = {for (var s in studentsRes) s['id'].toString(): s};
 
-      final perfilesRes = await _client.from('perfiles').select('id, nombre_completo').inFilter('id', guardIds);
+      final perfilesRes = await _client
+          .from('perfiles')
+          .select('id, nombre_completo')
+          .inFilter('id', guardIds);
       final perfilesMap = {for (var p in perfilesRes) p['id'].toString(): p};
 
-      final tercerosRes = await _client.from('terceros').select('id, nombre, relacion').inFilter('id', terceroIds);
+      final tercerosRes = await _client
+          .from('terceros')
+          .select('id, nombre, relacion')
+          .inFilter('id', terceroIds);
       final tercerosMap = {for (var t in tercerosRes) t['id'].toString(): t};
 
       return logs.map((log) {
@@ -280,13 +318,20 @@ class SupabaseService {
 
   Future<int> getTodayPickupsCount([String? tutorId]) async {
     final now = DateTime.now();
-    final startOfDay = DateTime(now.year, now.month, now.day).toUtc().toIso8601String();
-    
-    var query = _client.from('registro_salidas').select('id').gte('fecha_hora', startOfDay);
+    final startOfDay = DateTime(
+      now.year,
+      now.month,
+      now.day,
+    ).toUtc().toIso8601String();
+
+    var query = _client
+        .from('registro_salidas')
+        .select('id')
+        .gte('fecha_hora', startOfDay);
     if (tutorId != null) {
       query = query.eq('tutor_autorizador_id', tutorId);
     }
-    
+
     final response = await query;
     return (response as List).length;
   }
@@ -313,16 +358,26 @@ class SupabaseService {
 
   // --- NOTIFICACIONES ---
   Future<List<Map<String, dynamic>>> getUserNotifications(String userId) async {
-    final response = await _client.from('notificaciones').select().eq('usuario_id', userId).order('creada_en', ascending: false);
+    final response = await _client
+        .from('notificaciones')
+        .select()
+        .eq('usuario_id', userId)
+        .order('creada_en', ascending: false);
     return List<Map<String, dynamic>>.from(response);
   }
 
   Future<void> markNotificationAsRead(String notificationId) async {
-    await _client.from('notificaciones').update({'leida': true}).eq('id', notificationId);
+    await _client
+        .from('notificaciones')
+        .update({'leida': true})
+        .eq('id', notificationId);
   }
 
   Future<void> markAllNotificationsAsRead(String userId) async {
-    await _client.from('notificaciones').update({'leida': true}).eq('usuario_id', userId);
+    await _client
+        .from('notificaciones')
+        .update({'leida': true})
+        .eq('usuario_id', userId);
   }
 
   // --- ESTADÍSTICAS ---
