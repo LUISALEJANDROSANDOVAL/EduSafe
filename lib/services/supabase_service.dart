@@ -235,8 +235,7 @@ class SupabaseService {
     if (invitationId != null) {
       await _client.from('invitaciones_terceros').update({
         'estado': 'Completada',
-        // Intentamos vincular si la columna existe, si no, al menos actualizamos el estado
-      }).eq('id', invitationId);
+      }).eq('token_seguridad', invitationId);
     }
   }
 }

@@ -111,7 +111,7 @@ class _AuthorizeThirdPartyWidgetState extends State<AuthorizeThirdPartyWidget> {
       }
 
       final allTokens = tokens.join(",");
-      final invitationLink = "https://edusafe-web.vercel.app/#/registro-tercero?tokens=$allTokens&tutorId=${profile!['id']}";
+      final invitationLink = "https://edu-safe-tau.vercel.app/#/registro-tercero?tokens=$allTokens&tutorId=${profile!['id']}";
       
       final String allStudents = studentNames.join(", ");
       
