@@ -256,7 +256,7 @@ class _PickupHistoryWidgetState extends State<PickupHistoryWidget> {
             ),
             const SizedBox(height: 24),
             const Text(
-              'Pickup Details',
+              'Detalles del Retiro',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 24),
@@ -286,7 +286,7 @@ class _PickupHistoryWidgetState extends State<PickupHistoryWidget> {
                               ),
                               const SizedBox(height: 8),
                               const Text(
-                                'Student',
+                                'Estudiante',
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 12,

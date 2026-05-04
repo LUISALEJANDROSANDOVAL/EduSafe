@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'GuardProfile.dart';
 import 'IdentityValidation.dart';
+
 class GuardScannerWidget extends StatefulWidget {
   const GuardScannerWidget({super.key});
 
@@ -13,6 +15,90 @@ class GuardScannerWidget extends StatefulWidget {
 class _GuardScannerWidgetState extends State<GuardScannerWidget> {
   final scaffoldKey = GlobalKey<ScaffoldState>();
   bool _isScannerActive = true;
+  bool _isLoading = true;
+
+  int _salidasHoy = 0;
+  int _pendientes = 0;
+  List<Map<String, dynamic>> _validaciones = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchScannerData();
+  }
+
+  Future<void> _fetchScannerData() async {
+    setState(() => _isLoading = true);
+    try {
+      final supabase = Supabase.instance.client;
+      // Fetch salidas
+      final salidasRes = await supabase.from('registro_salidas').select('*').order('fecha_hora', ascending: false);
+      final estudiantesRes = await supabase.from('estudiantes').select('id, nombre');
+      final perfilesRes = await supabase.from('perfiles').select('id, nombre_completo, rol');
+      final tercerosRes = await supabase.from('terceros').select('id, nombre');
+
+      // count salidas hoy
+      final hoy = DateTime.now();
+      int salidasHoyCount = 0;
+      List<Map<String, dynamic>> validacionesLoaded = [];
+
+      for (var log in salidasRes) {
+        if (log['fecha_hora'] != null) {
+          DateTime d = DateTime.parse(log['fecha_hora']).toLocal();
+          if (d.year == hoy.year && d.month == hoy.month && d.day == hoy.day) {
+            if (log['estado'] == 'Exitoso' || log['estado'] == 'Completado') {
+              salidasHoyCount++;
+            }
+          }
+        }
+
+        if (validacionesLoaded.length < 5 && (log['estado'] == 'Exitoso' || log['estado'] == 'Completado')) {
+          // Join student
+          String studentName = 'Desconocido';
+          var stMatch = estudiantesRes.where((e) => e['id'] == log['estudiante_id']).toList();
+          if (stMatch.isNotEmpty) studentName = stMatch.first['nombre'];
+
+          // Join guardian
+          String guardianName = 'Desconocido';
+          if (log['tercero_id'] != null) {
+            var terMatch = tercerosRes.where((t) => t['id'] == log['tercero_id']).toList();
+            if (terMatch.isNotEmpty) guardianName = terMatch.first['nombre'];
+          } else if (log['tutor_autorizador_id'] != null) {
+            var tutMatch = perfilesRes.where((p) => p['id'] == log['tutor_autorizador_id']).toList();
+            if (tutMatch.isNotEmpty) guardianName = tutMatch.first['nombre_completo'];
+          }
+
+          String time = '--:--';
+          if (log['fecha_hora'] != null) {
+            DateTime d = DateTime.parse(log['fecha_hora']).toLocal();
+            time = '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
+          }
+
+          validacionesLoaded.add({
+            'studentName': studentName,
+            'guardian': guardianName,
+            'time': time,
+          });
+        }
+      }
+
+      int totalStudents = estudiantesRes.length;
+      int pendientesCount = totalStudents - salidasHoyCount;
+      if (pendientesCount < 0) pendientesCount = 0;
+
+      if (mounted) {
+        setState(() {
+          _salidasHoy = salidasHoyCount;
+          _pendientes = pendientesCount;
+          _validaciones = validacionesLoaded;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error: $e');
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   Widget _buildToggle() {
     return Container(
@@ -285,25 +371,33 @@ class _GuardScannerWidgetState extends State<GuardScannerWidget> {
                       ),
                     ] else ...[
                       // History View (Metrics & Validations)
-                      Row(
-                        children: [
-                          Expanded(child: _buildMetricsCard('Hoy', '142', 'Salida de Estudiantes', Colors.deepPurple)),
-                          const SizedBox(width: 16),
-                          Expanded(child: _buildMetricsCard('Pendientes', '28', 'Restantes', Colors.black87)),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text('Validaciones Recientes', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                          Text('Ver Todos', style: TextStyle(color: Colors.deepPurple.shade400, fontWeight: FontWeight.bold)),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      _buildValidationCard('Mateo Garcia', 'Sofia Garcia (Madre)', '14:22'),
-                      _buildValidationCard('Lucia Torres', 'Carlos Mendez (Tío)', '14:15'),
-                      _buildValidationCard('Emma Wilson', 'David Wilson (Padre)', '14:05'),
+                      if (_isLoading)
+                        const Padding(
+                          padding: EdgeInsets.all(32.0),
+                          child: Center(child: CircularProgressIndicator(color: Colors.deepPurple)),
+                        )
+                      else ...[
+                        Row(
+                          children: [
+                            Expanded(child: _buildMetricsCard('Hoy', '$_salidasHoy', 'Salida de Estudiantes', Colors.deepPurple)),
+                            const SizedBox(width: 16),
+                            Expanded(child: _buildMetricsCard('Pendientes', '$_pendientes', 'Restantes', Colors.black87)),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text('Validaciones Recientes', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                            Text('Ver Todos', style: TextStyle(color: Colors.deepPurple.shade400, fontWeight: FontWeight.bold)),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        if (_validaciones.isEmpty)
+                          const Center(child: Padding(padding: EdgeInsets.all(16), child: Text('No hay validaciones hoy.')))
+                        else
+                          ..._validaciones.map((v) => _buildValidationCard(v['studentName'], v['guardian'], v['time'])),
+                      ],
                     ],
                   ],
                 ),
@@ -315,3 +409,4 @@ class _GuardScannerWidgetState extends State<GuardScannerWidget> {
     );
   }
 }
+
