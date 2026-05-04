@@ -23,7 +23,7 @@ class SupabaseService {
 
   // --- AUTENTICACIÓN ---
   Future<Map<String, dynamic>> signIn({required String email, required String password}) async {
-    // --- MOCK DE PRUEBA (Bypass temporal) ---
+    // --- MOCK DE PRUEBA (Bypass temporal para desarrollo) ---
     if (email.endsWith('@test.com')) {
       _currentUserProfile = {
         'id': 'f8b04eef-3e5d-40b6-b494-f49c99d8bd81', 
@@ -53,28 +53,13 @@ class SupabaseService {
 
   // --- PERFILES ---
   Future<Map<String, dynamic>?> getCurrentUserProfile() async {
-    if (_currentUserProfile != null) {
-      print("🔔 Usuario actual (cache): ${_currentUserProfile!['id']} - ${_currentUserProfile!['correo']}");
-      return _currentUserProfile;
-    }
+    if (_currentUserProfile != null) return _currentUserProfile;
     
-    // Si no hay perfil en cache, intentar recuperarlo de la sesión de Supabase Auth
     final user = _client.auth.currentUser;
     if (user != null) {
-      print("🔍 Buscando perfil en base de datos para ID: ${user.id}");
-      final response = await _client
-          .from('perfiles')
-          .select()
-          .eq('id', user.id)
-          .maybeSingle();
+      final response = await _client.from('perfiles').select().eq('id', user.id).maybeSingle();
       _currentUserProfile = response;
-      if (_currentUserProfile != null) {
-        print("✅ Perfil recuperado: ${_currentUserProfile!['correo']}");
-      }
-    } else {
-      print("⚠️ No hay ningún usuario autenticado.");
     }
-    
     return _currentUserProfile;
   }
 
@@ -102,6 +87,11 @@ class SupabaseService {
   // --- ESTUDIANTES ---
   Future<List<Map<String, dynamic>>> getStudentsByTutor(String tutorId) async {
     final response = await _client.from('estudiantes').select().eq('tutor_id', tutorId);
+    return List<Map<String, dynamic>>.from(response);
+  }
+
+  Future<List<Map<String, dynamic>>> getAllStudents() async {
+    final response = await _client.from('estudiantes').select();
     return List<Map<String, dynamic>>.from(response);
   }
 
@@ -139,54 +129,28 @@ class SupabaseService {
   // --- REGISTRO DE SALIDAS (HISTORIAL) ---
   Future<List<Map<String, dynamic>>> getRecentPickupLogs(String tutorId) async {
     try {
-      print("🔍 Consultando registro_salidas para tutor_id: $tutorId");
-      
       final response = await _client
           .from('registro_salidas')
           .select('*, estudiantes(nombre, curso), terceros(nombre, relacion), perfiles!encargado_id(nombre_completo)')
           .eq('tutor_id', tutorId)
           .order('fecha_hora', ascending: false);
-      
-      print("✅ Respuesta de Supabase: ${response.length} registros encontrados.");
-      if (response.isNotEmpty) {
-        print("Muestra 1: ${response[0]}");
-      }
-      
       return List<Map<String, dynamic>>.from(response);
     } catch (e) {
-      print("🚨 ERROR CRÍTICO EN LA CONSULTA: $e");
-      try {
-        print("🔄 Reintentando consulta básica sin joins...");
-        final basic = await _client.from('registro_salidas').select('*').eq('tutor_id', tutorId);
-        print("📊 Consulta básica trajo ${basic.length} registros.");
-        return List<Map<String, dynamic>>.from(basic);
-      } catch (e2) {
-        print("🚨 Falló incluso el reintento básico: $e2");
-        return [];
-      }
+      final basic = await _client.from('registro_salidas').select('*').eq('tutor_id', tutorId);
+      return List<Map<String, dynamic>>.from(basic);
     }
   }
 
   Future<int> getTodayPickupsCount(String tutorId) async {
     final now = DateTime.now();
     final startOfDay = DateTime(now.year, now.month, now.day).toUtc().toIso8601String();
-    
-    final response = await _client
-        .from('registro_salidas')
-        .select('id')
-        .eq('tutor_id', tutorId)
-        .gte('fecha_hora', startOfDay);
-        
+    final response = await _client.from('registro_salidas').select('id').eq('tutor_id', tutorId).gte('fecha_hora', startOfDay);
     return (response as List).length;
   }
 
   // --- NOTIFICACIONES ---
   Future<List<Map<String, dynamic>>> getUserNotifications(String userId) async {
-    final response = await _client
-        .from('notificaciones')
-        .select()
-        .eq('usuario_id', userId)
-        .order('creada_en', ascending: false);
+    final response = await _client.from('notificaciones').select().eq('usuario_id', userId).order('creada_en', ascending: false);
     return List<Map<String, dynamic>>.from(response);
   }
 
@@ -204,15 +168,45 @@ class SupabaseService {
       final students = await _client.from('estudiantes').select('id').eq('tutor_id', tutorId);
       final thirdParties = await _client.from('terceros').select('id').eq('tutor_id', tutorId).eq('activo', true);
       final deliveries = await _client.from('registro_salidas').select('id').eq('tutor_id', tutorId).eq('estado', 'Exitoso');
-
       return {
         'students': (students as List).length,
         'thirdParties': (thirdParties as List).length,
         'deliveries': (deliveries as List).length,
       };
-    } catch (e) {
-      print("🚨 Error en estadísticas: $e");
+    } catch (_) {
       return {'students': 0, 'thirdParties': 0, 'deliveries': 0};
+    }
+  }
+
+  // --- GUARDIAS ---
+  Future<List<Map<String, dynamic>>> getAllGuards() async {
+    final response = await _client.from('perfiles').select().eq('rol', 'Encargado');
+    return List<Map<String, dynamic>>.from(response);
+  }
+
+  Future<void> addGuard({required String nombreCompleto, required String idEmpleado, required String turno}) async {
+    final correo = '${idEmpleado.toLowerCase()}@colegio.com';
+    await _client.from('perfiles').insert({
+      'nombre_completo': nombreCompleto,
+      'cedula_identidad': idEmpleado,
+      'correo': correo,
+      'rol': 'Encargado',
+      'password_hash': idEmpleado,
+    });
+  }
+
+  Future<void> updateGuardStatus({
+    required String id,
+    String? turno,
+    String? estado,
+  }) async {
+    final Map<String, dynamic> updates = {};
+    if (turno != null) updates['turno'] = turno;
+    // Nota: Asegúrate de tener estas columnas en tu tabla perfiles si vas a usarlas
+    // if (estado != null) updates['estado'] = estado; 
+
+    if (updates.isNotEmpty) {
+      await _client.from('perfiles').update(updates).eq('id', id);
     }
   }
 }

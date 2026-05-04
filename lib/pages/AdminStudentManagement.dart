@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AdminStudentManagementWidget extends StatefulWidget {
   const AdminStudentManagementWidget({super.key});
@@ -12,46 +13,113 @@ class AdminStudentManagementWidget extends StatefulWidget {
 
 class _AdminStudentManagementWidgetState
     extends State<AdminStudentManagementWidget> {
-  final List<Map<String, dynamic>> _students = [
-    {
-      'id': '101',
-      'name': 'Mateo García',
-      'ci': '12345678',
-      'grade': '4to Grado - Sección B',
-      'tutor': 'Lucia Garcia',
-      'tutorCI': '98765432',
-      'status': 'Registrado',
-      'photo': 'https://i.pravatar.cc/150?u=mateo',
-      'attendance': '98%',
-      'lastPickup': 'Ayer 13:05 - Padre',
-    },
-    {
-      'id': '102',
-      'name': 'Sofía Rodriguez',
-      'ci': '87654321',
-      'grade': '2do Grado - Sección A',
-      'tutor': 'Luis Rodriguez',
-      'tutorCI': '55544433',
-      'status': 'Registrado',
-      'photo': 'https://i.pravatar.cc/150?u=sofia',
-      'attendance': '100%',
-      'lastPickup': 'Hoy 07:45 - Ingreso',
-    },
-    {
-      'id': '103',
-      'name': 'Lucas Miller',
-      'ci': '11223344',
-      'grade': '5to Grado - Sección C',
-      'tutor': 'John Miller',
-      'tutorCI': '99887766',
-      'status': 'Pendiente',
-      'photo': 'https://i.pravatar.cc/150?u=lucas',
-      'attendance': '92%',
-      'lastPickup': 'N/A',
-    },
-  ];
+  bool _isLoading = true;
+  List<Map<String, dynamic>> _allStudents = [];
+  List<Map<String, dynamic>> _filteredStudents = [];
+  List<Map<String, dynamic>> _tutors = [];
+  final TextEditingController _searchController = TextEditingController();
+  
+  final _nombreController = TextEditingController();
+  final _ciEstudianteController = TextEditingController();
+  final _cursoController = TextEditingController();
+  final _ciTutorController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchStudents();
+    _searchController.addListener(_filterStudents);
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _nombreController.dispose();
+    _ciEstudianteController.dispose();
+    _cursoController.dispose();
+    _ciTutorController.dispose();
+    super.dispose();
+  }
+
+  void _filterStudents() {
+    String query = _searchController.text.toLowerCase();
+    setState(() {
+      _filteredStudents = _allStudents.where((s) {
+        return s['name'].toString().toLowerCase().contains(query) ||
+               s['ci'].toString().toLowerCase().contains(query);
+      }).toList();
+    });
+  }
+
+  Future<void> _fetchStudents() async {
+    setState(() => _isLoading = true);
+    try {
+      final supabase = Supabase.instance.client;
+      
+      // Fetch tutors first
+      final tutorRes = await supabase.from('perfiles').select('id, nombre_completo, cedula_identidad').eq('rol', 'Tutor');
+      List<Map<String, dynamic>> loadedTutors = List<Map<String, dynamic>>.from(tutorRes);
+
+      // Fetch students without the join
+      final response = await supabase.from('estudiantes').select('id, nombre, curso, cedula_identidad, pinata_foto_cid, tutor_id').order('creado_en', ascending: false);
+      
+      List<Map<String, dynamic>> loaded = [];
+      for (var row in response) {
+        String tutorName = 'Sin Asignar';
+        String tutorCi = 'N/A';
+        
+        if (row['tutor_id'] != null) {
+          final tutor = loadedTutors.firstWhere(
+            (t) => t['id'] == row['tutor_id'],
+            orElse: () => <String, dynamic>{},
+          );
+          if (tutor.isNotEmpty) {
+            tutorName = tutor['nombre_completo'] ?? 'Sin Asignar';
+            tutorCi = tutor['cedula_identidad'] ?? 'N/A';
+          }
+        }
+        
+        loaded.add({
+          'id': row['id'].toString().substring(0, 8),
+          'rawId': row['id'],
+          'name': row['nombre'],
+          'ci': row['cedula_identidad'] ?? 'S/C',
+          'grade': row['curso'],
+          'tutor': tutorName,
+          'tutorCI': tutorCi,
+          'status': 'Registrado',
+          'photo': row['pinata_foto_cid'] != null ? 'https://gateway.pinata.cloud/ipfs/${row['pinata_foto_cid']}' : 'https://ui-avatars.com/api/?name=${Uri.encodeComponent(row['nombre'])}',
+          'attendance': '100%',
+          'lastPickup': 'Ver detalles',
+        });
+      }
+
+      if (mounted) {
+        setState(() {
+          _allStudents = loaded;
+          _filteredStudents = loaded;
+          _tutors = loadedTutors;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error fetching students: $e');
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Error al cargar datos: $e'),
+          backgroundColor: Colors.red,
+        ));
+      }
+    }
+  }
 
   void _showAddStudentModal() {
+    _nombreController.clear();
+    _ciEstudianteController.clear();
+    _cursoController.clear();
+    String? localSelectedTutorId;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -60,32 +128,35 @@ class _AdminStudentManagementWidgetState
         borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
       ),
       builder: (context) {
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-            top: 24,
-            left: 24,
-            right: 24,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Registrar Nuevo Estudiante',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ],
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setModalState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+                top: 24,
+                left: 24,
+                right: 24,
               ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Registrar Nuevo Estudiante',
+                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ],
+                  ),
               const SizedBox(height: 16),
               TextField(
+                controller: _nombreController,
                 decoration: InputDecoration(
                   labelText: 'Nombre Completo del Estudiante',
                   prefixIcon: const Icon(Icons.person),
@@ -96,6 +167,7 @@ class _AdminStudentManagementWidgetState
               ),
               const SizedBox(height: 16),
               TextField(
+                controller: _ciEstudianteController,
                 decoration: InputDecoration(
                   labelText: 'CI del Estudiante (Opcional)',
                   prefixIcon: const Icon(Icons.badge),
@@ -106,6 +178,7 @@ class _AdminStudentManagementWidgetState
               ),
               const SizedBox(height: 16),
               TextField(
+                controller: _cursoController,
                 decoration: InputDecoration(
                   labelText: 'Grado / Curso',
                   prefixIcon: const Icon(Icons.class_),
@@ -115,25 +188,54 @@ class _AdminStudentManagementWidgetState
                 ),
               ),
               const SizedBox(height: 16),
-              TextField(
+              DropdownButtonFormField<String>(
+                isExpanded: true,
+                value: localSelectedTutorId,
                 decoration: InputDecoration(
-                  labelText: 'CI del Padre/Tutor',
+                  labelText: 'Seleccionar Padre/Tutor',
                   prefixIcon: const Icon(Icons.family_restroom),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
+                items: _tutors.isEmpty 
+                  ? [const DropdownMenuItem<String>(value: null, child: Text('No hay tutores o recargue la página', overflow: TextOverflow.ellipsis))]
+                  : _tutors.map((t) {
+                      return DropdownMenuItem<String>(
+                        value: t['id'].toString(),
+                        child: Text(
+                          '${t['nombre_completo'] ?? 'Sin Nombre'} (CI: ${t['cedula_identidad'] ?? 'S/C'})',
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      );
+                    }).toList(),
+                onChanged: _tutors.isEmpty ? null : (val) {
+                  setModalState(() {
+                    localSelectedTutorId = val;
+                  });
+                },
               ),
               const SizedBox(height: 32),
               ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Estudiante registrado exitosamente.'),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
+                onPressed: () async {
+                  if (_nombreController.text.isEmpty || _cursoController.text.isEmpty || localSelectedTutorId == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Llene nombre, grado y seleccione un tutor')));
+                    return;
+                  }
+                  try {
+                    final supabase = Supabase.instance.client;
+                    await supabase.from('estudiantes').insert({
+                      'tutor_id': localSelectedTutorId,
+                      'nombre': _nombreController.text,
+                      'curso': _cursoController.text,
+                      'cedula_identidad': _ciEstudianteController.text.isEmpty ? null : _ciEstudianteController.text,
+                    });
+                    if (mounted) Navigator.pop(context);
+                    _fetchStudents();
+                    if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Estudiante registrado exitosamente.'), backgroundColor: Colors.green));
+                  } catch (e) {
+                    if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red));
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.deepPurple,
@@ -153,6 +255,8 @@ class _AdminStudentManagementWidgetState
               const SizedBox(height: 24),
             ],
           ),
+        );
+        },
         );
       },
     );
@@ -373,6 +477,8 @@ class _AdminStudentManagementWidgetState
               ),
               const SizedBox(height: 24),
               TextField(
+                controller: _searchController,
+                onChanged: (value) => _filterStudents(),
                 decoration: InputDecoration(
                   hintText: 'Buscar por nombre o CI...',
                   prefixIcon: const Icon(Icons.search),
@@ -386,12 +492,16 @@ class _AdminStudentManagementWidgetState
               ),
               const SizedBox(height: 24),
               Expanded(
-                child: ListView.builder(
-                  itemCount: _students.length,
-                  itemBuilder: (context, index) {
-                    return _buildStudentCard(_students[index]);
-                  },
-                ),
+                child: _isLoading 
+                    ? const Center(child: CircularProgressIndicator())
+                    : _filteredStudents.isEmpty 
+                        ? const Center(child: Text('No hay estudiantes.'))
+                        : ListView.builder(
+                            itemCount: _filteredStudents.length,
+                            itemBuilder: (context, index) {
+                              return _buildStudentCard(_filteredStudents[index]);
+                            },
+                          ),
               ),
             ],
           ),

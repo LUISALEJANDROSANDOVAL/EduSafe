@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/supabase_service.dart';
 
 class AdminGuardManagementWidget extends StatefulWidget {
   const AdminGuardManagementWidget({super.key});
@@ -12,29 +13,50 @@ class AdminGuardManagementWidget extends StatefulWidget {
 
 class _AdminGuardManagementWidgetState
     extends State<AdminGuardManagementWidget> {
-  // Lista simulada de guardias
-  final List<Map<String, dynamic>> _guards = [
-    {
-      'name': 'Carlos Rodriguez',
-      'id': 'SEC-8942-A',
-      'shift': 'Mañana (06:00 AM - 02:00 PM)',
-      'status': 'Activo',
-    },
-    {
-      'name': 'Luis Martinez',
-      'id': 'SEC-8943-B',
-      'shift': 'Tarde (02:00 PM - 10:00 PM)',
-      'status': 'Fuera de Servicio',
-    },
-    {
-      'name': 'Ana Silva',
-      'id': 'SEC-8944-C',
-      'shift': 'Noche (10:00 PM - 06:00 AM)',
-      'status': 'De Permiso',
-    },
-  ];
+  List<Map<String, dynamic>> _guards = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadGuards();
+  }
+
+  Future<void> _loadGuards() async {
+    setState(() => _isLoading = true);
+    try {
+      final guards = await SupabaseService().getAllGuards();
+      setState(() {
+        _guards = guards
+            .map(
+              (g) => {
+                'id_db': g['id'],
+                'name': g['nombre_completo'] ?? 'Sin Nombre',
+                'id': g['cedula_identidad'] ?? 'Sin ID',
+                'shift': g['turno'] ?? 'Mañana (06:00 AM - 02:00 PM)',
+                'status': g['estado'] ?? 'Activo',
+              },
+            )
+            .toList();
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error al cargar guardias: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
 
   void _showAddGuardModal() {
+    final TextEditingController nameController = TextEditingController();
+    final TextEditingController idController = TextEditingController();
+    String? selectedShift;
+    bool isSaving = false;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -43,107 +65,161 @@ class _AdminGuardManagementWidgetState
         borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
       ),
       builder: (context) {
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-            top: 24,
-            left: 24,
-            right: 24,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+                top: 24,
+                left: 24,
+                right: 24,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Text(
-                    'Agregar Guardia',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                decoration: InputDecoration(
-                  labelText: 'Nombre Completo',
-                  prefixIcon: const Icon(Icons.person),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                decoration: InputDecoration(
-                  labelText: 'ID de Empleado',
-                  prefixIcon: const Icon(Icons.badge),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                decoration: InputDecoration(
-                  labelText: 'Asignar Horario de Turno',
-                  prefixIcon: const Icon(Icons.access_time),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                items: const [
-                  DropdownMenuItem(
-                    value: 'Mañana',
-                    child: Text('Mañana (06:00 AM - 02:00 PM)'),
-                  ),
-                  DropdownMenuItem(
-                    value: 'Tarde',
-                    child: Text('Tarde (02:00 PM - 10:00 PM)'),
-                  ),
-                  DropdownMenuItem(
-                    value: 'Noche',
-                    child: Text('Noche (10:00 PM - 06:00 AM)'),
-                  ),
-                ],
-                onChanged: (value) {},
-              ),
-              const SizedBox(height: 32),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        'Guardia registrado exitosamente en el sistema.',
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Agregar Guardia',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                      backgroundColor: Colors.green,
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: nameController,
+                    decoration: InputDecoration(
+                      labelText: 'Nombre Completo',
+                      prefixIcon: const Icon(Icons.person),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.deepPurple,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
                   ),
-                ),
-                child: const Text(
-                  'Guardar Guardia',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: idController,
+                    decoration: InputDecoration(
+                      labelText: 'ID de Empleado',
+                      prefixIcon: const Icon(Icons.badge),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<String>(
+                    initialValue: selectedShift,
+                    decoration: InputDecoration(
+                      labelText: 'Asignar Horario de Turno',
+                      prefixIcon: const Icon(Icons.access_time),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    items: const [
+                      DropdownMenuItem(
+                        value: 'Mañana (06:00 AM - 02:00 PM)',
+                        child: Text('Mañana (06:00 AM - 02:00 PM)'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'Tarde (02:00 PM - 10:00 PM)',
+                        child: Text('Tarde (02:00 PM - 10:00 PM)'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'Noche (10:00 PM - 06:00 AM)',
+                        child: Text('Noche (10:00 PM - 06:00 AM)'),
+                      ),
+                    ],
+                    onChanged: (value) {
+                      setModalState(() => selectedShift = value);
+                    },
+                  ),
+                  const SizedBox(height: 32),
+                  ElevatedButton(
+                    onPressed: isSaving
+                        ? null
+                        : () async {
+                            if (nameController.text.trim().isEmpty ||
+                                idController.text.trim().isEmpty ||
+                                selectedShift == null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Por favor, completa todos los campos',
+                                  ),
+                                ),
+                              );
+                              return;
+                            }
+
+                            setModalState(() => isSaving = true);
+                            try {
+                              await SupabaseService().addGuard(
+                                nombreCompleto: nameController.text.trim(),
+                                idEmpleado: idController.text.trim(),
+                                turno: selectedShift!,
+                              );
+
+                              Navigator.pop(context);
+                              _loadGuards();
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Guardia registrado exitosamente.',
+                                  ),
+                                  backgroundColor: Colors.green,
+                                ),
+                              );
+                            } catch (e) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Error al guardar: $e'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                              setModalState(() => isSaving = false);
+                            }
+                          },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.deepPurple,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    child: isSaving
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Text(
+                            'Guardar Guardia',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                  ),
+                  const SizedBox(height: 24),
+                ],
               ),
-              const SizedBox(height: 24),
-            ],
-          ),
+            );
+          },
         );
       },
     );
@@ -197,7 +273,7 @@ class _AdminGuardManagementWidgetState
                   ),
                   const SizedBox(height: 24),
                   DropdownButtonFormField<String>(
-                    value: selectedShift,
+                    initialValue: selectedShift,
                     decoration: InputDecoration(
                       labelText: 'Turno',
                       prefixIcon: const Icon(
@@ -226,13 +302,14 @@ class _AdminGuardManagementWidgetState
                       ),
                     ],
                     onChanged: (value) {
-                      if (value != null)
+                      if (value != null) {
                         setModalState(() => selectedShift = value);
+                      }
                     },
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
-                    value: selectedStatus,
+                    initialValue: selectedStatus,
                     decoration: InputDecoration(
                       labelText: 'Estado',
                       prefixIcon: const Icon(
@@ -258,24 +335,39 @@ class _AdminGuardManagementWidgetState
                       ),
                     ],
                     onChanged: (value) {
-                      if (value != null)
+                      if (value != null) {
                         setModalState(() => selectedStatus = value);
+                      }
                     },
                   ),
                   const SizedBox(height: 32),
                   ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        _guards[index]['shift'] = selectedShift;
-                        _guards[index]['status'] = selectedStatus;
-                      });
-                      Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Guardia actualizado exitosamente.'),
-                          backgroundColor: Colors.green,
-                        ),
-                      );
+                    onPressed: () async {
+                      try {
+                        String idDb = _guards[index]['id_db'];
+                        await SupabaseService().updateGuardStatus(
+                          id: idDb,
+                          turno: selectedShift,
+                          estado: selectedStatus,
+                        );
+
+                        Navigator.pop(context);
+                        _loadGuards();
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Guardia actualizado exitosamente.'),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Error al actualizar: $e'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.deepPurple,
@@ -305,9 +397,9 @@ class _AdminGuardManagementWidgetState
 
   Widget _buildGuardCard(Map<String, dynamic> guard, int index) {
     Color statusColor;
-    if (guard['status'] == 'Activo')
+    if (guard['status'] == 'Activo') {
       statusColor = Colors.green;
-    else if (guard['status'] == 'Fuera de Servicio')
+    } else if (guard['status'] == 'Fuera de Servicio')
       statusColor = Colors.grey;
     else
       statusColor = Colors.orange;
@@ -457,12 +549,25 @@ class _AdminGuardManagementWidgetState
               ),
               const SizedBox(height: 24),
               Expanded(
-                child: ListView.builder(
-                  itemCount: _guards.length,
-                  itemBuilder: (context, index) {
-                    return _buildGuardCard(_guards[index], index);
-                  },
-                ),
+                child: _isLoading
+                    ? const Center(
+                        child: CircularProgressIndicator(
+                          color: Colors.deepPurple,
+                        ),
+                      )
+                    : _guards.isEmpty
+                    ? const Center(
+                        child: Text(
+                          'No hay guardias registrados.',
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                      )
+                    : ListView.builder(
+                        itemCount: _guards.length,
+                        itemBuilder: (context, index) {
+                          return _buildGuardCard(_guards[index], index);
+                        },
+                      ),
               ),
             ],
           ),
