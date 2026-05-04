@@ -206,6 +206,12 @@ class _UserProfileSettingsWidgetState extends State<UserProfileSettingsWidget> {
                     title: "Biometría",
                     subtitle: "Configurar huella o rostro",
                     icon: Icons.fingerprint_rounded,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const BiometricsPage(),
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 24),
 
