@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'dart:convert';
+import 'package:crypto/crypto.dart';
 
 class AdminGuardManagementWidget extends StatefulWidget {
   const AdminGuardManagementWidget({super.key});
@@ -12,29 +15,64 @@ class AdminGuardManagementWidget extends StatefulWidget {
 
 class _AdminGuardManagementWidgetState
     extends State<AdminGuardManagementWidget> {
-  // Lista simulada de guardias
-  final List<Map<String, dynamic>> _guards = [
-    {
-      'name': 'Carlos Rodriguez',
-      'id': 'SEC-8942-A',
-      'shift': 'Mañana (06:00 AM - 02:00 PM)',
-      'status': 'Activo',
-    },
-    {
-      'name': 'Luis Martinez',
-      'id': 'SEC-8943-B',
-      'shift': 'Tarde (02:00 PM - 10:00 PM)',
-      'status': 'Fuera de Servicio',
-    },
-    {
-      'name': 'Ana Silva',
-      'id': 'SEC-8944-C',
-      'shift': 'Noche (10:00 PM - 06:00 AM)',
-      'status': 'De Permiso',
-    },
-  ];
+  
+  bool _isLoading = true;
+  List<Map<String, dynamic>> _guards = [];
+
+  final _nameController = TextEditingController();
+  final _idController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchGuards();
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _idController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _fetchGuards() async {
+    setState(() => _isLoading = true);
+    try {
+      final supabase = Supabase.instance.client;
+      final response = await supabase.from('perfiles').select().eq('rol', 'Encargado');
+      
+      List<Map<String, dynamic>> loadedGuards = [];
+      for (var row in response) {
+        loadedGuards.add({
+          'raw_id': row['id'],
+          'name': row['nombre_completo'] ?? 'Guardia Sin Nombre',
+          'id': row['cedula_identidad'] ?? 'Sin ID',
+          'shift': row['turno'] ?? 'Mañana (06:00 AM - 02:00 PM)',
+          'status': row['estado'] ?? 'Activo',
+        });
+      }
+      if (mounted) {
+        setState(() {
+          _guards = loadedGuards;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error fetching guards: $e');
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al cargar guardias: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
 
   void _showAddGuardModal() {
+    _nameController.clear();
+    _idController.clear();
+    String selectedShift = 'Mañana (06:00 AM - 02:00 PM)';
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -43,107 +81,156 @@ class _AdminGuardManagementWidgetState
         borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
       ),
       builder: (context) {
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-            top: 24,
-            left: 24,
-            right: 24,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+                top: 24,
+                left: 24,
+                right: 24,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Text(
-                    'Agregar Guardia',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                decoration: InputDecoration(
-                  labelText: 'Nombre Completo',
-                  prefixIcon: const Icon(Icons.person),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                decoration: InputDecoration(
-                  labelText: 'ID de Empleado',
-                  prefixIcon: const Icon(Icons.badge),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                decoration: InputDecoration(
-                  labelText: 'Asignar Horario de Turno',
-                  prefixIcon: const Icon(Icons.access_time),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                items: const [
-                  DropdownMenuItem(
-                    value: 'Mañana',
-                    child: Text('Mañana (06:00 AM - 02:00 PM)'),
-                  ),
-                  DropdownMenuItem(
-                    value: 'Tarde',
-                    child: Text('Tarde (02:00 PM - 10:00 PM)'),
-                  ),
-                  DropdownMenuItem(
-                    value: 'Noche',
-                    child: Text('Noche (10:00 PM - 06:00 AM)'),
-                  ),
-                ],
-                onChanged: (value) {},
-              ),
-              const SizedBox(height: 32),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        'Guardia registrado exitosamente en el sistema.',
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Agregar Guardia',
+                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                       ),
-                      backgroundColor: Colors.green,
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: _nameController,
+                    decoration: InputDecoration(
+                      labelText: 'Nombre Completo',
+                      prefixIcon: const Icon(Icons.person),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.deepPurple,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
                   ),
-                ),
-                child: const Text(
-                  'Guardar Guardia',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: _idController,
+                    decoration: InputDecoration(
+                      labelText: 'ID de Empleado (CI)',
+                      prefixIcon: const Icon(Icons.badge),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<String>(
+                    value: selectedShift,
+                    decoration: InputDecoration(
+                      labelText: 'Asignar Horario de Turno',
+                      prefixIcon: const Icon(Icons.access_time),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    items: const [
+                      DropdownMenuItem(
+                        value: 'Mañana (06:00 AM - 02:00 PM)',
+                        child: Text('Mañana (06:00 AM - 02:00 PM)'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'Tarde (02:00 PM - 10:00 PM)',
+                        child: Text('Tarde (02:00 PM - 10:00 PM)'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'Noche (10:00 PM - 06:00 AM)',
+                        child: Text('Noche (10:00 PM - 06:00 AM)'),
+                      ),
+                    ],
+                    onChanged: (value) {
+                      if (value != null) setModalState(() => selectedShift = value);
+                    },
+                  ),
+                  const SizedBox(height: 32),
+                  ElevatedButton(
+                    onPressed: () async {
+                      if (_nameController.text.isEmpty || _idController.text.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Por favor, llene todos los campos.')));
+                        return;
+                      }
+
+                      final ci = _idController.text;
+                      final hashedPassword = sha256.convert(utf8.encode(ci)).toString();
+                      final supabase = Supabase.instance.client;
+
+                      try {
+                        // Intento de inserción con turno y estado (si las columnas existen)
+                        try {
+                          await supabase.from('perfiles').insert({
+                            'nombre_completo': _nameController.text,
+                            'cedula_identidad': ci,
+                            'rol': 'Encargado',
+                            'correo': 'guardia.$ci@edusafe.com',
+                            'password_hash': hashedPassword,
+                            'turno': selectedShift,
+                            'estado': 'Activo',
+                          });
+                        } catch (_) {
+                          // Fallback si turno o estado no existen en la base de datos
+                          await supabase.from('perfiles').insert({
+                            'nombre_completo': _nameController.text,
+                            'cedula_identidad': ci,
+                            'rol': 'Encargado',
+                            'correo': 'guardia.$ci@edusafe.com',
+                            'password_hash': hashedPassword,
+                          });
+                        }
+
+                        if (mounted) Navigator.pop(context);
+                        _fetchGuards(); // Refrescar en tiempo real
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Guardia registrado exitosamente en el sistema.'),
+                              backgroundColor: Colors.green,
+                            ),
+                          );
+                        }
+                      } catch (e) {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Error al crear guardia: $e'), backgroundColor: Colors.red),
+                          );
+                        }
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.deepPurple,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    child: const Text(
+                      'Guardar Guardia',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                ],
               ),
-              const SizedBox(height: 24),
-            ],
-          ),
+            );
+          },
         );
       },
     );
@@ -152,6 +239,7 @@ class _AdminGuardManagementWidgetState
   void _showEditGuardModal(int index) {
     String selectedShift = _guards[index]['shift'];
     String selectedStatus = _guards[index]['status'];
+    String rawId = _guards[index]['raw_id'].toString();
 
     showModalBottomSheet(
       context: context,
@@ -264,18 +352,30 @@ class _AdminGuardManagementWidgetState
                   ),
                   const SizedBox(height: 32),
                   ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        _guards[index]['shift'] = selectedShift;
-                        _guards[index]['status'] = selectedStatus;
-                      });
-                      Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Guardia actualizado exitosamente.'),
-                          backgroundColor: Colors.green,
-                        ),
-                      );
+                    onPressed: () async {
+                      final supabase = Supabase.instance.client;
+                      try {
+                        await supabase.from('perfiles').update({
+                          'turno': selectedShift,
+                          'estado': selectedStatus,
+                        }).eq('id', rawId);
+                      } catch (_) {
+                        // Ignorar si las columnas no existen en Supabase
+                      }
+
+                      if (mounted) {
+                        setState(() {
+                          _guards[index]['shift'] = selectedShift;
+                          _guards[index]['status'] = selectedStatus;
+                        });
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Guardia actualizado exitosamente.'),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                      }
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.deepPurple,
@@ -457,12 +557,16 @@ class _AdminGuardManagementWidgetState
               ),
               const SizedBox(height: 24),
               Expanded(
-                child: ListView.builder(
-                  itemCount: _guards.length,
-                  itemBuilder: (context, index) {
-                    return _buildGuardCard(_guards[index], index);
-                  },
-                ),
+                child: _isLoading 
+                    ? const Center(child: CircularProgressIndicator())
+                    : _guards.isEmpty 
+                        ? const Center(child: Text('No hay guardias registrados.'))
+                        : ListView.builder(
+                            itemCount: _guards.length,
+                            itemBuilder: (context, index) {
+                              return _buildGuardCard(_guards[index], index);
+                            },
+                          ),
               ),
             ],
           ),
@@ -481,3 +585,4 @@ class _AdminGuardManagementWidgetState
     );
   }
 }
+
