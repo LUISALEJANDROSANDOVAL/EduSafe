@@ -303,57 +303,7 @@ class _TerceroWebFormPageState extends State<TerceroWebFormPage> {
                     width: double.infinity,
                     height: 56,
                     child: ElevatedButton(
-                      onPressed: () {
-                        if (_formKey.currentState!.validate()) {
-                          if (!_fotoSubida) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Por favor sube tu fotografía para la verificación biométrica',
-                                ),
-                                backgroundColor: Colors.redAccent,
-                              ),
-                            );
-                            return;
-                          }
-                          // Success Dialog
-                          showDialog(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              title: Row(
-                                children: [
-                                  const Icon(
-                                    Icons.check_circle,
-                                    color: Colors.green,
-                                    size: 32,
-                                  ),
-                                  const SizedBox(width: 12),
-                                  const Text('Registro Exitoso'),
-                                ],
-                              ),
-                              content: Text(
-                                'Tus datos (\${_nombreController.text}, \$_relacionSeleccionada) han sido guardados en la tabla de terceros.\n\nEl sistema activará tu perfil automáticamente.',
-                                style: const TextStyle(fontSize: 16),
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.pop(context);
-                                    // Navigate away or reset form
-                                  },
-                                  child: const Text(
-                                    'Entendido',
-                                    style: TextStyle(fontSize: 16),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        }
-                      },
+                      onPressed: _isSaving ? null : _handleRegister,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF4A00E0),
                         shape: RoundedRectangleBorder(
