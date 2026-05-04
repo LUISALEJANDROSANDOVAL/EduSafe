@@ -28,6 +28,7 @@ class _TerceroWebFormPageState extends State<TerceroWebFormPage> {
   }
 
   void _extractParameters() {
+    // Para Flutter Web, extraemos de la URL
     final uri = Uri.base;
     Map<String, String> params = Map.from(uri.queryParameters);
 
@@ -360,7 +361,6 @@ class _TerceroWebFormPageState extends State<TerceroWebFormPage> {
                         ),
                         elevation: 0,
                       ),
-<<<<<<< HEAD
                       child: _isSaving
                           ? const CircularProgressIndicator(color: Colors.white)
                           : const Text(
@@ -371,16 +371,6 @@ class _TerceroWebFormPageState extends State<TerceroWebFormPage> {
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-=======
-                      child: const Text(
-                        'Registrar Autorizado',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
->>>>>>> 1a3870806bb57af6fa70c7b4f9606f4ec3adf829
                     ),
                   ),
                 ],

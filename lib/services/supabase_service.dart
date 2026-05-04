@@ -270,5 +270,88 @@ class SupabaseService {
       }).eq('id', invitationId);
     }
   }
+
+  // --- ADMIN & GUARDIAS ---
+  Future<List<Map<String, dynamic>>> getAllGuards() async {
+    final response = await _client.from('perfiles').select().eq('rol', 'Encargado');
+    return List<Map<String, dynamic>>.from(response);
+  }
+
+  Future<void> addGuard({
+    required String nombreCompleto,
+    required String idEmpleado,
+    required String turno,
+  }) async {
+    final hashedPassword = sha256.convert(utf8.encode(idEmpleado)).toString();
+    try {
+      await _client.from('perfiles').insert({
+        'nombre_completo': nombreCompleto,
+        'cedula_identidad': idEmpleado,
+        'rol': 'Encargado',
+        'correo': 'guardia.$idEmpleado@edusafe.com',
+        'password_hash': hashedPassword,
+        'turno': turno,
+        'estado': 'Activo',
+      });
+    } catch (_) {
+      // Fallback si turno o estado no existen en la tabla
+      await _client.from('perfiles').insert({
+        'nombre_completo': nombreCompleto,
+        'cedula_identidad': idEmpleado,
+        'rol': 'Encargado',
+        'correo': 'guardia.$idEmpleado@edusafe.com',
+        'password_hash': hashedPassword,
+      });
+    }
+  }
+
+  Future<void> updateGuardStatus({
+    required String id,
+    required String turno,
+    required String estado,
+  }) async {
+    try {
+      await _client.from('perfiles').update({
+        'turno': turno,
+        'estado': estado,
+      }).eq('id', id);
+    } catch (_) {
+      // Ignorar si las columnas no existen
+    }
+  }
+
+  // --- NOTIFICACIONES ---
+  Future<List<Map<String, dynamic>>> getUserNotifications(String userId) async {
+    final response = await _client
+        .from('notificaciones')
+        .select()
+        .eq('usuario_id', userId)
+        .order('fecha_creacion', ascending: false);
+    return List<Map<String, dynamic>>.from(response);
+  }
+
+  Future<void> markNotificationAsRead(String notificationId) async {
+    await _client.from('notificaciones').update({'leida': true}).eq('id', notificationId);
+  }
+
+  Future<void> markAllNotificationsAsRead(String userId) async {
+    await _client.from('notificaciones').update({'leida': true}).eq('usuario_id', userId);
+  }
+
+  // --- DASHBOARD / METRICS ---
+  Future<int> getTodayPickupsCount(String profileId) async {
+    final today = DateTime.now();
+    final startOfDay = DateTime(today.year, today.month, today.day).toIso8601String();
+    
+    // We check if the user is a tutor or a guard, but usually this is called 
+    // by either. For Tutors we check 'tutor_autorizador_id'. For guards 'encargado_id'.
+    // Here we can check tutor_autorizador_id since it's used in PickupHistory
+    final response = await _client
+        .from('registro_salidas')
+        .select('id')
+        .eq('tutor_autorizador_id', profileId)
+        .gte('fecha_hora', startOfDay);
+    return response.length;
+  }
 }
 
