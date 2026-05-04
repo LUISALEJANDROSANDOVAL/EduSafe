@@ -21,45 +21,99 @@ class SupabaseService {
 
   Map<String, dynamic>? _currentUserProfile;
 
-  // --- AUTENTICACIÓN ---
+  // --- AUTENTICACIÓN PERSONALIZADA ---
   Future<Map<String, dynamic>> signIn({required String email, required String password}) async {
-    // --- MOCK DE PRUEBA (Bypass temporal para desarrollo) ---
-    if (email.endsWith('@test.com')) {
-      _currentUserProfile = {
-        'id': 'f8b04eef-3e5d-40b6-b494-f49c99d8bd81', 
-        'correo': email,
-        'nombre_completo': 'Carlos Mendez (SafeGuard)',
-        'rol': 'Tutor',
-      };
-      return _currentUserProfile!;
-    }
+    // Buscar usuario por correo en la tabla perfiles
+    final response = await _client
+        .from('perfiles')
+        .select()
+        .eq('correo', email)
+        .maybeSingle();
 
-    final response = await _client.from('perfiles').select().eq('correo', email).maybeSingle();
-    if (response == null) throw Exception('Correo no registrado.');
+    if (response == null) {
+      throw Exception('El correo ingresado no se encuentra registrado.');
+    }
     
-    final hashedPassword = sha256.convert(utf8.encode(password)).toString();
+    // Hashear la contraseña ingresada con SHA-256
+    final bytes = utf8.encode(password);
+    final digest = sha256.convert(bytes);
+    final hashedPassword = digest.toString();
+
+    // Comparar contraseña (soporta texto plano como fallback temporal por si creaste registros manuales sin hash)
     if (response['password_hash'] != hashedPassword && response['password_hash'] != password) {
-      throw Exception('Contraseña incorrecta.');
+      throw Exception('La contraseña es incorrecta.');
     }
 
+    // Guardar sesión en memoria
     _currentUserProfile = response;
     return response;
   }
 
+  Future<Map<String, dynamic>> signUp({
+    required String fullName,
+    required String email,
+    required String password,
+    required String ci,
+    required String role,
+  }) async {
+    final responseCheck = await _client.from('perfiles').select().eq('correo', email).maybeSingle();
+    if (responseCheck != null) {
+      throw Exception('Este correo ya está registrado.');
+    }
+
+    final bytes = utf8.encode(password);
+    final digest = sha256.convert(bytes);
+    final hashedPassword = digest.toString();
+
+    final response = await _client.from('perfiles').insert({
+      'nombre_completo': fullName,
+      'correo': email,
+      'cedula_identidad': ci,
+      'password_hash': hashedPassword,
+      'rol': role,
+    }).select().single();
+
+    return response;
+  }
+
+  Future<void> updatePassword({
+    required String email,
+    required String ci,
+    required String newPassword,
+  }) async {
+    final responseCheck = await _client.from('perfiles').select().eq('correo', email).eq('cedula_identidad', ci).maybeSingle();
+    if (responseCheck == null) {
+      throw Exception('El correo o la Cédula de Identidad no coinciden.');
+    }
+
+    final bytes = utf8.encode(newPassword);
+    final digest = sha256.convert(bytes);
+    final hashedPassword = digest.toString();
+
+    final updateResponse = await _client.from('perfiles').update({'password_hash': hashedPassword}).eq('id', responseCheck['id']).select();
+    
+    if (updateResponse.isEmpty) {
+      throw Exception('La base de datos bloqueó el cambio. Revisa las políticas "RLS" (Row Level Security) de tu tabla "perfiles" en Supabase para permitir Updates.');
+    }
+
+    // Registrar la notificación de seguridad en la base de datos
+    await _client.from('notificaciones').insert({
+      'usuario_id': responseCheck['id'],
+      'titulo': 'Contraseña Actualizada',
+      'mensaje': 'Has restablecido tu contraseña exitosamente.',
+      'tipo': 'Seguridad',
+      'leida': false,
+    });
+  }
+
   Future<void> signOut() async {
+    // Limpiar la sesión en memoria y también intentar cerrar Supabase Auth por seguridad
     _currentUserProfile = null;
     try { await _client.auth.signOut(); } catch (_) {}
   }
 
   // --- PERFILES ---
   Future<Map<String, dynamic>?> getCurrentUserProfile() async {
-    if (_currentUserProfile != null) return _currentUserProfile;
-    
-    final user = _client.auth.currentUser;
-    if (user != null) {
-      final response = await _client.from('perfiles').select().eq('id', user.id).maybeSingle();
-      _currentUserProfile = response;
-    }
     return _currentUserProfile;
   }
 
@@ -77,29 +131,43 @@ class SupabaseService {
     if (correo != null) updates['correo'] = correo;
 
     if (updates.isEmpty) return;
+
     await _client.from('perfiles').update(updates).eq('id', id);
 
+    // Actualizar cache local
     if (_currentUserProfile != null && _currentUserProfile!['id'] == id) {
-      _currentUserProfile = {..._currentUserProfile!, ...updates};
+      _currentUserProfile = {
+        ..._currentUserProfile!,
+        ...updates,
+      };
     }
   }
 
   // --- ESTUDIANTES ---
   Future<List<Map<String, dynamic>>> getStudentsByTutor(String tutorId) async {
-    final response = await _client.from('estudiantes').select().eq('tutor_id', tutorId);
+    final response = await _client
+        .from('estudiantes')
+        .select()
+        .eq('tutor_id', tutorId);
     return List<Map<String, dynamic>>.from(response);
   }
 
   Future<List<Map<String, dynamic>>> getAllStudents() async {
-    final response = await _client.from('estudiantes').select();
+    final response = await _client.from('estudiantes').select('*, perfiles(nombre_completo)');
     return List<Map<String, dynamic>>.from(response);
   }
 
   // --- TERCEROS ---
   Future<List<Map<String, dynamic>>> getAuthorizedThirdParties(String tutorId) async {
-    final response = await _client.from('terceros').select().eq('tutor_id', tutorId).eq('activo', true);
+    final response = await _client
+        .from('terceros')
+        .select()
+        .eq('tutor_id', tutorId)
+        .eq('activo', true);
     return List<Map<String, dynamic>>.from(response);
   }
+
+
 
   // --- INVITACIONES ---
   Future<void> createInvitation({
@@ -118,7 +186,11 @@ class SupabaseService {
   }
 
   Future<List<Map<String, dynamic>>> getPendingInvitations(String tutorId) async {
-    final response = await _client.from('invitaciones_terceros').select().eq('tutor_id', tutorId).eq('estado', 'Pendiente');
+    final response = await _client
+        .from('invitaciones_terceros')
+        .select()
+        .eq('tutor_id', tutorId)
+        .eq('estado', 'Pendiente');
     return List<Map<String, dynamic>>.from(response);
   }
 
@@ -126,94 +198,48 @@ class SupabaseService {
     await _client.from('invitaciones_terceros').update({'estado': status}).eq('id', id);
   }
 
-  // --- REGISTRO DE SALIDAS (HISTORIAL) ---
+  // --- REGISTRO DE SALIDAS (LOGS) ---
   Future<List<Map<String, dynamic>>> getRecentPickupLogs(String tutorId) async {
-    try {
-      final response = await _client
-          .from('registro_salidas')
-          .select('*, estudiantes(nombre, curso), terceros(nombre, relacion), perfiles!encargado_id(nombre_completo)')
-          .eq('tutor_id', tutorId)
-          .order('fecha_hora', ascending: false);
-      return List<Map<String, dynamic>>.from(response);
-    } catch (e) {
-      final basic = await _client.from('registro_salidas').select('*').eq('tutor_id', tutorId);
-      return List<Map<String, dynamic>>.from(basic);
-    }
-  }
-
-  Future<int> getTodayPickupsCount(String tutorId) async {
-    final now = DateTime.now();
-    final startOfDay = DateTime(now.year, now.month, now.day).toUtc().toIso8601String();
-    final response = await _client.from('registro_salidas').select('id').eq('tutor_id', tutorId).gte('fecha_hora', startOfDay);
-    return (response as List).length;
-  }
-
-  // --- NOTIFICACIONES ---
-  Future<List<Map<String, dynamic>>> getUserNotifications(String userId) async {
-    final response = await _client.from('notificaciones').select().eq('usuario_id', userId).order('creada_en', ascending: false);
+    final response = await _client
+        .from('registro_salidas')
+        .select('*, estudiantes(nombre), terceros(nombre)')
+        .eq('tutor_autorizador_id', tutorId)
+        .order('fecha_hora', ascending: false)
+        .limit(10);
     return List<Map<String, dynamic>>.from(response);
   }
 
-  Future<void> markNotificationAsRead(String notificationId) async {
-    await _client.from('notificaciones').update({'leida': true}).eq('id', notificationId);
-  }
-
-  Future<void> markAllNotificationsAsRead(String userId) async {
-    await _client.from('notificaciones').update({'leida': true}).eq('usuario_id', userId);
+  Future<void> logPickup({
+    required String studentId,
+    required String tutorId,
+    required String encargadoId,
+    String? terceroId,
+    required String qrToken,
+    required String estado,
+    String? evidenciaCid,
+  }) async {
+    await _client.from('registro_salidas').insert({
+      'estudiante_id': studentId,
+      'tutor_autorizador_id': tutorId,
+      'tercero_id': terceroId,
+      'encargado_id': encargadoId,
+      'qr_token': qrToken,
+      'estado': estado,
+      'evidencia_salida_cid': evidenciaCid,
+    });
   }
 
   // --- ESTADÍSTICAS ---
   Future<Map<String, int>> getTutorStats(String tutorId) async {
-    try {
-      final students = await _client.from('estudiantes').select('id').eq('tutor_id', tutorId);
-      final thirdParties = await _client.from('terceros').select('id').eq('tutor_id', tutorId).eq('activo', true);
-      final deliveries = await _client.from('registro_salidas').select('id').eq('tutor_id', tutorId).eq('estado', 'Exitoso');
-      return {
-        'students': (students as List).length,
-        'thirdParties': (thirdParties as List).length,
-        'deliveries': (deliveries as List).length,
-      };
-    } catch (_) {
-      return {'students': 0, 'thirdParties': 0, 'deliveries': 0};
-    }
-  }
+    final students = await _client.from('estudiantes').select('id').eq('tutor_id', tutorId);
+    final thirdParties = await _client.from('terceros').select('id').eq('tutor_id', tutorId).eq('activo', true);
+    final deliveries = await _client.from('registro_salidas').select('id').eq('tutor_autorizador_id', tutorId).eq('estado', 'Exitoso');
 
-  // --- GUARDIAS ---
-  Future<List<Map<String, dynamic>>> getAllGuards() async {
-    final response = await _client.from('perfiles').select().eq('rol', 'Encargado');
-    return List<Map<String, dynamic>>.from(response);
-  }
-
-  Future<void> addGuard({required String nombreCompleto, required String idEmpleado, required String turno}) async {
-    final correo = '${idEmpleado.toLowerCase()}@colegio.com';
-    await _client.from('perfiles').insert({
-      'nombre_completo': nombreCompleto,
-      'cedula_identidad': idEmpleado,
-      'correo': correo,
-      'rol': 'Encargado',
-      'password_hash': idEmpleado,
-    });
-  }
-
-  Future<void> updateGuardStatus({
-    required String id,
-    String? turno,
-    String? estado,
-  }) async {
-    final Map<String, dynamic> updates = {};
-    if (turno != null) updates['turno'] = turno;
-    // Intentaremos actualizar estado también, capturando el error si la columna no existe
-    if (estado != null) updates['estado'] = estado; 
-
-    if (updates.isNotEmpty) {
-      try {
-        await _client.from('perfiles').update(updates).eq('id', id);
-      } catch (e) {
-        print('Error actualizando estado/turno: \$e');
-        // Fallback: Si da error porque las columnas no existen, lo ignoramos para que no rompa la UI
-        // En producción deberías añadir las columnas 'turno' y 'estado' a la tabla 'perfiles'
-      }
-    }
+    return {
+      'students': students.length,
+      'thirdParties': thirdParties.length,
+      'deliveries': deliveries.length,
+    };
   }
 
   // --- REGISTRO DE TERCEROS (DESDE FORMULARIO WEB) ---
@@ -241,8 +267,91 @@ class SupabaseService {
     if (invitationId != null) {
       await _client.from('invitaciones_terceros').update({
         'estado': 'Completada',
-      }).eq('token_seguridad', invitationId);
+      }).eq('id', invitationId);
     }
+  }
+
+  // --- ADMIN & GUARDIAS ---
+  Future<List<Map<String, dynamic>>> getAllGuards() async {
+    final response = await _client.from('perfiles').select().eq('rol', 'Encargado');
+    return List<Map<String, dynamic>>.from(response);
+  }
+
+  Future<void> addGuard({
+    required String nombreCompleto,
+    required String idEmpleado,
+    required String turno,
+  }) async {
+    final hashedPassword = sha256.convert(utf8.encode(idEmpleado)).toString();
+    try {
+      await _client.from('perfiles').insert({
+        'nombre_completo': nombreCompleto,
+        'cedula_identidad': idEmpleado,
+        'rol': 'Encargado',
+        'correo': 'guardia.$idEmpleado@edusafe.com',
+        'password_hash': hashedPassword,
+        'turno': turno,
+        'estado': 'Activo',
+      });
+    } catch (_) {
+      // Fallback si turno o estado no existen en la tabla
+      await _client.from('perfiles').insert({
+        'nombre_completo': nombreCompleto,
+        'cedula_identidad': idEmpleado,
+        'rol': 'Encargado',
+        'correo': 'guardia.$idEmpleado@edusafe.com',
+        'password_hash': hashedPassword,
+      });
+    }
+  }
+
+  Future<void> updateGuardStatus({
+    required String id,
+    required String turno,
+    required String estado,
+  }) async {
+    try {
+      await _client.from('perfiles').update({
+        'turno': turno,
+        'estado': estado,
+      }).eq('id', id);
+    } catch (_) {
+      // Ignorar si las columnas no existen
+    }
+  }
+
+  // --- NOTIFICACIONES ---
+  Future<List<Map<String, dynamic>>> getUserNotifications(String userId) async {
+    final response = await _client
+        .from('notificaciones')
+        .select()
+        .eq('usuario_id', userId)
+        .order('fecha_creacion', ascending: false);
+    return List<Map<String, dynamic>>.from(response);
+  }
+
+  Future<void> markNotificationAsRead(String notificationId) async {
+    await _client.from('notificaciones').update({'leida': true}).eq('id', notificationId);
+  }
+
+  Future<void> markAllNotificationsAsRead(String userId) async {
+    await _client.from('notificaciones').update({'leida': true}).eq('usuario_id', userId);
+  }
+
+  // --- DASHBOARD / METRICS ---
+  Future<int> getTodayPickupsCount(String profileId) async {
+    final today = DateTime.now();
+    final startOfDay = DateTime(today.year, today.month, today.day).toIso8601String();
+    
+    // We check if the user is a tutor or a guard, but usually this is called 
+    // by either. For Tutors we check 'tutor_autorizador_id'. For guards 'encargado_id'.
+    // Here we can check tutor_autorizador_id since it's used in PickupHistory
+    final response = await _client
+        .from('registro_salidas')
+        .select('id')
+        .eq('tutor_autorizador_id', profileId)
+        .gte('fecha_hora', startOfDay);
+    return response.length;
   }
 }
 
