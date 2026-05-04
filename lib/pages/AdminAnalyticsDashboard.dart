@@ -874,49 +874,38 @@ class _AdminAnalyticsDashboardWidgetState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Header
+              // Custom Premium Header
               Container(
-                padding: const EdgeInsets.only(
-                  top: 24,
-                  left: 24,
-                  right: 24,
-                  bottom: 32,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: const BorderRadius.only(
-                    bottomLeft: Radius.circular(32),
-                    bottomRight: Radius.circular(32),
+                padding: const EdgeInsets.only(top: 40, left: 24, right: 24, bottom: 40),
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF673AB7), Color(0xFF512DA8)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.deepPurple.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(40),
+                    bottomRight: Radius.circular(40),
+                  ),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Análisis del Sistema',
-                          style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Text(
-                          'Administrador de Escuela Segura',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey.shade600,
-                          ),
-                        ),
-                      ],
+                    const Text(
+                      'Análisis del Sistema',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Administrador de Escuela Segura',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.white.withOpacity(0.8),
+                      ),
                     ),
                   ],
                 ),
@@ -928,7 +917,7 @@ class _AdminAnalyticsDashboardWidgetState
                 padding: const EdgeInsets.all(24),
                 child: Column(
                   children: [
-                    // Métricas
+                    // Métricas con Nuevo Diseño
                     Row(
                       children: [
                         Expanded(
@@ -957,31 +946,19 @@ class _AdminAnalyticsDashboardWidgetState
                       children: [
                         Expanded(
                           child: _buildQuickNavButton(
-                            'Estudiantes',
-                            Icons.school_rounded,
+                            'Estudiantes', 
+                            Icons.school_rounded, 
                             Colors.blue,
-                            () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    const AdminStudentManagementWidget(),
-                              ),
-                            ),
+                            () => Navigator.push(context, MaterialPageRoute(builder: (context) => const AdminStudentManagementWidget())),
                           ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: _buildQuickNavButton(
-                            'Guardias',
-                            Icons.security_rounded,
+                            'Guardias', 
+                            Icons.security_rounded, 
                             Colors.indigo,
-                            () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    const AdminGuardManagementWidget(),
-                              ),
-                            ),
+                            () => Navigator.push(context, MaterialPageRoute(builder: (context) => const AdminGuardManagementWidget())),
                           ),
                         ),
                       ],
@@ -1040,24 +1017,15 @@ class _AdminAnalyticsDashboardWidgetState
                           else
                             ..._auditoriaReciente.map((log) {
                               String name = 'Estudiante';
-                              if (log['estudiantes'] != null &&
-                                  log['estudiantes'] is Map) {
-                                name =
-                                    log['estudiantes']['nombre'] ??
-                                    'Estudiante';
-                              } else if (log['estudiantes'] != null &&
-                                  log['estudiantes'] is List &&
-                                  log['estudiantes'].isNotEmpty) {
-                                name =
-                                    log['estudiantes'][0]['nombre'] ??
-                                    'Estudiante';
+                              if (log['estudiantes'] != null && log['estudiantes'] is Map) {
+                                name = log['estudiantes']['nombre'] ?? 'Estudiante';
+                              } else if (log['estudiantes'] != null && log['estudiantes'] is List && log['estudiantes'].isNotEmpty) {
+                                name = log['estudiantes'][0]['nombre'] ?? 'Estudiante';
                               }
                               String status = log['estado'] ?? 'Desconocido';
                               String timeStr = 'Reciente';
                               if (log['fecha_hora'] != null) {
-                                DateTime date = DateTime.parse(
-                                  log['fecha_hora'],
-                                ).toLocal();
+                                DateTime date = DateTime.parse(log['fecha_hora']).toLocal();
                                 Duration diff = DateTime.now().difference(date);
                                 if (diff.inMinutes < 60) {
                                   timeStr = 'hace ${diff.inMinutes}m';
@@ -1067,12 +1035,8 @@ class _AdminAnalyticsDashboardWidgetState
                                   timeStr = 'hace ${diff.inDays}d';
                                 }
                               }
-                              return _buildExpandableAuditItem(
-                                name,
-                                status,
-                                timeStr,
-                              );
-                            }),
+                              return _buildExpandableAuditItem(name, status, timeStr);
+                            }).toList(),
                           const SizedBox(height: 16),
                           TextButton(
                             onPressed: () {
@@ -1106,12 +1070,7 @@ class _AdminAnalyticsDashboardWidgetState
     );
   }
 
-  Widget _buildQuickNavButton(
-    String label,
-    IconData icon,
-    Color color,
-    VoidCallback onTap,
-  ) {
+  Widget _buildQuickNavButton(String label, IconData icon, Color color, VoidCallback onTap) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),

@@ -450,67 +450,128 @@ class _AdminStudentManagementWidgetState
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
-      appBar: AppBar(
-        title: const Text(
-          'Gestión de Estudiantes',
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: Colors.white,
-        iconTheme: const IconThemeData(color: Colors.black),
-        elevation: 0,
-        centerTitle: true,
-      ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Directorio de Alumnos',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Custom Header with Gradient
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.only(top: 10, left: 24, right: 24, bottom: 32),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xFF673AB7), Color(0xFF512DA8)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(32),
+                  bottomRight: Radius.circular(32),
+                ),
               ),
-              const SizedBox(height: 8),
-              Text(
-                'Administra los estudiantes y sus tutores asociados.',
-                style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 20),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                      const Text(
+                        'Gestión de Estudiantes',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(width: 48), // Spacer to center title
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Directorio de Alumnos',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Administra los estudiantes y sus tutores asociados.',
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.8),
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 24),
-              TextField(
-                controller: _searchController,
-                onChanged: (value) => _filterStudents(),
-                decoration: InputDecoration(
-                  hintText: 'Buscar por nombre o CI...',
-                  prefixIcon: const Icon(Icons.search),
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide.none,
+            ),
+
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 15,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: 'Buscar por nombre o CI...',
+                    hintStyle: TextStyle(color: Colors.grey.shade400),
+                    prefixIcon: const Icon(Icons.search, color: Colors.deepPurple),
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
                   ),
                 ),
               ),
-              const SizedBox(height: 24),
-              Expanded(
-                child: _isLoading 
-                    ? const Center(child: CircularProgressIndicator())
-                    : _filteredStudents.isEmpty 
-                        ? const Center(child: Text('No hay estudiantes.'))
-                        : ListView.builder(
-                            itemCount: _filteredStudents.length,
-                            itemBuilder: (context, index) {
-                              return _buildStudentCard(_filteredStudents[index]);
-                            },
+            ),
+            
+            const SizedBox(height: 24),
+            
+            Expanded(
+              child: _isLoading 
+                  ? const Center(child: CircularProgressIndicator())
+                  : _filteredStudents.isEmpty 
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.school_rounded, size: 64, color: Colors.grey.shade300),
+                              const SizedBox(height: 16),
+                              Text(
+                                'No hay estudiantes',
+                                style: TextStyle(color: Colors.grey.shade400, fontSize: 16),
+                              ),
+                            ],
                           ),
-              ),
-            ],
-          ),
+                        )
+                      : ListView.builder(
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          itemCount: _filteredStudents.length,
+                          itemBuilder: (context, index) {
+                            return _buildStudentCard(_filteredStudents[index]);
+                          },
+                        ),
+            ),
+          ],
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _showAddStudentModal,
-        backgroundColor: Colors.indigo,
-        elevation: 4,
+        backgroundColor: const Color(0xFF673AB7),
+        elevation: 8,
         icon: const Icon(Icons.add, color: Colors.white),
         label: const Text(
           'Nuevo Estudiante',
