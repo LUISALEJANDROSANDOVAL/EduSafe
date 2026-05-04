@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:local_auth/local_auth.dart';
 import 'ParentDashboard.dart';
 import 'AdminAnalyticsDashboard.dart';
 import 'GuardScanner.dart';
@@ -18,6 +20,7 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _passwordVisible = false;
+  final LocalAuthentication _localAuth = LocalAuthentication();
   bool _isLoading = false;
 
   // Estado para la tarjeta de rol seleccionada
@@ -28,6 +31,158 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _authenticateBiometrics() async {
+    try {
+      if (kIsWeb) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('La biometría no funciona en navegadores web (Edge/Chrome). Prueba en un celular.')));
+        return;
+      }
+
+      final bool canAuthenticateWithBiometrics = await _localAuth.canCheckBiometrics;
+      final bool canAuthenticate = canAuthenticateWithBiometrics || await _localAuth.isDeviceSupported();
+
+      if (!canAuthenticate) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Biometría no disponible en este dispositivo')));
+        return;
+      }
+
+      final bool didAuthenticate = await _localAuth.authenticate(
+        localizedReason: 'Por favor, autentícate para iniciar sesión en EduSafe',
+      );
+
+      if (didAuthenticate && mounted) {
+        // Here we could fetch the stored credentials from secure storage.
+        // For now, we simulate a successful login as an administrator or fallback.
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Autenticación exitosa. Redirigiendo...')));
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const AdminAnalyticsDashboardWidget()), // Default fallback for biometrics
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+    }
+  }
+
+  void _showForgotPasswordModal() {
+    final emailCtrl = TextEditingController();
+    final ciCtrl = TextEditingController();
+    final passCtrl = TextEditingController();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(32))),
+      builder: (context) {
+        return Padding(
+          padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom, left: 24, right: 24, top: 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Restablecer Contraseña', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 16),
+              TextField(controller: emailCtrl, decoration: const InputDecoration(labelText: 'Correo electrónico', border: OutlineInputBorder())),
+              const SizedBox(height: 12),
+              TextField(controller: ciCtrl, decoration: const InputDecoration(labelText: 'Cédula de Identidad', border: OutlineInputBorder())),
+              const SizedBox(height: 12),
+              TextField(controller: passCtrl, decoration: const InputDecoration(labelText: 'Nueva Contraseña', border: OutlineInputBorder()), obscureText: true),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () async {
+                  try {
+                    await SupabaseService().updatePassword(email: emailCtrl.text.trim(), ci: ciCtrl.text.trim(), newPassword: passCtrl.text);
+                    if (mounted) Navigator.pop(context);
+                    if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Contraseña actualizada.')));
+                  } catch (e) {
+                    if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red));
+                  }
+                },
+                child: const Text('Actualizar Contraseña'),
+              ),
+              const SizedBox(height: 24),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showRegisterModal() {
+    final nameCtrl = TextEditingController();
+    final emailCtrl = TextEditingController();
+    final passCtrl = TextEditingController();
+    final ciCtrl = TextEditingController();
+    String localRole = 'Tutor';
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(32))),
+      builder: (context) {
+        return StatefulBuilder(builder: (context, setModalState) {
+          return Padding(
+            padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom, left: 24, right: 24, top: 24),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('Crear Cuenta Nueva', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 16),
+                  TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: 'Nombre Completo', border: OutlineInputBorder())),
+                  const SizedBox(height: 12),
+                  TextField(controller: emailCtrl, decoration: const InputDecoration(labelText: 'Correo', border: OutlineInputBorder())),
+                  const SizedBox(height: 12),
+                  TextField(controller: ciCtrl, decoration: const InputDecoration(labelText: 'Cédula de Identidad', border: OutlineInputBorder())),
+                  const SizedBox(height: 12),
+                  TextField(controller: passCtrl, decoration: const InputDecoration(labelText: 'Contraseña', border: OutlineInputBorder()), obscureText: true),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<String>(
+                    value: localRole,
+                    decoration: const InputDecoration(labelText: 'Rol', border: OutlineInputBorder()),
+                    items: const [
+                      DropdownMenuItem(value: 'Tutor', child: Text('Padre / Tutor')),
+                      DropdownMenuItem(value: 'Encargado', child: Text('Guardia de Seguridad')),
+                      DropdownMenuItem(value: 'Administrador', child: Text('Administrador')),
+                    ],
+                    onChanged: (val) {
+                      if (val != null) setModalState(() => localRole = val);
+                    },
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton(
+                    onPressed: () async {
+                      try {
+                        await SupabaseService().signUp(
+                          fullName: nameCtrl.text.trim(),
+                          email: emailCtrl.text.trim(),
+                          password: passCtrl.text,
+                          ci: ciCtrl.text.trim(),
+                          role: localRole,
+                        );
+                        if (mounted) Navigator.pop(context);
+                        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Cuenta creada con éxito. Ya puedes iniciar sesión.'), backgroundColor: Colors.green));
+                      } catch (e) {
+                        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red));
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.deepPurple, padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 32)),
+                    child: const Text('Registrarse', style: TextStyle(color: Colors.white)),
+                  ),
+                  const SizedBox(height: 24),
+                ],
+              ),
+            ),
+          );
+        });
+      },
+    );
   }
 
   // Widget personalizado para reemplazar el RoleCard de FlutterFlow
@@ -205,7 +360,7 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(
-                    onPressed: () {},
+                    onPressed: _showForgotPasswordModal,
                     child: const Text('¿Olvidaste tu contraseña?', style: TextStyle(color: Colors.deepPurple)),
                   ),
                 ),
@@ -324,10 +479,7 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                 const SizedBox(height: 16),
 
                 OutlinedButton.icon(
-                  onPressed: () {
-                    // Bypass biométrico
-                    print("Biometría presionada");
-                  },
+                  onPressed: _authenticateBiometrics,
                   icon: const Icon(Icons.fingerprint_rounded, color: Colors.deepPurple),
                   label: const Text('Iniciar sesión con Biometría', style: TextStyle(color: Colors.deepPurple)),
                   style: OutlinedButton.styleFrom(
@@ -347,9 +499,9 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                     const Text('¿Nuevo en SafeGuard?', style: TextStyle(color: Colors.grey)),
                     const SizedBox(width: 4),
                     GestureDetector(
-                      onTap: () {},
+                      onTap: _showRegisterModal,
                       child: const Text(
-                        'Contactar Administrador',
+                        'Crear Cuenta',
                         style: TextStyle(fontWeight: FontWeight.bold, color: Colors.deepPurple, decoration: TextDecoration.underline),
                       ),
                     ),
