@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import '../services/supabase_service.dart';
 
 class AdminStudentManagementWidget extends StatefulWidget {
   const AdminStudentManagementWidget({super.key});
@@ -17,6 +17,7 @@ class _AdminStudentManagementWidgetState
   List<Map<String, dynamic>> _allStudents = [];
   List<Map<String, dynamic>> _filteredStudents = [];
   List<Map<String, dynamic>> _tutors = [];
+  final _supabaseService = SupabaseService();
   final TextEditingController _searchController = TextEditingController();
   
   final _nombreController = TextEditingController();
@@ -54,21 +55,28 @@ class _AdminStudentManagementWidgetState
   Future<void> _fetchStudents() async {
     setState(() => _isLoading = true);
     try {
-      final supabase = Supabase.instance.client;
-      
       // Fetch tutors first
-      final tutorRes = await supabase.from('perfiles').select('id, nombre_completo, cedula_identidad').eq('rol', 'Tutor');
+      final tutorRes = await _supabaseService.client.from('perfiles').select('id, nombre_completo, cedula_identidad').eq('rol', 'Tutor');
       List<Map<String, dynamic>> loadedTutors = List<Map<String, dynamic>>.from(tutorRes);
 
-      // Fetch students without the join
-      final response = await supabase.from('estudiantes').select('id, nombre, curso, cedula_identidad, pinata_foto_cid, tutor_id').order('creado_en', ascending: false);
+      // Fetch students using the service (which handles the basic join or we match manually)
+      final response = await _supabaseService.getAllStudents();
       
       List<Map<String, dynamic>> loaded = [];
       for (var row in response) {
         String tutorName = 'Sin Asignar';
         String tutorCi = 'N/A';
         
-        if (row['tutor_id'] != null) {
+        // El servicio trae perfiles(nombre_completo) si la FK existe
+        if (row['perfiles'] != null) {
+          tutorName = row['perfiles']['nombre_completo'] ?? 'Sin Asignar';
+          // Para la CI, si no viene en el join, la buscamos en el mapa local
+          final tutor = loadedTutors.firstWhere(
+            (t) => t['id'] == row['tutor_id'],
+            orElse: () => <String, dynamic>{},
+          );
+          tutorCi = tutor['cedula_identidad'] ?? 'N/A';
+        } else if (row['tutor_id'] != null) {
           final tutor = loadedTutors.firstWhere(
             (t) => t['id'] == row['tutor_id'],
             orElse: () => <String, dynamic>{},
@@ -223,8 +231,7 @@ class _AdminStudentManagementWidgetState
                     return;
                   }
                   try {
-                    final supabase = Supabase.instance.client;
-                    await supabase.from('estudiantes').insert({
+                    await _supabaseService.client.from('estudiantes').insert({
                       'tutor_id': localSelectedTutorId,
                       'nombre': _nombreController.text,
                       'curso': _cursoController.text,

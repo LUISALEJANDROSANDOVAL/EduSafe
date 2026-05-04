@@ -6,6 +6,8 @@ import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'GuardProfile.dart';
 import 'IdentityValidation.dart';
+import '../services/supabase_service.dart';
+import 'package:intl/intl.dart';
 
 class GuardScannerWidget extends StatefulWidget {
   const GuardScannerWidget({super.key});
@@ -27,6 +29,12 @@ class _GuardScannerWidgetState extends State<GuardScannerWidget> with SingleTick
   bool _isProcessing = false;
   bool _faceDetected = false;
   String? _lastScannedCode;
+  final _supabaseService = SupabaseService();
+  
+  // Dynamic metrics and history
+  int _todayCount = 0;
+  List<Map<String, dynamic>> _recentLogs = [];
+  bool _isLoadingHistory = false;
 
   late AnimationController _animationController;
 
@@ -44,6 +52,26 @@ class _GuardScannerWidgetState extends State<GuardScannerWidget> with SingleTick
     )..repeat(reverse: true);
     
     _initializeCamera();
+    _loadHistoryData();
+  }
+
+  Future<void> _loadHistoryData() async {
+    setState(() => _isLoadingHistory = true);
+    try {
+      final count = await _supabaseService.getTodayPickupsCount();
+      final logs = await _supabaseService.getRecentPickupLogs();
+      
+      if (mounted) {
+        setState(() {
+          _todayCount = count;
+          _recentLogs = logs;
+          _isLoadingHistory = false;
+        });
+      }
+    } catch (e) {
+      debugPrint("Error loading guard history: $e");
+      if (mounted) setState(() => _isLoadingHistory = false);
+    }
   }
 
   Future<void> _initializeCamera() async {
@@ -178,7 +206,7 @@ class _GuardScannerWidgetState extends State<GuardScannerWidget> with SingleTick
         children: [
           Expanded(
             child: GestureDetector(
-              onTap: () {
+                onTap: () {
                 setState(() => _isScannerActive = true);
                 _cameraController?.startImageStream(_processCameraImage).catchError((e) => null);
               },
@@ -201,9 +229,10 @@ class _GuardScannerWidgetState extends State<GuardScannerWidget> with SingleTick
           ),
           Expanded(
             child: GestureDetector(
-              onTap: () {
+                onTap: () {
                 setState(() => _isScannerActive = false);
                 _cameraController?.stopImageStream().catchError((e) => null);
+                _loadHistoryData();
               },
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 12),
@@ -523,9 +552,9 @@ class _GuardScannerWidgetState extends State<GuardScannerWidget> with SingleTick
                       // History View
                       Row(
                         children: [
-                          Expanded(child: _buildMetricsCard('Hoy', '142', 'Salida de Estudiantes', Colors.deepPurple)),
+                          Expanded(child: _buildMetricsCard('Hoy', '$_todayCount', 'Salida de Estudiantes', Colors.deepPurple)),
                           const SizedBox(width: 16),
-                          Expanded(child: _buildMetricsCard('Pendientes', '28', 'Restantes', Colors.black87)),
+                          Expanded(child: _buildMetricsCard('Alertas', _recentLogs.where((l) => l['estado'] == 'Alerta').length.toString(), 'Detectadas', Colors.redAccent)),
                         ],
                       ),
                       const SizedBox(height: 24),
@@ -533,13 +562,31 @@ class _GuardScannerWidgetState extends State<GuardScannerWidget> with SingleTick
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           const Text('Validaciones Recientes', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                          Text('Ver Todos', style: TextStyle(color: Colors.deepPurple.shade400, fontWeight: FontWeight.bold)),
+                          GestureDetector(
+                            onTap: _loadHistoryData,
+                            child: Text('Actualizar', style: TextStyle(color: Colors.deepPurple.shade400, fontWeight: FontWeight.bold)),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 16),
-                      _buildValidationCard('Mateo Garcia', 'Sofia Garcia (Madre)', '14:22'),
-                      _buildValidationCard('Lucia Torres', 'Carlos Mendez (Tío)', '14:15'),
-                      _buildValidationCard('Emma Wilson', 'David Wilson (Padre)', '14:05'),
+                      if (_isLoadingHistory)
+                        const Center(child: CircularProgressIndicator())
+                      else if (_recentLogs.isEmpty)
+                        const Center(child: Text('No hay registros recientes'))
+                      else
+                        ..._recentLogs.take(5).map((log) {
+                          final student = log['estudiantes'];
+                          final thirdParty = log['terceros'];
+                          final time = log['fecha_hora'] != null 
+                              ? DateFormat('HH:mm').format(DateTime.parse(log['fecha_hora']).toLocal())
+                              : '--:--';
+                          
+                          return _buildValidationCard(
+                            student != null ? student['nombre'] : 'Estudiante',
+                            thirdParty != null ? "${thirdParty['nombre']} (${thirdParty['relacion']})" : 'Tutor Principal',
+                            time,
+                          );
+                        }).toList(),
                     ],
                   ],
                 ),

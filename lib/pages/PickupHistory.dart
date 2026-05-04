@@ -40,35 +40,52 @@ class _PickupHistoryWidgetState extends State<PickupHistoryWidget> {
   }
 
   Future<void> _loadHistoryData() async {
+    if (!mounted) return;
     setState(() => _isLoading = true);
     try {
       final profile = await _supabaseService.getCurrentUserProfile();
       if (profile != null) {
-        final logs = await _supabaseService.getRecentPickupLogs(profile['id']);
-        final todayLogsCount = await _supabaseService.getTodayPickupsCount(profile['id']);
+        final role = profile['rol'];
+        // Si es administrador o encargado, vemos todo. Si es Tutor, solo lo suyo.
+        final String? filterId = (role == 'Administrador' || role == 'Encargado') ? null : profile['id'];
+        
+        final logs = await _supabaseService.getRecentPickupLogs(filterId);
+        final todayLogsCount = await _supabaseService.getTodayPickupsCount(filterId);
         
         List<Map<String, dynamic>> items = [];
         for (var log in logs) {
           final student = log['estudiantes'];
           final thirdParty = log['terceros'];
-          final guard = log['perfiles'];
+          final guard = log['guardia']; // Usando el alias definido en el servicio
           
           DateTime date = DateTime.now();
           String time = '--:--';
           if (log['fecha_hora'] != null) {
-            date = DateTime.parse(log['fecha_hora']).toLocal();
-            time = DateFormat('hh:mm a').format(date);
+            try {
+              date = DateTime.parse(log['fecha_hora']).toLocal();
+              time = DateFormat('hh:mm a').format(date);
+            } catch (e) {
+              debugPrint("Error parsing date: ${log['fecha_hora']}");
+            }
+          }
+
+          // Truncar UUID para mostrar si no hay nombre
+          String formatId(dynamic id) {
+            if (id == null) return 'N/A';
+            String s = id.toString();
+            return s.length > 8 ? s.substring(0, 8) : s;
           }
 
           items.add({
-            'studentName': student != null ? student['nombre'] : 'Desconocido',
+            'studentName': student != null ? student['nombre'] : "Estudiante (${formatId(log['estudiante_id'])})",
             'grade': student != null ? student['curso'] : 'N/A',
             'time': time,
             'authorizedBy': thirdParty != null 
                 ? "${thirdParty['nombre']} (${thirdParty['relacion'] ?? 'Tercero'})" 
-                : 'Tutor Principal',
-            'guardName': guard != null ? guard['nombre_completo'] : 'Sistema', 
-            'isFlagged': log['estado'] == 'Alerta',
+                : (log['tercero_id'] != null ? 'Tercero Registrado' : 'Tutor Principal'),
+            'guardName': guard != null ? guard['nombre_completo'] : "Guardia (${formatId(log['encargado_id'])})", 
+            'isFlagged': log['estado'] == 'Alerta' || log['estado'] == 'Rechazado',
+            'status': log['estado'] ?? 'Exitoso',
             'date': date,
           });
         }
@@ -80,6 +97,8 @@ class _PickupHistoryWidgetState extends State<PickupHistoryWidget> {
             _isLoading = false;
           });
         }
+      } else {
+        if (mounted) setState(() => _isLoading = false);
       }
     } catch (e) {
       debugPrint("🚨 Error loading history: $e");
@@ -203,8 +222,12 @@ class _PickupHistoryWidgetState extends State<PickupHistoryWidget> {
     );
   }
 
-  Widget _buildHistoryCard(Map<String, dynamic> item) {
-    bool isFlagged = item['isFlagged'];
+   Widget _buildHistoryCard(Map<String, dynamic> item) {
+    bool isFlagged = item['isFlagged'] ?? false;
+    String statusText = item['status'] ?? (isFlagged ? "Alerta" : "Exitoso");
+    Color statusColor = statusText == 'Exitoso' ? Colors.green : (statusText == 'Rechazado' ? Colors.red : Colors.orange);
+    Color statusBg = statusColor.withOpacity(0.1);
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
@@ -219,8 +242,11 @@ class _PickupHistoryWidgetState extends State<PickupHistoryWidget> {
             Row(
               children: [
                 CircleAvatar(
-                  backgroundColor: isFlagged ? Colors.orange.shade50 : Colors.deepPurple.shade50,
-                  child: Icon(isFlagged ? Icons.warning_rounded : Icons.person, color: isFlagged ? Colors.orange : Colors.deepPurple),
+                  backgroundColor: statusBg,
+                  child: Icon(
+                    statusText == 'Exitoso' ? Icons.check_circle_outline : (statusText == 'Rechazado' ? Icons.cancel_outlined : Icons.warning_rounded), 
+                    color: statusColor
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -234,8 +260,8 @@ class _PickupHistoryWidgetState extends State<PickupHistoryWidget> {
                 ),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(color: isFlagged ? Colors.orange.shade50 : Colors.green.shade50, borderRadius: BorderRadius.circular(12)),
-                  child: Text(isFlagged ? "Alerta" : "Exitoso", style: TextStyle(color: isFlagged ? Colors.orange : Colors.green, fontSize: 10, fontWeight: FontWeight.bold)),
+                  decoration: BoxDecoration(color: statusBg, borderRadius: BorderRadius.circular(12)),
+                  child: Text(statusText, style: TextStyle(color: statusColor, fontSize: 10, fontWeight: FontWeight.bold)),
                 ),
               ],
             ),
@@ -424,27 +450,38 @@ class _PickupHistoryWidgetState extends State<PickupHistoryWidget> {
             Expanded(
               child: _isLoading 
                   ? const Center(child: CircularProgressIndicator())
-                  : _filteredItems.isEmpty 
-                      ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.history_rounded, size: 64, color: Colors.grey.shade300),
-                              const SizedBox(height: 16),
-                              Text(
-                                'No hay registros',
-                                style: TextStyle(color: Colors.grey.shade400, fontSize: 16),
-                              ),
-                            ],
-                          ),
-                        )
-                      : ListView.builder(
-                          padding: const EdgeInsets.symmetric(horizontal: 24),
-                          itemCount: _filteredItems.length,
-                          itemBuilder: (context, index) {
-                            return _buildHistoryCard(_filteredItems[index]);
-                          },
-                        ),
+                  : RefreshIndicator(
+                      onRefresh: _loadHistoryData,
+                      child: _filteredItems.isEmpty 
+                          ? ListView(
+                              children: [
+                                SizedBox(height: MediaQuery.of(context).size.height * 0.2),
+                                Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.history_rounded, size: 64, color: Colors.grey.shade300),
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      'No hay registros',
+                                      style: TextStyle(color: Colors.grey.shade400, fontSize: 16),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    TextButton(
+                                      onPressed: _loadHistoryData,
+                                      child: const Text('Reintentar'),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            )
+                          : ListView.builder(
+                              padding: const EdgeInsets.symmetric(horizontal: 24),
+                              itemCount: _filteredItems.length,
+                              itemBuilder: (context, index) {
+                                return _buildHistoryCard(_filteredItems[index]);
+                              },
+                            ),
+                    ),
             ),
           ],
         ),
