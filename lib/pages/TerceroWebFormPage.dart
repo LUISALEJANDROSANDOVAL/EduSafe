@@ -28,6 +28,15 @@ class _TerceroWebFormPageState extends State<TerceroWebFormPage> {
   }
 
   void _extractParameters() {
+<<<<<<< HEAD
+    // Para Flutter Web, extraemos de la URL
+    final uri = Uri.base;
+    setState(() {
+      _tutorId = uri.queryParameters['tutorId'];
+      _tokens = uri.queryParameters['tokens'];
+    });
+    print("TutorId cargado: $_tutorId, Tokens: $_tokens");
+=======
     // Para Flutter Web, extraemos tanto de la query principal como del fragmento (después del #)
     final uri = Uri.base;
     Map<String, String> params = Map.from(uri.queryParameters);
@@ -47,6 +56,7 @@ class _TerceroWebFormPageState extends State<TerceroWebFormPage> {
       _tokens = params['tokens'];
     });
     print("Parámetros extraídos - TutorId: $_tutorId, Tokens: $_tokens");
+>>>>>>> 88cbea5660b29b647643ed97d5b5dc0861aaf980
   }
 
   // Opciones de relación para la base de datos
@@ -252,18 +262,83 @@ class _TerceroWebFormPageState extends State<TerceroWebFormPage> {
                     width: double.infinity,
                     height: 56,
                     child: ElevatedButton(
+<<<<<<< HEAD
                       onPressed: _isSaving ? null : _handleRegister,
+=======
+                      onPressed: () {
+                        if (_formKey.currentState!.validate()) {
+                          if (!_fotoSubida) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Por favor sube tu fotografía para la verificación biométrica',
+                                ),
+                                backgroundColor: Colors.redAccent,
+                              ),
+                            );
+                            return;
+                          }
+                          // Success Dialog
+                          showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              title: Row(
+                                children: [
+                                  const Icon(
+                                    Icons.check_circle,
+                                    color: Colors.green,
+                                    size: 32,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  const Text('Registro Exitoso'),
+                                ],
+                              ),
+                              content: Text(
+                                'Tus datos (\${_nombreController.text}, \$_relacionSeleccionada) han sido guardados en la tabla de terceros.\n\nEl sistema activará tu perfil automáticamente.',
+                                style: const TextStyle(fontSize: 16),
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.pop(context);
+                                    // Navigate away or reset form
+                                  },
+                                  child: const Text(
+                                    'Entendido',
+                                    style: TextStyle(fontSize: 16),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+                      },
+>>>>>>> 88cbea5660b29b647643ed97d5b5dc0861aaf980
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF4A00E0),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         elevation: 0,
                       ),
+<<<<<<< HEAD
                       child: _isSaving 
                         ? const CircularProgressIndicator(color: Colors.white)
                         : const Text(
                             'Registrar Autorizado', 
                             style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)
                           ),
+=======
+                      child: const Text(
+                        'Registrar Autorizado',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+>>>>>>> 88cbea5660b29b647643ed97d5b5dc0861aaf980
                     ),
                   ),
                 ],

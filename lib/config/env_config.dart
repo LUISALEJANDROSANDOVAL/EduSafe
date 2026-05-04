@@ -9,6 +9,7 @@ class EnvConfig {
   static String get emailjsServiceId => dotenv.env['EMAILJS_SERVICE_ID'] ?? '';
   static String get emailjsTemplateId => dotenv.env['EMAILJS_TEMPLATE_ID'] ?? '';
   static String get emailjsPublicKey => dotenv.env['EMAILJS_PUBLIC_KEY'] ?? '';
+  static String get emailjsPrivateKey => dotenv.env['EMAILJS_PRIVATE_KEY'] ?? '';
 
   static Future<void> init() async {
     await dotenv.load(fileName: ".env");
