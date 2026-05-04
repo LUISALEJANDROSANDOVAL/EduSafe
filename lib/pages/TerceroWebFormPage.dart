@@ -28,7 +28,6 @@ class _TerceroWebFormPageState extends State<TerceroWebFormPage> {
   }
 
   void _extractParameters() {
-    // Para Flutter Web, extraemos tanto de la query principal como del fragmento (después del #)
     final uri = Uri.base;
     Map<String, String> params = Map.from(uri.queryParameters);
 
@@ -46,7 +45,7 @@ class _TerceroWebFormPageState extends State<TerceroWebFormPage> {
       _tutorId = params['tutorId'];
       _tokens = params['tokens'];
     });
-    print("Parámetros extraídos - TutorId: $_tutorId, Tokens: $_tokens");
+    print("TutorId cargado: $_tutorId, Tokens: $_tokens");
   }
 
   // Opciones de relación para la base de datos
@@ -303,7 +302,57 @@ class _TerceroWebFormPageState extends State<TerceroWebFormPage> {
                     width: double.infinity,
                     height: 56,
                     child: ElevatedButton(
-                      onPressed: _isSaving ? null : _handleRegister,
+                      onPressed: () {
+                        if (_formKey.currentState!.validate()) {
+                          if (!_fotoSubida) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Por favor sube tu fotografía para la verificación biométrica',
+                                ),
+                                backgroundColor: Colors.redAccent,
+                              ),
+                            );
+                            return;
+                          }
+                          // Success Dialog
+                          showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              title: Row(
+                                children: [
+                                  const Icon(
+                                    Icons.check_circle,
+                                    color: Colors.green,
+                                    size: 32,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  const Text('Registro Exitoso'),
+                                ],
+                              ),
+                              content: Text(
+                                'Tus datos (\${_nombreController.text}, \$_relacionSeleccionada) han sido guardados en la tabla de terceros.\n\nEl sistema activará tu perfil automáticamente.',
+                                style: const TextStyle(fontSize: 16),
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.pop(context);
+                                    // Navigate away or reset form
+                                  },
+                                  child: const Text(
+                                    'Entendido',
+                                    style: TextStyle(fontSize: 16),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+                      },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF4A00E0),
                         shape: RoundedRectangleBorder(
@@ -311,6 +360,7 @@ class _TerceroWebFormPageState extends State<TerceroWebFormPage> {
                         ),
                         elevation: 0,
                       ),
+<<<<<<< HEAD
                       child: _isSaving
                           ? const CircularProgressIndicator(color: Colors.white)
                           : const Text(
@@ -321,6 +371,16 @@ class _TerceroWebFormPageState extends State<TerceroWebFormPage> {
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
+=======
+                      child: const Text(
+                        'Registrar Autorizado',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+>>>>>>> 1a3870806bb57af6fa70c7b4f9606f4ec3adf829
                     ),
                   ),
                 ],
