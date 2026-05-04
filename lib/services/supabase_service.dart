@@ -49,6 +49,63 @@ class SupabaseService {
     return response;
   }
 
+  Future<Map<String, dynamic>> signUp({
+    required String fullName,
+    required String email,
+    required String password,
+    required String ci,
+    required String role,
+  }) async {
+    final responseCheck = await _client.from('perfiles').select().eq('correo', email).maybeSingle();
+    if (responseCheck != null) {
+      throw Exception('Este correo ya está registrado.');
+    }
+
+    final bytes = utf8.encode(password);
+    final digest = sha256.convert(bytes);
+    final hashedPassword = digest.toString();
+
+    final response = await _client.from('perfiles').insert({
+      'nombre_completo': fullName,
+      'correo': email,
+      'cedula_identidad': ci,
+      'password_hash': hashedPassword,
+      'rol': role,
+    }).select().single();
+
+    return response;
+  }
+
+  Future<void> updatePassword({
+    required String email,
+    required String ci,
+    required String newPassword,
+  }) async {
+    final responseCheck = await _client.from('perfiles').select().eq('correo', email).eq('cedula_identidad', ci).maybeSingle();
+    if (responseCheck == null) {
+      throw Exception('El correo o la Cédula de Identidad no coinciden.');
+    }
+
+    final bytes = utf8.encode(newPassword);
+    final digest = sha256.convert(bytes);
+    final hashedPassword = digest.toString();
+
+    final updateResponse = await _client.from('perfiles').update({'password_hash': hashedPassword}).eq('id', responseCheck['id']).select();
+    
+    if (updateResponse.isEmpty) {
+      throw Exception('La base de datos bloqueó el cambio. Revisa las políticas "RLS" (Row Level Security) de tu tabla "perfiles" en Supabase para permitir Updates.');
+    }
+
+    // Registrar la notificación de seguridad en la base de datos
+    await _client.from('notificaciones').insert({
+      'usuario_id': responseCheck['id'],
+      'titulo': 'Contraseña Actualizada',
+      'mensaje': 'Has restablecido tu contraseña exitosamente.',
+      'tipo': 'Seguridad',
+      'leida': false,
+    });
+  }
+
   Future<void> signOut() async {
     // Limpiar la sesión en memoria y también intentar cerrar Supabase Auth por seguridad
     _currentUserProfile = null;
@@ -110,29 +167,7 @@ class SupabaseService {
     return List<Map<String, dynamic>>.from(response);
   }
 
-  Future<void> registerThirdParty({
-    required String tutorId,
-    required String name,
-    required String ci,
-    required String relation,
-    required String biometricHash,
-    String? photoCid,
-    String? invitationId,
-  }) async {
-    await _client.from('terceros').insert({
-      'tutor_id': tutorId,
-      'nombre': name,
-      'cedula_identidad': ci,
-      'relacion': relation,
-      'biometria_hash': biometricHash,
-      'pinata_foto_cid': photoCid,
-      'invitacion_id': invitationId,
-    });
-    
-    if (invitationId != null) {
-      await updateInvitationStatus(invitationId, 'Completado');
-    }
-  }
+
 
   // --- INVITACIONES ---
   Future<void> createInvitation({

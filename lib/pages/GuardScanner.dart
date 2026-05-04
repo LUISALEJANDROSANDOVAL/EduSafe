@@ -1,6 +1,12 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:camera/camera.dart';
+import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
+import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'GuardProfile.dart';
 import 'IdentityValidation.dart';
+
 class GuardScannerWidget extends StatefulWidget {
   const GuardScannerWidget({super.key});
 
@@ -10,9 +16,156 @@ class GuardScannerWidget extends StatefulWidget {
   State<GuardScannerWidget> createState() => _GuardScannerWidgetState();
 }
 
-class _GuardScannerWidgetState extends State<GuardScannerWidget> {
+class _GuardScannerWidgetState extends State<GuardScannerWidget> with SingleTickerProviderStateMixin {
   final scaffoldKey = GlobalKey<ScaffoldState>();
   bool _isScannerActive = true;
+
+  CameraController? _cameraController;
+  late final BarcodeScanner _barcodeScanner;
+  late final FaceDetector _faceDetector;
+  
+  bool _isProcessing = false;
+  bool _faceDetected = false;
+  String? _lastScannedCode;
+
+  late AnimationController _animationController;
+
+  @override
+  void initState() {
+    super.initState();
+    _barcodeScanner = BarcodeScanner();
+    _faceDetector = FaceDetector(options: FaceDetectorOptions(
+      enableTracking: true,
+      performanceMode: FaceDetectorMode.fast,
+    ));
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat(reverse: true);
+    
+    _initializeCamera();
+  }
+
+  Future<void> _initializeCamera() async {
+    final cameras = await availableCameras();
+    if (cameras.isEmpty) return;
+
+    final camera = cameras.first;
+    _cameraController = CameraController(
+      camera,
+      ResolutionPreset.medium,
+      enableAudio: false,
+      imageFormatGroup: Platform.isAndroid ? ImageFormatGroup.nv21 : ImageFormatGroup.bgra8888,
+    );
+
+    await _cameraController?.initialize();
+    if (!mounted) return;
+    setState(() {});
+
+    _cameraController?.startImageStream(_processCameraImage);
+  }
+
+  Future<void> _processCameraImage(CameraImage image) async {
+    if (_isProcessing || !_isScannerActive) return;
+    _isProcessing = true;
+
+    try {
+      final inputImage = _inputImageFromCameraImage(image);
+      if (inputImage == null) return;
+
+      // Escanear Código QR
+      final barcodes = await _barcodeScanner.processImage(inputImage);
+      if (barcodes.isNotEmpty) {
+        final code = barcodes.first.displayValue;
+        if (code != null && code != _lastScannedCode) {
+          _lastScannedCode = code;
+          _onQrDetected(code);
+        }
+      }
+
+      // Escanear Rostro
+      final faces = await _faceDetector.processImage(inputImage);
+      if (faces.isNotEmpty && !_faceDetected) {
+        setState(() {
+          _faceDetected = true;
+        });
+      } else if (faces.isEmpty && _faceDetected) {
+        setState(() {
+          _faceDetected = false;
+        });
+      }
+    } catch (e) {
+      debugPrint("Error al procesar imagen: $e");
+    } finally {
+      _isProcessing = false;
+    }
+  }
+
+  InputImage? _inputImageFromCameraImage(CameraImage image) {
+    final camera = _cameraController?.description;
+    if (camera == null) return null;
+
+    final sensorOrientation = camera.sensorOrientation;
+    InputImageRotation? rotation = InputImageRotationValue.fromRawValue(sensorOrientation);
+    if (rotation == null) return null;
+
+    final format = InputImageFormatValue.fromRawValue(image.format.raw);
+    if (format == null || (Platform.isAndroid && format != InputImageFormat.nv21) || (Platform.isIOS && format != InputImageFormat.bgra8888)) {
+      return null;
+    }
+
+    if (image.planes.isEmpty) return null;
+
+    final WriteBuffer allBytes = WriteBuffer();
+    for (final Plane plane in image.planes) {
+      allBytes.putUint8List(plane.bytes);
+    }
+    final bytes = allBytes.done().buffer.asUint8List();
+
+    return InputImage.fromBytes(
+      bytes: bytes,
+      metadata: InputImageMetadata(
+        size: Size(image.width.toDouble(), image.height.toDouble()),
+        rotation: rotation,
+        format: format,
+        bytesPerRow: image.planes[0].bytesPerRow,
+      ),
+    );
+  }
+
+  void _onQrDetected(String code) {
+    _cameraController?.stopImageStream();
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const IdentityValidationWidget()),
+    ).then((_) {
+      _lastScannedCode = null;
+      if (_isScannerActive && mounted) {
+        _cameraController?.startImageStream(_processCameraImage);
+      }
+    });
+  }
+
+  void _onFaceCapture() {
+    _cameraController?.stopImageStream();
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const IdentityValidationWidget()),
+    ).then((_) {
+      if (_isScannerActive && mounted) {
+        _cameraController?.startImageStream(_processCameraImage);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _cameraController?.dispose();
+    _barcodeScanner.close();
+    _faceDetector.close();
+    _animationController.dispose();
+    super.dispose();
+  }
 
   Widget _buildToggle() {
     return Container(
@@ -25,7 +178,10 @@ class _GuardScannerWidgetState extends State<GuardScannerWidget> {
         children: [
           Expanded(
             child: GestureDetector(
-              onTap: () => setState(() => _isScannerActive = true),
+              onTap: () {
+                setState(() => _isScannerActive = true);
+                _cameraController?.startImageStream(_processCameraImage).catchError((e) => null);
+              },
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
@@ -45,7 +201,10 @@ class _GuardScannerWidgetState extends State<GuardScannerWidget> {
           ),
           Expanded(
             child: GestureDetector(
-              onTap: () => setState(() => _isScannerActive = false),
+              onTap: () {
+                setState(() => _isScannerActive = false);
+                _cameraController?.stopImageStream().catchError((e) => null);
+              },
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
@@ -69,46 +228,123 @@ class _GuardScannerWidgetState extends State<GuardScannerWidget> {
   }
 
   Widget _buildScannerFrame() {
+    if (_cameraController == null || !_cameraController!.value.isInitialized) {
+      return Container(
+        height: 400,
+        decoration: BoxDecoration(
+          color: Colors.black87,
+          borderRadius: BorderRadius.circular(24),
+        ),
+        child: const Center(child: CircularProgressIndicator(color: Colors.greenAccent)),
+      );
+    }
+
     return Container(
       height: 400,
       decoration: BoxDecoration(
         color: Colors.black87,
         borderRadius: BorderRadius.circular(24),
       ),
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          // Simulated camera view (black background with a scan frame)
-          Container(
-            width: 250,
-            height: 250,
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.greenAccent, width: 2),
-              borderRadius: BorderRadius.circular(16),
-            ),
-          ),
-          // Scanning line animation simulation
-          Positioned(
-            top: 150,
-            child: Container(
-              width: 250,
-              height: 2,
-              color: Colors.greenAccent,
-            ),
-          ),
-          // Bottom instruction
-          Positioned(
-            bottom: 24,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.6),
-                borderRadius: BorderRadius.circular(30),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Stack(
+          alignment: Alignment.center,
+          fit: StackFit.expand,
+          children: [
+            // Camera Preview
+            CameraPreview(_cameraController!),
+            
+            // Mask to dim background and show clear center
+            ColorFiltered(
+              colorFilter: const ColorFilter.mode(Colors.black54, BlendMode.srcOut),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Container(
+                    decoration: const BoxDecoration(
+                      color: Colors.black,
+                      backgroundBlendMode: BlendMode.dstOut,
+                    ),
+                  ),
+                  Center(
+                    child: Container(
+                      width: 250,
+                      height: 250,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              child: const Text('Alinea el código QR en el marco', style: TextStyle(color: Colors.white)),
             ),
-          ),
-        ],
+
+            // Scan frame border
+            Center(
+              child: Container(
+                width: 250,
+                height: 250,
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.greenAccent, width: 2),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+            ),
+
+            // Scanning line animation
+            AnimatedBuilder(
+              animation: _animationController,
+              builder: (context, child) {
+                return Positioned(
+                  top: 75 + (_animationController.value * 250),
+                  child: Container(
+                    width: 250,
+                    height: 2,
+                    decoration: BoxDecoration(
+                      color: Colors.greenAccent,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.greenAccent.withOpacity(0.5),
+                          blurRadius: 10,
+                          spreadRadius: 2,
+                        )
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+
+            // Face detected button overlay
+            if (_faceDetected)
+              Positioned(
+                bottom: 80,
+                child: ElevatedButton.icon(
+                  onPressed: _onFaceCapture,
+                  icon: const Icon(Icons.face_retouching_natural, color: Colors.white),
+                  label: const Text('Capturar y Validar', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.deepPurple,
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                  ),
+                ),
+              )
+            else
+              Positioned(
+                bottom: 24,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.6),
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  child: const Text('Alinea el código QR o rostro', style: TextStyle(color: Colors.white)),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -284,7 +520,7 @@ class _GuardScannerWidgetState extends State<GuardScannerWidget> {
                         ),
                       ),
                     ] else ...[
-                      // History View (Metrics & Validations)
+                      // History View
                       Row(
                         children: [
                           Expanded(child: _buildMetricsCard('Hoy', '142', 'Salida de Estudiantes', Colors.deepPurple)),

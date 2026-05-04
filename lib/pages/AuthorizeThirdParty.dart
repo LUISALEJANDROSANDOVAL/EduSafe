@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'dart:math';
+import '../services/supabase_service.dart';
+import '../services/email_service.dart';
+
 
 class AuthorizeThirdPartyWidget extends StatefulWidget {
   const AuthorizeThirdPartyWidget({super.key});
@@ -10,36 +14,146 @@ class AuthorizeThirdPartyWidget extends StatefulWidget {
 }
 
 class _AuthorizeThirdPartyWidgetState extends State<AuthorizeThirdPartyWidget> {
+  final SupabaseService _supabaseService = SupabaseService();
+  final EmailService _emailService = EmailService();
+
   final _emailController = TextEditingController();
-  String _selectedChild = 'Mateo Garcia';
+  String _selectedChild = '';
+
   
-  // Datos simulados para la demostración
-  final List<Map<String, dynamic>> _authorizedPersons = [
-    {
-      'id': '1',
-      'name': 'Carlos Mendoza',
-      'relation': 'Tío',
-      'status': 'Activo',
-      'email': 'carlos@email.com',
-      'photo': 'https://i.pravatar.cc/150?u=carlos',
-    },
-    {
-      'id': '2',
-      'name': 'Pendiente de Registro',
-      'relation': 'Transporte',
-      'status': 'Pendiente',
-      'email': 'maria.transporte@gmail.com',
-      'photo': null,
-    },
-    {
-      'id': '3',
-      'name': 'Roberto Gomez',
-      'relation': 'Abuelo',
-      'status': 'Activo',
-      'email': 'roberto.g@email.com',
-      'photo': 'https://i.pravatar.cc/150?u=roberto',
-    },
-  ];
+  Set<String> _selectedChildIds = {}; // Cambiado a Set para selección múltiple
+  List<Map<String, dynamic>> _children = [];
+  List<Map<String, dynamic>> _authorizedPersons = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadInitialData();
+  }
+
+  Future<void> _loadInitialData() async {
+    try {
+      final profile = await _supabaseService.getCurrentUserProfile();
+      if (profile != null) {
+        final children = await _supabaseService.getStudentsByTutor(profile['id']);
+        final thirdParties = await _supabaseService.getAuthorizedThirdParties(profile['id']);
+        final pendingInvs = await _supabaseService.getPendingInvitations(profile['id']);
+
+        setState(() {
+          _children = children;
+          
+          // Agrupamos las invitaciones por email para no ver duplicados en la lista
+          final Map<String, Map<String, dynamic>> groupedPersons = {};
+
+          // Primero procesamos los verificados
+          for (var p in thirdParties) {
+            groupedPersons[p['email'] ?? p['id']] = {...p, 'status': 'Verificado'};
+          }
+
+          // Luego los pendientes (si ya existe el email, no lo duplicamos)
+
+          for (var i in pendingInvs) {
+            final email = i['correo_tercero'];
+            if (!groupedPersons.containsKey(email)) {
+              groupedPersons[email] = {
+                'id': i['id'],
+                'name': email,
+                'relation': 'Invitación enviada',
+                'status': 'Pendiente',
+                'email': email,
+                'photo': null,
+              };
+            }
+          }
+
+          _authorizedPersons = groupedPersons.values.toList();
+        });
+      }
+    } catch (e) {
+      print("Error cargando datos: $e");
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  String _generateSecureToken() {
+    final random = Random();
+    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    return List.generate(16, (index) => chars[random.nextInt(chars.length)]).join();
+  }
+
+  Future<void> _sendInvitation() async {
+    final email = _emailController.text.trim();
+    if (email.isEmpty || !email.contains('@')) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Ingresa un correo válido')));
+      return;
+    }
+
+    if (_selectedChildIds.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Selecciona al menos un hijo')));
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final profile = await _supabaseService.getCurrentUserProfile();
+      
+      List<String> studentNames = [];
+      List<String> tokens = [];
+      
+      for (String childId in _selectedChildIds) {
+        try {
+          final uniqueToken = _generateSecureToken();
+          await _supabaseService.createInvitation(
+            tutorId: profile!['id'],
+            estudianteId: childId,
+            email: email,
+            token: uniqueToken,
+          );
+          tokens.add(uniqueToken);
+          
+          final child = _children.firstWhere((c) => c['id'] == childId);
+          studentNames.add(child['nombre']);
+        } catch (dbError) {
+          print("⚠️ Error guardando hijo $childId: $dbError");
+        }
+      }
+
+      if (tokens.isEmpty) {
+        throw Exception("No se pudo crear ninguna invitación.");
+      }
+
+      final allTokens = tokens.join(",");
+      final invitationLink = "https://edu-safe-tau.vercel.app/#/registro-tercero?tokens=$allTokens&tutorId=${profile!['id']}";
+      
+      final String allStudents = studentNames.join(", ");
+      
+      final bool sent = await _emailService.enviarInvitacionEmail(
+        toEmail: email,
+        tutorName: profile['nombre_completo'] ?? 'Tutor de SafeGuard School',
+        studentName: allStudents,
+        invitationLink: invitationLink,
+        tutorEmail: profile['email'],
+      );
+
+      if (sent) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Invitación enviada para recoger a $allStudents'), backgroundColor: Colors.green),
+        );
+      }
+      
+      _emailController.clear();
+      _selectedChildIds.clear();
+      _loadInitialData();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error al enviar: $e')));
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
 
   void _showQRModal(Map<String, dynamic> person) {
     showModalBottomSheet(
@@ -162,17 +276,19 @@ class _AuthorizeThirdPartyWidgetState extends State<AuthorizeThirdPartyWidget> {
                   Text('Envía un enlace seguro para que el tercero registre sus datos.', style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
                   const SizedBox(height: 24),
                   
-                  // Selección de Hijo
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        _buildChildChip('Mateo Garcia', '2do Grado', 'https://i.pravatar.cc/150?u=mateo'),
-                        const SizedBox(width: 12),
-                        _buildChildChip('Sofia Garcia', 'Kinder', 'https://i.pravatar.cc/150?u=sofia'),
-                      ],
-                    ),
-                  ),
+                  // Selección de Hijo (Dinámico desde DB)
+                  _children.isEmpty 
+                    ? const Center(child: Padding(padding: EdgeInsets.all(8.0), child: CircularProgressIndicator()))
+                    : SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: _children.map((child) => Padding(
+                            padding: const EdgeInsets.only(right: 12.0),
+                            child: _buildChildChip(child),
+                          )).toList(),
+                        ),
+                      ),
+
                   
                   const SizedBox(height: 24),
                   
@@ -190,19 +306,8 @@ class _AuthorizeThirdPartyWidgetState extends State<AuthorizeThirdPartyWidget> {
                         prefixIcon: const Icon(Icons.mail_outline_rounded, color: Colors.deepPurple),
                         suffixIcon: IconButton(
                           icon: const Icon(Icons.send_rounded, color: Colors.deepPurple),
-                          onPressed: () {
-                            if (_emailController.text.contains('@')) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: const Text('¡Invitación enviada con éxito!'),
-                                  backgroundColor: Colors.green,
-                                  behavior: SnackBarBehavior.floating,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                ),
-                              );
-                              _emailController.clear();
-                            }
-                          },
+                          onPressed: _sendInvitation,
+
                         ),
                         border: InputBorder.none,
                         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -349,10 +454,24 @@ class _AuthorizeThirdPartyWidgetState extends State<AuthorizeThirdPartyWidget> {
     );
   }
 
-  Widget _buildChildChip(String name, String grade, String imageUrl) {
-    bool isSelected = _selectedChild == name;
+  Widget _buildChildChip(Map<String, dynamic> child) {
+    final String id = child['id'].toString();
+    final String name = child['nombre'] ?? 'Sin nombre';
+    final String grade = child['grado_escolar'] ?? '';
+    final String imageUrl = child['foto_url'] ?? 'https://i.pravatar.cc/150?u=$id';
+    
+    bool isSelected = _selectedChildIds.contains(id);
+
     return GestureDetector(
-      onTap: () => setState(() => _selectedChild = name),
+      onTap: () {
+        setState(() {
+          if (isSelected) {
+            _selectedChildIds.remove(id);
+          } else {
+            _selectedChildIds.add(id);
+          }
+        });
+      },
       child: Container(
         width: 140,
         padding: const EdgeInsets.all(12),
@@ -373,4 +492,5 @@ class _AuthorizeThirdPartyWidgetState extends State<AuthorizeThirdPartyWidget> {
       ),
     );
   }
+
 }
