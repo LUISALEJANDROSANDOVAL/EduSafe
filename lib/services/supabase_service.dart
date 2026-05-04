@@ -209,4 +209,34 @@ class SupabaseService {
       await _client.from('perfiles').update(updates).eq('id', id);
     }
   }
+
+  // --- REGISTRO DE TERCEROS (DESDE FORMULARIO WEB) ---
+  Future<void> registerThirdParty({
+    required String tutorId,
+    required String name,
+    required String ci,
+    required String relation,
+    required String biometricHash,
+    required String photoCid,
+    String? invitationId,
+  }) async {
+    // 1. Insertar el tercero en la tabla 'terceros'
+    final response = await _client.from('terceros').insert({
+      'tutor_id': tutorId,
+      'nombre': name,
+      'cedula_identidad': ci,
+      'relacion': relation,
+      'biometria_hash': biometricHash,
+      'pinata_foto_cid': photoCid,
+      'activo': true,
+    }).select().single();
+
+    // 2. Si hay una invitación, marcarla como 'Completada'
+    if (invitationId != null) {
+      await _client.from('invitaciones_terceros').update({
+        'estado': 'Completada',
+      }).eq('id', invitationId);
+    }
+  }
 }
+
