@@ -13,35 +13,6 @@ class _AuthorizeThirdPartyWidgetState extends State<AuthorizeThirdPartyWidget> {
   final _emailController = TextEditingController();
   String _selectedChild = 'Mateo Garcia';
   
-<<<<<<< HEAD
-  // Datos simulados para la demostración
-  final List<Map<String, dynamic>> _authorizedPersons = [
-    {
-      'id': '1',
-      'name': 'Carlos Mendoza',
-      'relation': 'Tío',
-      'status': 'Activo',
-      'email': 'carlos@email.com',
-      'photo': 'https://i.pravatar.cc/150?u=carlos',
-    },
-    {
-      'id': '2',
-      'name': 'Pendiente de Registro',
-      'relation': 'Transporte',
-      'status': 'Pendiente',
-      'email': 'maria.transporte@gmail.com',
-      'photo': null,
-    },
-    {
-      'id': '3',
-      'name': 'Roberto Gomez',
-      'relation': 'Abuelo',
-      'status': 'Activo',
-      'email': 'roberto.g@email.com',
-      'photo': 'https://i.pravatar.cc/150?u=roberto',
-    },
-  ];
-=======
   Set<String> _selectedChildIds = {}; // Cambiado a Set para selección múltiple
   List<Map<String, dynamic>> _children = [];
   List<Map<String, dynamic>> _authorizedPersons = [];
@@ -64,15 +35,13 @@ class _AuthorizeThirdPartyWidgetState extends State<AuthorizeThirdPartyWidget> {
         setState(() {
           _children = children;
           
-          // Agrupamos las invitaciones por email para no ver duplicados en la lista
+          // Agrupamos las invitaciones por email para no ver duplicados
           final Map<String, Map<String, dynamic>> groupedPersons = {};
 
-          // Primero procesamos los verificados
           for (var p in thirdParties) {
             groupedPersons[p['email'] ?? p['id']] = {...p, 'status': 'Verificado'};
           }
 
-          // Luego los pendientes (si ya existe el email, no lo duplicamos)
           for (var i in pendingInvs) {
             final email = i['correo_tercero'];
             if (!groupedPersons.containsKey(email)) {
@@ -123,8 +92,6 @@ class _AuthorizeThirdPartyWidgetState extends State<AuthorizeThirdPartyWidget> {
       List<String> studentNames = [];
       List<String> tokens = [];
       
-      print("🚀 Iniciando creación de invitaciones...");
-
       for (String childId in _selectedChildIds) {
         try {
           final uniqueToken = _generateSecureToken();
@@ -140,12 +107,11 @@ class _AuthorizeThirdPartyWidgetState extends State<AuthorizeThirdPartyWidget> {
           studentNames.add(child['nombre']);
         } catch (dbError) {
           print("⚠️ Error guardando hijo $childId: $dbError");
-          // Si ya existe o hay error, intentamos seguir con los demás
         }
       }
 
       if (tokens.isEmpty) {
-        throw Exception("No se pudo crear ninguna invitación en la base de datos. Verifica el comando SQL en Supabase.");
+        throw Exception("No se pudo crear ninguna invitación.");
       }
 
       final allTokens = tokens.join(",");
@@ -153,8 +119,6 @@ class _AuthorizeThirdPartyWidgetState extends State<AuthorizeThirdPartyWidget> {
       
       final String allStudents = studentNames.join(", ");
       
-      print("📧 Intentando enviar correo a $email para recoger a $allStudents...");
-
       final bool sent = await _emailService.enviarInvitacionEmail(
         toEmail: email,
         tutorName: profile['nombre_completo'] ?? 'Tutor de SafeGuard School',
@@ -165,16 +129,12 @@ class _AuthorizeThirdPartyWidgetState extends State<AuthorizeThirdPartyWidget> {
 
       if (sent) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Invitación enviada para recoger a $allStudents'),
-            backgroundColor: Colors.green,
-            behavior: SnackBarBehavior.floating,
-          ),
+          SnackBar(content: Text('Invitación enviada para recoger a $allStudents'), backgroundColor: Colors.green),
         );
       }
       
       _emailController.clear();
-      _selectedChildIds.clear(); // Limpiar selección
+      _selectedChildIds.clear();
       _loadInitialData();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error al enviar: $e')));
@@ -182,7 +142,7 @@ class _AuthorizeThirdPartyWidgetState extends State<AuthorizeThirdPartyWidget> {
       setState(() => _isLoading = false);
     }
   }
->>>>>>> 1f07747 (conexion con vercel)
+
 
   void _showQRModal(Map<String, dynamic> person) {
     showModalBottomSheet(
