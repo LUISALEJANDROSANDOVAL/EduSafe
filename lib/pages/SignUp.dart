@@ -13,6 +13,7 @@ class _SignUpPageState extends State<SignUpPage> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _ciController = TextEditingController();
   String _selectedRole = 'Tutor';
   bool _isLoading = false;
 
@@ -21,6 +22,7 @@ class _SignUpPageState extends State<SignUpPage> {
     _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _ciController.dispose();
     super.dispose();
   }
 
@@ -30,10 +32,11 @@ class _SignUpPageState extends State<SignUpPage> {
     setState(() => _isLoading = true);
     try {
       await SupabaseService().signUp(
+        fullName: _nameController.text.trim(),
         email: _emailController.text.trim(),
         password: _passwordController.text,
-        nombreCompleto: _nameController.text.trim(),
-        rol: _selectedRole,
+        ci: _ciController.text.trim(),
+        role: _selectedRole,
       );
 
       if (mounted) {
@@ -106,6 +109,17 @@ class _SignUpPageState extends State<SignUpPage> {
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
                 ),
                 validator: (val) => val == null || val.length < 6 ? 'Mínimo 6 caracteres' : null,
+              ),
+              const SizedBox(height: 16),
+              
+              TextFormField(
+                controller: _ciController,
+                decoration: InputDecoration(
+                  labelText: 'Cédula de Identidad (CI)',
+                  prefixIcon: const Icon(Icons.badge_outlined),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                ),
+                validator: (val) => val == null || val.isEmpty ? 'Requerido para validación' : null,
               ),
               const SizedBox(height: 16),
               
