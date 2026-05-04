@@ -13,6 +13,7 @@ class _AuthorizeThirdPartyWidgetState extends State<AuthorizeThirdPartyWidget> {
   final _emailController = TextEditingController();
   String _selectedChild = 'Mateo Garcia';
   
+<<<<<<< HEAD
   // Datos simulados para la demostración
   final List<Map<String, dynamic>> _authorizedPersons = [
     {
@@ -40,6 +41,148 @@ class _AuthorizeThirdPartyWidgetState extends State<AuthorizeThirdPartyWidget> {
       'photo': 'https://i.pravatar.cc/150?u=roberto',
     },
   ];
+=======
+  Set<String> _selectedChildIds = {}; // Cambiado a Set para selección múltiple
+  List<Map<String, dynamic>> _children = [];
+  List<Map<String, dynamic>> _authorizedPersons = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadInitialData();
+  }
+
+  Future<void> _loadInitialData() async {
+    try {
+      final profile = await _supabaseService.getCurrentUserProfile();
+      if (profile != null) {
+        final children = await _supabaseService.getStudentsByTutor(profile['id']);
+        final thirdParties = await _supabaseService.getAuthorizedThirdParties(profile['id']);
+        final pendingInvs = await _supabaseService.getPendingInvitations(profile['id']);
+
+        setState(() {
+          _children = children;
+          
+          // Agrupamos las invitaciones por email para no ver duplicados en la lista
+          final Map<String, Map<String, dynamic>> groupedPersons = {};
+
+          // Primero procesamos los verificados
+          for (var p in thirdParties) {
+            groupedPersons[p['email'] ?? p['id']] = {...p, 'status': 'Verificado'};
+          }
+
+          // Luego los pendientes (si ya existe el email, no lo duplicamos)
+          for (var i in pendingInvs) {
+            final email = i['correo_tercero'];
+            if (!groupedPersons.containsKey(email)) {
+              groupedPersons[email] = {
+                'id': i['id'],
+                'name': email,
+                'relation': 'Invitación enviada',
+                'status': 'Pendiente',
+                'email': email,
+                'photo': null,
+              };
+            }
+          }
+
+          _authorizedPersons = groupedPersons.values.toList();
+        });
+      }
+    } catch (e) {
+      print("Error cargando datos: $e");
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  String _generateSecureToken() {
+    final random = Random();
+    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    return List.generate(16, (index) => chars[random.nextInt(chars.length)]).join();
+  }
+
+  Future<void> _sendInvitation() async {
+    final email = _emailController.text.trim();
+    if (email.isEmpty || !email.contains('@')) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Ingresa un correo válido')));
+      return;
+    }
+
+    if (_selectedChildIds.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Selecciona al menos un hijo')));
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final profile = await _supabaseService.getCurrentUserProfile();
+      
+      List<String> studentNames = [];
+      List<String> tokens = [];
+      
+      print("🚀 Iniciando creación de invitaciones...");
+
+      for (String childId in _selectedChildIds) {
+        try {
+          final uniqueToken = _generateSecureToken();
+          await _supabaseService.createInvitation(
+            tutorId: profile!['id'],
+            estudianteId: childId,
+            email: email,
+            token: uniqueToken,
+          );
+          tokens.add(uniqueToken);
+          
+          final child = _children.firstWhere((c) => c['id'] == childId);
+          studentNames.add(child['nombre']);
+        } catch (dbError) {
+          print("⚠️ Error guardando hijo $childId: $dbError");
+          // Si ya existe o hay error, intentamos seguir con los demás
+        }
+      }
+
+      if (tokens.isEmpty) {
+        throw Exception("No se pudo crear ninguna invitación en la base de datos. Verifica el comando SQL en Supabase.");
+      }
+
+      final allTokens = tokens.join(",");
+      final invitationLink = "https://edu-safe-tau.vercel.app/#/registro-tercero?tokens=$allTokens&tutorId=${profile!['id']}";
+      
+      final String allStudents = studentNames.join(", ");
+      
+      print("📧 Intentando enviar correo a $email para recoger a $allStudents...");
+
+      final bool sent = await _emailService.enviarInvitacionEmail(
+        toEmail: email,
+        tutorName: profile['nombre_completo'] ?? 'Tutor de SafeGuard School',
+        studentName: allStudents,
+        invitationLink: invitationLink,
+        tutorEmail: profile['email'],
+      );
+
+      if (sent) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Invitación enviada para recoger a $allStudents'),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+      
+      _emailController.clear();
+      _selectedChildIds.clear(); // Limpiar selección
+      _loadInitialData();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error al enviar: $e')));
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+>>>>>>> 1f07747 (conexion con vercel)
 
   void _showQRModal(Map<String, dynamic> person) {
     showModalBottomSheet(

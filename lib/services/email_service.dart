@@ -10,24 +10,24 @@ class EmailService {
     required String tutorName,
     required String studentName,
     required String invitationLink,
+    String? tutorEmail,
   }) async {
     try {
       final response = await http.post(
         Uri.parse(_url),
         headers: {
           'Content-Type': 'application/json',
-          'origin': 'http://localhost', 
         },
         body: json.encode({
           'service_id': EnvConfig.emailjsServiceId,
           'template_id': EnvConfig.emailjsTemplateId,
           'user_id': EnvConfig.emailjsPublicKey,
           'template_params': {
-            'to_email': toEmail,
+            'to_email': toEmail.trim(),
             'nombre_tutor': tutorName,
             'nombre_estudiante': studentName,
-            'project_name': 'SafeGuard School', // Identificador del proyecto
             'invitation_link': invitationLink,
+            'correo_tutor': tutorEmail ?? '',
           },
         }),
       );
