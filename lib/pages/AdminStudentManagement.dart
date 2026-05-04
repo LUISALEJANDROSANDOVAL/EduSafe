@@ -55,15 +55,26 @@ class _AdminStudentManagementWidgetState
     setState(() => _isLoading = true);
     try {
       final supabase = Supabase.instance.client;
-      final response = await supabase.from('estudiantes').select('id, nombre, curso, cedula_identidad, pinata_foto_cid, perfiles(nombre_completo, cedula_identidad)').order('creado_en', ascending: false);
       
+      // 1. Fetch students WITHOUT the 'perfiles' join to avoid the schema cache error
+      final response = await supabase.from('estudiantes').select('id, nombre, curso, cedula_identidad, pinata_foto_cid, tutor_id').order('creado_en', ascending: false);
+      
+      // 2. Fetch all tutors
+      final tutorRes = await supabase.from('perfiles').select('id, nombre_completo, cedula_identidad').eq('rol', 'Tutor');
+      List<Map<String, dynamic>> loadedTutors = List<Map<String, dynamic>>.from(tutorRes);
+
       List<Map<String, dynamic>> loaded = [];
       for (var row in response) {
         String tutorName = 'Sin Asignar';
         String tutorCi = 'N/A';
-        if (row['perfiles'] != null) {
-          tutorName = row['perfiles']['nombre_completo'] ?? 'Sin Asignar';
-          tutorCi = row['perfiles']['cedula_identidad'] ?? 'N/A';
+        
+        // 3. Map tutor manually in memory
+        if (row['tutor_id'] != null) {
+          final match = loadedTutors.where((t) => t['id'] == row['tutor_id']).toList();
+          if (match.isNotEmpty) {
+            tutorName = match.first['nombre_completo'] ?? 'Sin Asignar';
+            tutorCi = match.first['cedula_identidad'] ?? 'N/A';
+          }
         }
         
         loaded.add({
@@ -81,8 +92,7 @@ class _AdminStudentManagementWidgetState
         });
       }
       
-      final tutorRes = await supabase.from('perfiles').select('id, nombre_completo, cedula_identidad').eq('rol', 'Tutor');
-      List<Map<String, dynamic>> loadedTutors = List<Map<String, dynamic>>.from(tutorRes);
+
 
       if (mounted) {
         setState(() {
