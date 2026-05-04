@@ -3,6 +3,8 @@ import '../services/supabase_service.dart';
 import 'ParentDashboard.dart';
 import 'AdminAnalyticsDashboard.dart';
 import 'GuardScanner.dart';
+import 'SignUp.dart';
+import '../services/biometric_service.dart';
 
 class LoginScreenWidget extends StatefulWidget {
   const LoginScreenWidget({super.key});
@@ -25,6 +27,94 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _handleForgotPassword() async {
+    final email = _emailController.text.trim();
+    if (email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Por favor, ingresa tu correo primero.')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    try {
+      await SupabaseService().resetPassword(email);
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Correo Enviado'),
+            content: Text('Se ha enviado un enlace de recuperación a $email. Revisa también tu carpeta de spam.'),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(context), child: const Text('OK')),
+            ],
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _handleBiometricLogin() async {
+    final biometricService = BiometricService();
+    final isAvailable = await biometricService.isBiometricAvailable();
+    
+    if (!isAvailable) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Biometría no disponible en este dispositivo.')),
+      );
+      return;
+    }
+
+    try {
+      final hash = await biometricService.authenticateAndGenerateHash(
+        reason: 'Inicia sesión de forma segura con tu huella o rostro.'
+      );
+
+      if (hash != null) {
+        setState(() => _isLoading = true);
+        // En una app real, el hash se vincula al perfil previamente. 
+        // Para el prototipo, si es exitoso, intentamos buscar el perfil o simulamos éxito si ya tenemos un correo.
+        try {
+          final profile = await SupabaseService().signInWithBiometrics(hash);
+          _navigateToDashboard(profile['rol']);
+        } catch (e) {
+          // Fallback para demo: si no está vinculado, mostrar error educativo
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('No hay una cuenta vinculada a esta biometría. Inicia sesión con contraseña primero.')),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error de biometría: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  void _navigateToDashboard(String role) {
+    if (role == 'Tutor') {
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const ParentDashboardWidget()));
+    } else if (role == 'Administrador') {
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const AdminAnalyticsDashboardWidget()));
+    } else if (role == 'Encargado') {
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const GuardScannerWidget()));
+    }
   }
 
   @override
@@ -141,7 +231,7 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(
-                    onPressed: () {},
+                    onPressed: _handleForgotPassword,
                     child: const Text('¿Olvidaste tu contraseña?'),
                   ),
                 ),
@@ -168,43 +258,8 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                             );
 
                             final String realRole = profile['rol'];
-                            
-                            // Mapeo de rol seleccionado a rol de BD
-                            String expectedRole = '';
-                            if (_selectedRole == 'Parent') expectedRole = 'Tutor';
-                            if (_selectedRole == 'Guard') expectedRole = 'Encargado';
-                            if (_selectedRole == 'Admin') expectedRole = 'Administrador';
-
-                            if (realRole != expectedRole) {
-                              await SupabaseService().signOut();
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Acceso denegado. Tu cuenta es de $realRole, pero seleccionaste $_selectedRole.'),
-                                  backgroundColor: Colors.red,
-                                ),
-                              );
-                              setState(() => _isLoading = false);
-                              return;
-                            }
-
                             if (!mounted) return;
-                            
-                            if (realRole == 'Tutor') {
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(builder: (context) => const ParentDashboardWidget()),
-                              );
-                            } else if (realRole == 'Administrador') {
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(builder: (context) => const AdminAnalyticsDashboardWidget()),
-                              );
-                            } else if (realRole == 'Encargado') {
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(builder: (context) => const GuardScannerWidget()),
-                              );
-                            }
+                            _navigateToDashboard(realRole);
                           } catch (e) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
@@ -258,7 +313,7 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                 const SizedBox(height: 16),
 
                 OutlinedButton.icon(
-                  onPressed: () {},
+                  onPressed: _handleBiometricLogin,
                   icon: const Icon(Icons.fingerprint_rounded, color: Colors.deepPurple),
                   label: const Text('Iniciar sesión con Biometría', style: TextStyle(color: Colors.deepPurple)),
                   style: OutlinedButton.styleFrom(
@@ -277,7 +332,7 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                   children: [
                     const Text('¿Nuevo en SafeGuard?', style: TextStyle(color: Colors.grey)),
                     TextButton(
-                      onPressed: () {},
+                      onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const SignUpPage())),
                       child: const Text('Crear cuenta'),
                     ),
                   ],

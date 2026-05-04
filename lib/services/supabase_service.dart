@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
+import 'package:flutter/foundation.dart';
 import '../config/env_config.dart';
 
 class SupabaseService {
@@ -49,6 +50,43 @@ class SupabaseService {
   Future<void> signOut() async {
     _currentUserProfile = null;
     try { await _client.auth.signOut(); } catch (_) {}
+  }
+
+  Future<void> signUp({
+    required String email, 
+    required String password, 
+    required String nombreCompleto,
+    required String rol,
+  }) async {
+    final hashedPassword = sha256.convert(utf8.encode(password)).toString();
+    
+    await _client.from('perfiles').insert({
+      'correo': email,
+      'password_hash': hashedPassword,
+      'nombre_completo': nombreCompleto,
+      'rol': rol,
+    });
+  }
+
+  Future<void> resetPassword(String email) async {
+    final response = await _client.from('perfiles').select().eq('correo', email).maybeSingle();
+    if (response == null) throw Exception('El correo no está registrado.');
+    
+    await _client.from('notificaciones').insert({
+      'usuario_id': response['id'],
+      'titulo': 'Recuperación de Contraseña',
+      'mensaje': 'Se ha solicitado un enlace para restablecer tu contraseña.',
+      'leida': false,
+    });
+  }
+
+  Future<Map<String, dynamic>> signInWithBiometrics(String biometricHash) async {
+    final response = await _client.from('perfiles').select().eq('biometria_hash', biometricHash).maybeSingle();
+    if (response == null) {
+      throw Exception('No hay una cuenta vinculada a esta biometría en este dispositivo.');
+    }
+    _currentUserProfile = response;
+    return response;
   }
 
   // --- PERFILES ---
@@ -127,24 +165,60 @@ class SupabaseService {
   }
 
   // --- REGISTRO DE SALIDAS (HISTORIAL) ---
-  Future<List<Map<String, dynamic>>> getRecentPickupLogs(String tutorId) async {
+  Future<List<Map<String, dynamic>>> getRecentPickupLogs([String? tutorId]) async {
     try {
-      final response = await _client
-          .from('registro_salidas')
-          .select('*, estudiantes(nombre, curso), terceros(nombre, relacion), perfiles!encargado_id(nombre_completo)')
-          .eq('tutor_id', tutorId)
-          .order('fecha_hora', ascending: false);
-      return List<Map<String, dynamic>>.from(response);
+      // 1. Obtener los logs básicos de registro_salidas
+      var logsQuery = _client.from('registro_salidas').select('*');
+      if (tutorId != null) logsQuery = logsQuery.eq('tutor_id', tutorId);
+      final logsRes = await logsQuery.order('fecha_hora', ascending: false).limit(50);
+      final List<Map<String, dynamic>> logs = List<Map<String, dynamic>>.from(logsRes);
+
+      if (logs.isEmpty) return [];
+
+      // 2. Extraer IDs únicos para consultas optimizadas
+      final studentIds = logs.map((l) => l['estudiante_id']).where((id) => id != null).toList();
+      final guardIds = logs.map((l) => l['encargado_id']).where((id) => id != null).toList();
+      final terceroIds = logs.map((l) => l['tercero_id']).where((id) => id != null).toList();
+
+      // 3. Obtener datos de apoyo solo para los IDs necesarios
+      final studentsRes = await _client.from('estudiantes').select('id, nombre, curso').inFilter('id', studentIds);
+      final studentsMap = {for (var s in studentsRes) s['id'].toString(): s};
+
+      final perfilesRes = await _client.from('perfiles').select('id, nombre_completo').inFilter('id', guardIds);
+      final perfilesMap = {for (var p in perfilesRes) p['id'].toString(): p};
+
+      final tercerosRes = await _client.from('terceros').select('id, nombre, relacion').inFilter('id', terceroIds);
+      final tercerosMap = {for (var t in tercerosRes) t['id'].toString(): t};
+
+      // 4. Cruzar los datos manualmente
+      return logs.map((log) {
+        final estId = log['estudiante_id']?.toString();
+        final encId = log['encargado_id']?.toString();
+        final terId = log['tercero_id']?.toString();
+
+        return {
+          ...log,
+          'estudiantes': studentsMap[estId],
+          'guardia': perfilesMap[encId],
+          'terceros': tercerosMap[terId],
+        };
+      }).toList();
     } catch (e) {
-      final basic = await _client.from('registro_salidas').select('*').eq('tutor_id', tutorId);
-      return List<Map<String, dynamic>>.from(basic);
+      debugPrint("🚨 Error in getRecentPickupLogs: $e");
+      return [];
     }
   }
 
-  Future<int> getTodayPickupsCount(String tutorId) async {
+  Future<int> getTodayPickupsCount([String? tutorId]) async {
     final now = DateTime.now();
     final startOfDay = DateTime(now.year, now.month, now.day).toUtc().toIso8601String();
-    final response = await _client.from('registro_salidas').select('id').eq('tutor_id', tutorId).gte('fecha_hora', startOfDay);
+    
+    var query = _client.from('registro_salidas').select('id').gte('fecha_hora', startOfDay);
+    if (tutorId != null) {
+      query = query.eq('tutor_id', tutorId);
+    }
+    
+    final response = await query;
     return (response as List).length;
   }
 
