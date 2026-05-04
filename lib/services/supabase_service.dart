@@ -22,7 +22,10 @@ class SupabaseService {
   Map<String, dynamic>? _currentUserProfile;
 
   // --- AUTENTICACIÓN PERSONALIZADA ---
-  Future<Map<String, dynamic>> signIn({required String email, required String password}) async {
+  Future<Map<String, dynamic>> signIn({
+    required String email,
+    required String password,
+  }) async {
     // Buscar usuario por correo en la tabla perfiles
     final response = await _client
         .from('perfiles')
@@ -33,14 +36,15 @@ class SupabaseService {
     if (response == null) {
       throw Exception('El correo ingresado no se encuentra registrado.');
     }
-    
+
     // Hashear la contraseña ingresada con SHA-256
     final bytes = utf8.encode(password);
     final digest = sha256.convert(bytes);
     final hashedPassword = digest.toString();
 
     // Comparar contraseña (soporta texto plano como fallback temporal por si creaste registros manuales sin hash)
-    if (response['password_hash'] != hashedPassword && response['password_hash'] != password) {
+    if (response['password_hash'] != hashedPassword &&
+        response['password_hash'] != password) {
       throw Exception('La contraseña es incorrecta.');
     }
 
@@ -56,7 +60,11 @@ class SupabaseService {
     required String ci,
     required String role,
   }) async {
-    final responseCheck = await _client.from('perfiles').select().eq('correo', email).maybeSingle();
+    final responseCheck = await _client
+        .from('perfiles')
+        .select()
+        .eq('correo', email)
+        .maybeSingle();
     if (responseCheck != null) {
       throw Exception('Este correo ya está registrado.');
     }
@@ -65,13 +73,17 @@ class SupabaseService {
     final digest = sha256.convert(bytes);
     final hashedPassword = digest.toString();
 
-    final response = await _client.from('perfiles').insert({
-      'nombre_completo': fullName,
-      'correo': email,
-      'cedula_identidad': ci,
-      'password_hash': hashedPassword,
-      'rol': role,
-    }).select().single();
+    final response = await _client
+        .from('perfiles')
+        .insert({
+          'nombre_completo': fullName,
+          'correo': email,
+          'cedula_identidad': ci,
+          'password_hash': hashedPassword,
+          'rol': role,
+        })
+        .select()
+        .single();
 
     return response;
   }
@@ -81,7 +93,12 @@ class SupabaseService {
     required String ci,
     required String newPassword,
   }) async {
-    final responseCheck = await _client.from('perfiles').select().eq('correo', email).eq('cedula_identidad', ci).maybeSingle();
+    final responseCheck = await _client
+        .from('perfiles')
+        .select()
+        .eq('correo', email)
+        .eq('cedula_identidad', ci)
+        .maybeSingle();
     if (responseCheck == null) {
       throw Exception('El correo o la Cédula de Identidad no coinciden.');
     }
@@ -90,10 +107,16 @@ class SupabaseService {
     final digest = sha256.convert(bytes);
     final hashedPassword = digest.toString();
 
-    final updateResponse = await _client.from('perfiles').update({'password_hash': hashedPassword}).eq('id', responseCheck['id']).select();
-    
+    final updateResponse = await _client
+        .from('perfiles')
+        .update({'password_hash': hashedPassword})
+        .eq('id', responseCheck['id'])
+        .select();
+
     if (updateResponse.isEmpty) {
-      throw Exception('La base de datos bloqueó el cambio. Revisa las políticas "RLS" (Row Level Security) de tu tabla "perfiles" en Supabase para permitir Updates.');
+      throw Exception(
+        'La base de datos bloqueó el cambio. Revisa las políticas "RLS" (Row Level Security) de tu tabla "perfiles" en Supabase para permitir Updates.',
+      );
     }
 
     // Registrar la notificación de seguridad en la base de datos
@@ -109,7 +132,9 @@ class SupabaseService {
   Future<void> signOut() async {
     // Limpiar la sesión en memoria y también intentar cerrar Supabase Auth por seguridad
     _currentUserProfile = null;
-    try { await _client.auth.signOut(); } catch (_) {}
+    try {
+      await _client.auth.signOut();
+    } catch (_) {}
   }
 
   // --- PERFILES ---
@@ -136,10 +161,7 @@ class SupabaseService {
 
     // Actualizar cache local
     if (_currentUserProfile != null && _currentUserProfile!['id'] == id) {
-      _currentUserProfile = {
-        ..._currentUserProfile!,
-        ...updates,
-      };
+      _currentUserProfile = {..._currentUserProfile!, ...updates};
     }
   }
 
@@ -153,12 +175,16 @@ class SupabaseService {
   }
 
   Future<List<Map<String, dynamic>>> getAllStudents() async {
-    final response = await _client.from('estudiantes').select('*, perfiles(nombre_completo)');
+    final response = await _client
+        .from('estudiantes')
+        .select('*, perfiles(nombre_completo)');
     return List<Map<String, dynamic>>.from(response);
   }
 
   // --- TERCEROS ---
-  Future<List<Map<String, dynamic>>> getAuthorizedThirdParties(String tutorId) async {
+  Future<List<Map<String, dynamic>>> getAuthorizedThirdParties(
+    String tutorId,
+  ) async {
     final response = await _client
         .from('terceros')
         .select()
@@ -166,8 +192,6 @@ class SupabaseService {
         .eq('activo', true);
     return List<Map<String, dynamic>>.from(response);
   }
-
-
 
   // --- INVITACIONES ---
   Future<void> createInvitation({
@@ -185,7 +209,9 @@ class SupabaseService {
     });
   }
 
-  Future<List<Map<String, dynamic>>> getPendingInvitations(String tutorId) async {
+  Future<List<Map<String, dynamic>>> getPendingInvitations(
+    String tutorId,
+  ) async {
     final response = await _client
         .from('invitaciones_terceros')
         .select()
@@ -195,7 +221,10 @@ class SupabaseService {
   }
 
   Future<void> updateInvitationStatus(String id, String status) async {
-    await _client.from('invitaciones_terceros').update({'estado': status}).eq('id', id);
+    await _client
+        .from('invitaciones_terceros')
+        .update({'estado': status})
+        .eq('id', id);
   }
 
   // --- REGISTRO DE SALIDAS (LOGS) ---
@@ -231,9 +260,20 @@ class SupabaseService {
 
   // --- ESTADÍSTICAS ---
   Future<Map<String, int>> getTutorStats(String tutorId) async {
-    final students = await _client.from('estudiantes').select('id').eq('tutor_id', tutorId);
-    final thirdParties = await _client.from('terceros').select('id').eq('tutor_id', tutorId).eq('activo', true);
-    final deliveries = await _client.from('registro_salidas').select('id').eq('tutor_autorizador_id', tutorId).eq('estado', 'Exitoso');
+    final students = await _client
+        .from('estudiantes')
+        .select('id')
+        .eq('tutor_id', tutorId);
+    final thirdParties = await _client
+        .from('terceros')
+        .select('id')
+        .eq('tutor_id', tutorId)
+        .eq('activo', true);
+    final deliveries = await _client
+        .from('registro_salidas')
+        .select('id')
+        .eq('tutor_autorizador_id', tutorId)
+        .eq('estado', 'Exitoso');
 
     return {
       'students': students.length,
@@ -253,27 +293,35 @@ class SupabaseService {
     String? invitationId,
   }) async {
     // 1. Insertar el tercero en la tabla 'terceros'
-    final response = await _client.from('terceros').insert({
-      'tutor_id': tutorId,
-      'nombre': name,
-      'cedula_identidad': ci,
-      'relacion': relation,
-      'biometria_hash': biometricHash,
-      'pinata_foto_cid': photoCid,
-      'activo': true,
-    }).select().single();
+    final response = await _client
+        .from('terceros')
+        .insert({
+          'tutor_id': tutorId,
+          'nombre': name,
+          'cedula_identidad': ci,
+          'relacion': relation,
+          'biometria_hash': biometricHash,
+          'pinata_foto_cid': photoCid,
+          'activo': true,
+        })
+        .select()
+        .single();
 
     // 2. Si hay una invitación, marcarla como 'Completada'
     if (invitationId != null) {
-      await _client.from('invitaciones_terceros').update({
-        'estado': 'Completada',
-      }).eq('id', invitationId);
+      await _client
+          .from('invitaciones_terceros')
+          .update({'estado': 'Completada'})
+          .eq('id', invitationId);
     }
   }
 
   // --- ADMIN & GUARDIAS ---
   Future<List<Map<String, dynamic>>> getAllGuards() async {
-    final response = await _client.from('perfiles').select().eq('rol', 'Encargado');
+    final response = await _client
+        .from('perfiles')
+        .select()
+        .eq('rol', 'Encargado');
     return List<Map<String, dynamic>>.from(response);
   }
 
@@ -311,10 +359,10 @@ class SupabaseService {
     required String estado,
   }) async {
     try {
-      await _client.from('perfiles').update({
-        'turno': turno,
-        'estado': estado,
-      }).eq('id', id);
+      await _client
+          .from('perfiles')
+          .update({'turno': turno, 'estado': estado})
+          .eq('id', id);
     } catch (_) {
       // Ignorar si las columnas no existen
     }
@@ -331,19 +379,29 @@ class SupabaseService {
   }
 
   Future<void> markNotificationAsRead(String notificationId) async {
-    await _client.from('notificaciones').update({'leida': true}).eq('id', notificationId);
+    await _client
+        .from('notificaciones')
+        .update({'leida': true})
+        .eq('id', notificationId);
   }
 
   Future<void> markAllNotificationsAsRead(String userId) async {
-    await _client.from('notificaciones').update({'leida': true}).eq('usuario_id', userId);
+    await _client
+        .from('notificaciones')
+        .update({'leida': true})
+        .eq('usuario_id', userId);
   }
 
   // --- DASHBOARD / METRICS ---
   Future<int> getTodayPickupsCount(String profileId) async {
     final today = DateTime.now();
-    final startOfDay = DateTime(today.year, today.month, today.day).toIso8601String();
-    
-    // We check if the user is a tutor or a guard, but usually this is called 
+    final startOfDay = DateTime(
+      today.year,
+      today.month,
+      today.day,
+    ).toIso8601String();
+
+    // We check if the user is a tutor or a guard, but usually this is called
     // by either. For Tutors we check 'tutor_autorizador_id'. For guards 'encargado_id'.
     // Here we can check tutor_autorizador_id since it's used in PickupHistory
     final response = await _client
@@ -354,4 +412,3 @@ class SupabaseService {
     return response.length;
   }
 }
-
