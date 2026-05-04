@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import '../services/supabase_service.dart';
 
 class TerceroWebFormPage extends StatefulWidget {
   const TerceroWebFormPage({super.key});
 
-  static String routeName = 'TerceroWebFormPage';
+  static String routeName = 'registro-tercero';
 
   @override
   State<TerceroWebFormPage> createState() => _TerceroWebFormPageState();
@@ -15,6 +16,26 @@ class _TerceroWebFormPageState extends State<TerceroWebFormPage> {
   final _ciController = TextEditingController();
   String? _relacionSeleccionada;
   bool _fotoSubida = false;
+  bool _isSaving = false;
+
+  String? _tutorId;
+  String? _tokens;
+
+  @override
+  void initState() {
+    super.initState();
+    _extractParameters();
+  }
+
+  void _extractParameters() {
+    // Para Flutter Web, extraemos de la URL
+    final uri = Uri.base;
+    setState(() {
+      _tutorId = uri.queryParameters['tutorId'];
+      _tokens = uri.queryParameters['tokens'];
+    });
+    print("TutorId cargado: $_tutorId, Tokens: $_tokens");
+  }
 
   // Opciones de relación para la base de datos
   final List<String> _relaciones = [
@@ -219,55 +240,18 @@ class _TerceroWebFormPageState extends State<TerceroWebFormPage> {
                     width: double.infinity,
                     height: 56,
                     child: ElevatedButton(
-                      onPressed: () {
-                        if (_formKey.currentState!.validate()) {
-                          if (!_fotoSubida) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Por favor sube tu fotografía para la verificación biométrica'),
-                                backgroundColor: Colors.redAccent,
-                              )
-                            );
-                            return;
-                          }
-                          // Success Dialog
-                          showDialog(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                              title: Row(
-                                children: [
-                                  const Icon(Icons.check_circle, color: Colors.green, size: 32),
-                                  const SizedBox(width: 12),
-                                  const Text('Registro Exitoso'),
-                                ],
-                              ),
-                              content: Text(
-                                'Tus datos (\${_nombreController.text}, \$_relacionSeleccionada) han sido guardados en la tabla de terceros.\n\nEl sistema activará tu perfil automáticamente.',
-                                style: const TextStyle(fontSize: 16),
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.pop(context);
-                                    // Navigate away or reset form
-                                  }, 
-                                  child: const Text('Entendido', style: TextStyle(fontSize: 16))
-                                ),
-                              ],
-                            ),
-                          );
-                        }
-                      },
+                      onPressed: _isSaving ? null : _handleRegister,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF4A00E0),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         elevation: 0,
                       ),
-                      child: const Text(
-                        'Registrar Autorizado', 
-                        style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)
-                      ),
+                      child: _isSaving 
+                        ? const CircularProgressIndicator(color: Colors.white)
+                        : const Text(
+                            'Registrar Autorizado', 
+                            style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)
+                          ),
                     ),
                   ),
                 ],
@@ -277,6 +261,96 @@ class _TerceroWebFormPageState extends State<TerceroWebFormPage> {
         ),
       ),
     );
+  }
+
+  Future<void> _handleRegister() async {
+    if (!_formKey.currentState!.validate()) return;
+    
+    if (!_fotoSubida) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Por favor sube tu fotografía para la verificación biométrica'),
+          backgroundColor: Colors.redAccent,
+        )
+      );
+      return;
+    }
+
+    if (_tutorId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error: El enlace no contiene el ID del tutor.'), backgroundColor: Colors.redAccent)
+      );
+      return;
+    }
+
+    setState(() => _isSaving = true);
+
+    try {
+      final supabase = SupabaseService();
+      
+      // En una app real, aquí generarías un hash biométrico real y subirías la foto a Pinata.
+      // Por ahora simulamos con datos de prueba.
+      final String biometricHash = "simulated_hash_${DateTime.now().millisecondsSinceEpoch}";
+      final String photoCid = "Qm_simulated_cid_${DateTime.now().millisecondsSinceEpoch}";
+
+      // Registramos en Supabase
+      await supabase.registerThirdParty(
+        tutorId: _tutorId!,
+        name: _nombreController.text.trim(),
+        ci: _ciController.text.trim(),
+        relation: _relacionSeleccionada!,
+        biometricHash: biometricHash,
+        photoCid: photoCid,
+        // Usamos el primer token como invitationId para vincular (simplificación)
+        invitationId: _tokens?.split(',').first, 
+      );
+
+      // Mostrar éxito
+      if (mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            title: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.green, size: 32),
+                const SizedBox(width: 12),
+                const Text('¡Todo Listo!'),
+              ],
+            ),
+            content: const Text(
+              'Tu registro ha sido exitoso. El tutor recibirá una notificación y ahora estás autorizado para recoger a los estudiantes asignados.',
+              style: TextStyle(fontSize: 16),
+            ),
+            actions: [
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  // Podríamos redirigir a una página de bienvenida o simplemente limpiar
+                  setState(() {
+                    _nombreController.clear();
+                    _ciController.clear();
+                    _relacionSeleccionada = null;
+                    _fotoSubida = false;
+                  });
+                }, 
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.deepPurple),
+                child: const Text('Entendido', style: TextStyle(color: Colors.white))
+              ),
+            ],
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al registrar: $e'), backgroundColor: Colors.redAccent)
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
   }
 
   @override

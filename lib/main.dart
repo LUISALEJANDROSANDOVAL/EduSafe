@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'config/env_config.dart';
 import 'services/supabase_service.dart';
 import 'pages/Login.dart';
+import 'pages/TerceroWebFormPage.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,8 +30,13 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       home: const LoginScreenWidget(),
+      routes: {
+        'login': (context) => const LoginScreenWidget(),
+        'registro-tercero': (context) => const TerceroWebFormPage(),
+      },
     );
   }
 }
+
 
 //Prueba de Boris
