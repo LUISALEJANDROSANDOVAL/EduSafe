@@ -167,29 +167,7 @@ class SupabaseService {
     return List<Map<String, dynamic>>.from(response);
   }
 
-  Future<void> registerThirdParty({
-    required String tutorId,
-    required String name,
-    required String ci,
-    required String relation,
-    required String biometricHash,
-    String? photoCid,
-    String? invitationId,
-  }) async {
-    await _client.from('terceros').insert({
-      'tutor_id': tutorId,
-      'nombre': name,
-      'cedula_identidad': ci,
-      'relacion': relation,
-      'biometria_hash': biometricHash,
-      'pinata_foto_cid': photoCid,
-      'invitacion_id': invitationId,
-    });
-    
-    if (invitationId != null) {
-      await updateInvitationStatus(invitationId, 'Completado');
-    }
-  }
+
 
   // --- INVITACIONES ---
   Future<void> createInvitation({
